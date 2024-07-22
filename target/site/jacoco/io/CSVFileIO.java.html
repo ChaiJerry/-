@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CSVFileIO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Civil-aviation-recommended-subject</a> &gt; <a href="index.source.html" class="el_package">io</a> &gt; <span class="el_source">CSVFileIO.java</span></div><h1>CSVFileIO.java</h1><pre class="source lang-java linenums">package io;
+
+import com.csvreader.*;
+import org.apache.spark.sql.*;
+
+import java.io.*;
+import java.nio.charset.*;
+import java.util.*;
+import java.util.logging.*;
+
+import static data_processer.DataConverter.*;
+import static data_processer.DataParser.*;
+import static io.IOMonitor.*;
+import static main_system.FPGrowth.*;
+
+public class CSVFileIO {
+
+    //csv文件结果输出的目录路径
+    private final String resultDirPath;
+    //csv文件读取的路径，数组长度为types.length，数组下标与types对应
+<span class="fc" id="L21">    private final String[] csvPaths = new String[types.length];</span>
+
+    private final Logger logger;
+
+    //得到订单数量
+    public int getOrderNumber() {
+<span class="nc" id="L27">        return orderNumber;</span>
+    }
+
+    //订单数量
+    protected static int orderNumber;
+
+    /**
+     * 初始化CSVFileIO
+     */
+    public CSVFileIO(String resultDirPath, String pathT
+            , String pathH, String pathM, String pathB
+<span class="fc" id="L38">            , String pathI , String pathS) throws IOException {</span>
+        // 初始化路径
+        // 输出结果路径
+<span class="fc" id="L41">        this.resultDirPath = resultDirPath;</span>
+        // 机票订单相关数据csv文件路径
+<span class="fc" id="L43">        csvPaths[TICKET] = pathT;</span>
+        // 酒店相关数据csv文件路径
+<span class="fc" id="L45">        csvPaths[HOTEL] = pathH;</span>
+        // 餐食相关数据csv文件路径
+<span class="fc" id="L47">        csvPaths[MEAL] = pathM;</span>
+        // 行李相关数据csv文件路径
+<span class="fc" id="L49">        csvPaths[BAGGAGE] = pathB;</span>
+        // 保险相关数据csv文件路径
+<span class="fc" id="L51">        csvPaths[INSURANCE] = pathI;</span>
+        // 座位相关数据csv文件路径
+<span class="fc" id="L53">        csvPaths[SEAT] = pathS;</span>
+        // 初始化类型与索引的映射
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        for (int i = 0; i &lt; types.length; i++) {</span>
+<span class="fc" id="L56">            type2index.put(types[i], i);</span>
+        }
+        //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
+<span class="fc" id="L59">        ticketMap = CSVFileIO.read(csvPaths[TICKET], &quot;T&quot;);</span>
+        // 初始化日志
+<span class="fc" id="L61">        logger = Logger.getLogger(getClass().getName());</span>
+
+<span class="fc" id="L63">    }</span>
+
+    /**
+     * Convert a CSV file to a Dataset&lt;Row&gt;.
+     */
+    public Dataset&lt;Row&gt; singelTypeCsv2dataset(int type) throws IOException {
+        //订单与属性之间的映射map
+        Map&lt;String, List&lt;String&gt;&gt; attributeMap;
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (type != TICKET) {</span>
+            // 当读取的csv文件不是Ticket时，直接处理
+<span class="fc" id="L73">            attributeMap = CSVFileIO.read(csvPaths[type], types[type]);</span>
+            // 创建数据集
+<span class="fc" id="L75">            List&lt;Row&gt; data = new ArrayList&lt;&gt;();</span>
+            //筛选出能和机票订单号匹配的订单数据
+            // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到data中
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            for (Iterator&lt;String&gt; iterator = ticketMap.keySet().iterator(); iterator.hasNext(); ) {</span>
+<span class="fc" id="L79">                String key = iterator.next();</span>
+                // 得到属性列表
+<span class="fc" id="L81">                List&lt;String&gt; temp = attributeMap.get(key);</span>
+                // 如果temp不为空，则将temp添加到data中
+                // 若是为空则说明没有商品可以和该订单匹配，则跳过
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                if (temp != null) {</span>
+<span class="fc" id="L85">                    temp.addAll(ticketMap.get(key));</span>
+<span class="fc" id="L86">                    data.add(RowFactory.create(temp));</span>
+                }
+<span class="fc" id="L88">            }</span>
+            // 创建DataFrame，并指定模式，将List&lt;Row&gt;数据转换为Dataset&lt;Row&gt;
+<span class="fc" id="L90">            logger.info(&quot;正在创建DataFrame&quot;);</span>
+<span class="fc" id="L91">            return getDataFrame(data);</span>
+        } else {
+            // 当读取的csv文件是Ticket时
+<span class="nc" id="L94">            List&lt;Row&gt; data = new ArrayList&lt;&gt;();</span>
+            //将ticketMap的属性添加到data中
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            for (List&lt;String&gt; list : ticketMap.values()) {</span>
+<span class="nc" id="L97">                data.add(RowFactory.create(list));</span>
+<span class="nc" id="L98">            }</span>
+            // 创建DataFrame，并指定模式，将List&lt;Row&gt;数据转换为Dataset&lt;Row&gt;
+<span class="nc" id="L100">            return getDataFrame(data);</span>
+        }
+    }
+
+    public List&lt;List&lt;String&gt;&gt; singleTypeCsv2lists(int type) throws IOException{
+<span class="nc" id="L105">        return dataset2stringlist(singelTypeCsv2dataset(type));</span>
+    }
+
+    /**
+     * 将频繁项集转换为CSV文件
+     * @param dataSet 频繁项集
+     * @param type 商品类型
+     */
+    public void freItemSet2CSV(Dataset&lt;Row&gt; dataSet, int type) {
+        // 创建 CSV Writer 对象, 参数说明（写入的文件路径，分隔符，编码格式)
+<span class="nc" id="L115">        CsvWriter csvWriter = new CsvWriter(resultDirPath + &quot;\\FreqItemSet&quot; + FULL_NAMES[type] + &quot;.csv&quot;, ',', StandardCharsets.UTF_8);</span>
+        try {
+            // 定义 header 头
+<span class="nc" id="L118">            String[] headers = {&quot;Ticket&quot;, FULL_NAMES[type], &quot;freq&quot;};</span>
+            // 写入 header 头
+<span class="nc" id="L120">            csvWriter.writeRecord(headers);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            for (Row r : dataSet.collectAsList()) {</span>
+                //遍历r.getList(0)
+                String temp;
+<span class="nc" id="L124">                String[] columns = new String[3];</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                for (int i = 0; i &lt; 3; i++) {</span>
+<span class="nc" id="L126">                    columns[i] = &quot;&quot;;</span>
+                }
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                for (Object s : r.getList(0)) {</span>
+<span class="nc" id="L129">                    temp = s.toString() + &quot;; &quot;;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">                    columns[temp.charAt(0) == 'T' ? 0 : 1] += temp;</span>
+<span class="nc" id="L131">                }</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">                if (columns[0].isEmpty() || columns[1].isEmpty()) {</span>
+<span class="nc" id="L133">                    continue;</span>
+                }
+<span class="nc" id="L135">                columns[2] = r.get(1).toString();</span>
+<span class="nc" id="L136">                csvWriter.writeRecord(columns);</span>
+<span class="nc" id="L137">            }</span>
+<span class="nc" id="L138">        } catch (Exception e) {</span>
+<span class="nc" id="L139">            logger.info(&quot;freItemSet2CSV error&quot;);</span>
+        } finally {
+<span class="nc" id="L141">            csvWriter.close();</span>
+        }
+<span class="nc" id="L143">    }</span>
+
+    /**
+     * 将关联规则写入到CSV文件
+     * @param rules 关联规则
+     * @param type  商品类型
+     */
+    public void rules2CSV(Dataset&lt;Row&gt; rules, int type) throws IOException {
+        // 定义 header 头
+<span class="nc" id="L152">        String[] headers = {&quot;TICKET&quot;, FULL_NAMES[type], &quot;confidence&quot;};</span>
+        // 创建 CSV Writer 对象, 参数说明（写入的文件路径，分隔符，编码格式)
+<span class="nc" id="L154">        CsvWriter csvWriter = new CsvWriter(resultDirPath + &quot;\\&quot; + &quot;AssociationRules&quot; + FULL_NAMES[type] + &quot;.csv&quot;, ',', StandardCharsets.UTF_8);</span>
+        // 写入 header 头
+<span class="nc" id="L156">        csvWriter.writeRecord(headers);</span>
+        // 遍历 rules
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        for (Row r : rules.collectAsList()) {</span>
+            // 获取 Row 的内容
+<span class="nc" id="L160">            String[] columns = row2rule(r);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">            if(columns.length != 0) {</span>
+                //若是不为空则说明有效，写入CSV文件
+<span class="nc" id="L163">                csvWriter.writeRecord(columns);</span>
+            }
+<span class="nc" id="L165">        }</span>
+        // 关闭 CSV Writer
+<span class="nc" id="L167">        csvWriter.close();</span>
+<span class="nc" id="L168">    }</span>
+
+    /**
+     * 读取CSV文件
+     * @param path 文件路径
+     * @param type 商品类型
+     * @return 返回订单号和订单对应的商品属性之间的键值对 Map&lt;String, List&lt;String&gt;&gt;
+     */
+    public static Map&lt;String, List&lt;String&gt;&gt; read(String path, String type) throws IOException {
+<span class="fc" id="L177">        HashMap&lt;String, List&lt;String&gt;&gt; map = new HashMap&lt;&gt;();</span>
+        // 第一参数：读取文件的路径 第二个参数：分隔符 第三个参数：字符集
+<span class="fc" id="L179">        CsvReader csvReader = new CsvReader(path, ',', StandardCharsets.UTF_8);</span>
+        // 读取表头
+<span class="fc" id="L181">        csvReader.readHeaders();</span>
+        //通过type判断调用哪个方法
+        //将表头存入HeaderStorage之中，方便后续存入数据库
+<span class="fc" id="L184">        headerStorage[type2index.get(type)] = new HeaderStorage();</span>
+        //得到对应的属性头类
+<span class="fc" id="L186">        HeaderStorage header = headerStorage[type2index.get(type)];</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        for(int i=1;i&lt;csvReader.getHeaderCount();i++) {</span>
+            //将表头存入HeaderStorage之中，方便后续存入数据库
+<span class="fc" id="L189">            header.addHeader(csvReader.getHeader(i));</span>
+        }
+<span class="pc bpc" id="L191" title="5 of 7 branches missed.">        switch (type) {</span>
+            case &quot;M&quot;:
+                //处理餐食数据
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+                    //订单数量计数
+<span class="nc" id="L196">                    orderNumber++;</span>
+<span class="nc" id="L197">                    dealM(csvReader, map);</span>
+                }
+                break;
+            case &quot;T&quot;:
+                //特殊处理机票数据的属性
+                //添加处理后得到的属性头
+<span class="fc" id="L203">                header.addHeader(&quot;MONTH&quot;);</span>
+<span class="fc" id="L204">                header.addHeader(&quot;TO&quot;);</span>
+                //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
+                //删去多余的属性头
+<span class="fc" id="L207">                header.removeHeader(&quot;T_VOYAGE&quot;);</span>
+                //遍历csv每一行中的内容
+<span class="fc bfc" id="L209" title="All 2 branches covered.">                while (csvReader.readRecord()) {</span>
+                    //订单数量计数
+<span class="fc" id="L211">                    orderNumber++;</span>
+<span class="fc" id="L212">                    dealT(csvReader, map);</span>
+                }
+                break;
+            case &quot;B&quot;:
+                //处理行李数据
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+                    //订单数量计数
+<span class="nc" id="L219">                    orderNumber++;</span>
+<span class="nc" id="L220">                    dealB(csvReader, map);</span>
+                }
+                break;
+            case &quot;H&quot;:
+                //删除入住和退房时间属性头
+<span class="fc" id="L225">                header.removeHeader(&quot;IN_DATE&quot;);</span>
+<span class="fc" id="L226">                header.removeHeader(&quot;OUT_DATE&quot;);</span>
+                //处理酒店数据
+<span class="fc bfc" id="L228" title="All 2 branches covered.">                while (csvReader.readRecord()) {</span>
+                    //订单数量计数
+<span class="fc" id="L230">                    orderNumber++;</span>
+<span class="fc" id="L231">                    dealH(csvReader, map);</span>
+                }
+                break;
+            case &quot;I&quot;:
+                //处理保险数据
+<span class="nc bnc" id="L236" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+                    //订单数量计数
+<span class="nc" id="L238">                    orderNumber++;</span>
+<span class="nc" id="L239">                    dealI(csvReader, map);</span>
+                }
+                break;
+            case &quot;S&quot;:
+                //处理座位数据
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+                    //订单数量计数
+<span class="nc" id="L246">                    orderNumber++;</span>
+<span class="nc" id="L247">                    dealS(csvReader, map);</span>
+                }
+                break;
+            default:
+                break;
+        }
+<span class="fc" id="L253">        return map;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

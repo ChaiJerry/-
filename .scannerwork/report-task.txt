@@ -1,0 +1,6 @@
+projectKey=civil-aviatioin-project
+serverUrl=http://localhost:9000
+serverVersion=10.6.0.92116
+dashboardUrl=http://localhost:9000/dashboard?id=civil-aviatioin-project
+ceTaskId=e957d675-99bc-40dc-a921-b435d36761b6
+ceTaskUrl=http://localhost:9000/api/ce/task?id=e957d675-99bc-40dc-a921-b435d36761b6

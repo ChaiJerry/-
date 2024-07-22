@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IOMonitor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Civil-aviation-recommended-subject</a> &gt; <a href="index.source.html" class="el_package">io</a> &gt; <span class="el_source">IOMonitor.java</span></div><h1>IOMonitor.java</h1><pre class="source lang-java linenums">package io;
+
+import java.util.*;
+
+public class IOMonitor {
+    private IOMonitor() {
+    }
+    //下面用于定义商品品类对应的编号，其实可以换成枚举类
+    public static final int TICKET = 0;
+    public static final int HOTEL = 1;
+    public static final int MEAL = 2;
+    public static final int BAGGAGE = 3;
+    public static final int INSURANCE = 4;
+    public static final int SEAT = 5;
+    //缩写的商品品类，与下面的商品品类全称对应
+<span class="fc" id="L16">    protected static final String[] types = {&quot;T&quot;, &quot;H&quot;, &quot;M&quot;, &quot;B&quot;, &quot;I&quot;, &quot;S&quot;};</span>
+<span class="fc" id="L17">    protected static final String[] FULL_NAMES = {&quot;Ticket&quot;, &quot;Hotel&quot;, &quot;Meal&quot;, &quot;Baggage&quot;, &quot;Insurance&quot;,&quot;Seat&quot;};</span>
+    //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
+    protected static Map&lt;String, List&lt;String&gt;&gt; ticketMap;
+    //将type与index对应，用于快速查找
+<span class="fc" id="L21">    protected static HashMap&lt;String, Integer&gt; type2index = new HashMap&lt;&gt;();</span>
+    //存储每个品类下的商品属性，用于快速查找，主要从CSV文件的头文件读取
+<span class="fc" id="L23">    protected static HeaderStorage[] headerStorage = new HeaderStorage[6];</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
