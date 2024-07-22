@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Civil-aviation-recommended-subject</a> &gt; <a href="index.source.html" class="el_package">data_processer</a> &gt; <span class="el_source">DataParser.java</span></div><h1>DataParser.java</h1><pre class="source lang-java linenums">package data_processer;
+
+import com.csvreader.*;
+
+import java.io.*;
+import java.util.*;
+
+public class DataParser {
+    private DataParser() {
+    }
+    //用于添加到属性中的品类标识
+    //机票标识
+    private static final String T_SIGN = &quot;Ticket:&quot;;
+    //餐食标识
+    private static final String M_SIGN = &quot;Meal:&quot;;
+    //行李标识
+    private static final String B_SIGN = &quot;Baggage:&quot;;
+    //酒店标识
+    private static final String H_SIGN = &quot;Hotel:&quot;;
+    //保险标识
+    private static final String I_SIGN = &quot;Insurance:&quot;;
+    //选座标识
+    private static final String S_SIGN = &quot;Seat:&quot;;
+
+
+
+    //处理餐食订单
+    public static void dealM(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+        //餐食
+<span class="nc" id="L30">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //得到订单号
+<span class="nc" id="L32">        String key = csvReader.get(0);</span>
+        //订单号相同的情况检验
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
+            //订单号相同的情况实际上不应该出现，因为订单号是唯一的
+<span class="nc" id="L36">            return;</span>
+        }
+        //添加普通的类型属性
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        for (int i = 1; i &lt; 3; i++) {</span>
+<span class="nc" id="L40">            attributeList.add(M_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+        }
+        //添加订单的划档位处理后的数据类属性
+<span class="nc" id="L43">        attributeList.add(M_SIGN + csvReader.getHeader(3) + &quot;:&quot;</span>
+<span class="nc" id="L44">                + floatStr2Attribute(csvReader.get(3), 4));</span>
+<span class="nc" id="L45">        attributeList.add(M_SIGN + csvReader.getHeader(4) + &quot;:&quot;</span>
+<span class="nc" id="L46">                + floatStr2Attribute(csvReader.get(4), 400));</span>
+        //将订单号和属性列表放入map中
+<span class="nc" id="L48">        map.put(key, attributeList);</span>
+<span class="nc" id="L49">    }</span>
+
+    //处理机票订单
+    public static void dealT(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+        //机票
+<span class="fc" id="L54">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //得到订单号
+<span class="fc" id="L56">        String key = csvReader.get(&quot;ORDER_NO&quot;);</span>
+        //订单号相同的情况检验
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (map.containsKey(key)) {</span>
+<span class="fc" id="L59">            return;</span>
+        }
+        //添加时间属性（划分到月）
+<span class="fc" id="L62">        addDate2list(attributeList, csvReader.get(0), T_SIGN);</span>
+<span class="fc" id="L63">        attributeList.add(T_SIGN + csvReader.getHeader(5) + &quot;:&quot;</span>
+<span class="fc" id="L64">                + floatStr2Attribute(csvReader.get(5), 300));</span>
+        //添加目的地属性
+<span class="fc" id="L66">        splitSegment(attributeList, csvReader.get(2));</span>
+        //添加其他属性
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        for (int i = 1; i &lt; 5; i++) {</span>
+            //跳过voyage属性
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if (i == 2) {</span>
+<span class="fc" id="L71">                continue;</span>
+            }
+            //添加属性
+<span class="fc" id="L74">            attributeList.add(T_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+        }
+        //将订单号和属性列表放入map中
+<span class="fc" id="L77">        map.put(key, attributeList);</span>
+<span class="fc" id="L78">    }</span>
+
+    //处理行李订单
+    public  static void dealB(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+<span class="nc" id="L82">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //得到订单号
+<span class="nc" id="L84">        String key = csvReader.get(0);</span>
+        //订单号相同的情况检验
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
+<span class="nc" id="L87">            return;</span>
+        }
+        //添加划档处理后的数据类属性
+<span class="nc" id="L90">        attributeList.add(B_SIGN + csvReader.getHeader(1) + &quot;:&quot;</span>
+<span class="nc" id="L91">                + floatStr2Attribute(csvReader.get(1), 200));</span>
+<span class="nc" id="L92">        attributeList.add(B_SIGN + csvReader.getHeader(2) + &quot;:&quot; + csvReader.get(2));</span>
+        //添加其他属性
+<span class="nc" id="L94">        map.put(key, attributeList);</span>
+<span class="nc" id="L95">    }</span>
+
+    //处理酒店订单
+    public static void dealH(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+        //酒店
+<span class="fc" id="L100">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //得到订单号
+<span class="fc" id="L102">        String key = csvReader.get(0);</span>
+        //订单号相同的情况检验
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (map.containsKey(key)) {</span>
+<span class="fc" id="L105">            return;</span>
+        }
+        //可以选择用addDate2list(attributeList, csvReader.get(1), H_SIGN)导入酒店入住时间属性
+<span class="fc" id="L108">        attributeList.add(H_SIGN + &quot;HPRICE&quot; + &quot;:&quot; + floatStr2Attribute(csvReader.get(3), 300));</span>
+        //加入其它酒店属性
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (int i = 4; i &lt; csvReader.getColumnCount(); i++) {</span>
+<span class="fc" id="L111">            attributeList.add(H_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+        }
+        //将订单号和属性列表放入map中
+<span class="fc" id="L114">        map.put(key, attributeList);</span>
+<span class="fc" id="L115">    }</span>
+
+    //处理保险订单
+    public static  void dealI(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+<span class="nc" id="L119">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //得到订单号
+<span class="nc" id="L121">        String key = csvReader.get(0);</span>
+        //订单号相同的情况检验
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
+<span class="nc" id="L124">            return;</span>
+        }
+        //加入保险属性
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        for (int i = 1; i &lt; csvReader.getColumnCount(); i++) {</span>
+<span class="nc" id="L128">            String header = csvReader.getHeader(i);</span>
+<span class="nc" id="L129">            attributeList.add(I_SIGN + header + &quot;:&quot; + csvReader.get(i));</span>
+        }
+        //将订单号和属性列表放入map中
+<span class="nc" id="L132">        map.put(key, attributeList);</span>
+<span class="nc" id="L133">    }</span>
+
+    //处理选座订单
+    public static void dealS(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+<span class="nc" id="L137">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //得到订单号
+<span class="nc" id="L139">        String key = csvReader.get(0);</span>
+        //订单号相同的情况检验
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
+<span class="nc" id="L142">            return;</span>
+        }
+        //加入选座属性
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        for (int i = 1; i &lt; csvReader.getColumnCount(); i++) {</span>
+            //直接加入数据之中的属性
+<span class="nc" id="L147">            attributeList.add(S_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+        }
+        //将订单号和属性列表放入map中
+<span class="nc" id="L150">        map.put(key, attributeList);</span>
+<span class="nc" id="L151">    }</span>
+
+    /**
+     * 浮点数划档方法
+     * @param str 包含浮点数内容的字符串
+     * @param div 划档的间隔
+     * @return
+     */
+    private static Integer floatStr2Attribute(String str, int div) {
+        //将字符串转化为浮点数
+<span class="fc" id="L161">        float value = Float.parseFloat(str);</span>
+<span class="fc" id="L162">        return (int)value / div;</span>
+    }
+
+    //将日期拆分成月
+    private static void addDate2list(List&lt;String&gt; list, String date, String sign) {
+        //拆分日期
+<span class="fc" id="L168">        String[] results = date.split(&quot; &quot;)[0].split(&quot;/&quot;);</span>
+        //添加月
+<span class="fc" id="L170">        list.add(sign + &quot;MONTH:&quot; + results[1]);</span>
+<span class="fc" id="L171">    }</span>
+
+    //拆分航段
+    private static void splitSegment(List&lt;String&gt; list, String segment) {
+        //拆分航段
+<span class="fc" id="L176">        String[] results = segment.split(&quot;-&quot;);</span>
+        //添加航段
+<span class="fc" id="L178">        list.add(T_SIGN + &quot;FROM&quot; + &quot;:&quot; + results[0]);</span>
+<span class="fc" id="L179">        list.add(T_SIGN + &quot;TO&quot; + &quot;:&quot; + results[1]);</span>
+<span class="fc" id="L180">    }</span>
+}
+/*
+ * 数据处理基本原则：
+ * 1.性质类型数据直接保留即可
+ * 2.时间类型数据，需要将时间拆分成月、日等
+ * 3.数值类型数据，需要将数值进行划分，如：酒店价格，需要将价格划分为100元以下、200元以下等
+ */
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

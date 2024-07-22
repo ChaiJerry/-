@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Civil-aviation-recommended-subject</a> &gt; <a href="index.source.html" class="el_package">data_processer</a> &gt; <span class="el_source">DataConverter.java</span></div><h1>DataConverter.java</h1><pre class="source lang-java linenums">package data_processer;
+
+import org.apache.spark.sql.*;
+
+import java.util.*;
+
+public class DataConverter {
+    private DataConverter() {
+    }
+
+
+    //将训练得到的包含关联规则信息的dataset中的数据转化为List&lt;String&gt;
+    public static void dataset2RulesList(Dataset&lt;Row&gt; dataSet, List&lt;List&lt;String&gt;&gt; dataList) {
+        //遍历dataSet中的每一行，将每一行转化为List&lt;String&gt;
+<span class="fc bfc" id="L15" title="All 2 branches covered.">        for (Row r : dataSet.collectAsList()) {</span>
+            //将每一行转化为String[]
+<span class="fc" id="L17">            String[] rule=row2rule(r);</span>
+            //若rule长度为空，则说明无效应当跳过
+<span class="fc bfc" id="L19" title="All 2 branches covered.">            if(rule.length!=0){</span>
+                //将有效的rule添加到dataList中
+<span class="fc" id="L21">                dataList.add(Arrays.asList(rule));</span>
+            }
+<span class="fc" id="L23">        }</span>
+<span class="fc" id="L24">    }</span>
+
+
+    //将训练得到的包含频繁项集信息的dataset中的数据转化为List&lt;String&gt;
+    public static void dataset2FRList(Dataset&lt;Row&gt; dataSet, List&lt;List&lt;String&gt;&gt; dataList) {
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        for (Row r : dataSet.collectAsList()) {</span>
+<span class="fc" id="L30">            List&lt;String&gt; row = new ArrayList&lt;&gt;();</span>
+            //机票相关的属性
+<span class="fc" id="L32">            StringBuilder ticketList = new StringBuilder();</span>
+            //商品相关的属性
+<span class="fc" id="L34">            StringBuilder itemsList = new StringBuilder();</span>
+            //temp用于暂存字符串
+            String temp;
+            //row可以用get方法将其不同的部分得到
+            //这里使用getlist(0)得到频繁项集，get(1)得到频率
+            //遍历r.getList(0)
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            for (Object s : r.getList(0)) {</span>
+                //将Object 转化为String，并暂存
+<span class="fc" id="L42">                temp = s.toString();</span>
+                //归类
+<span class="fc bfc" id="L44" title="All 2 branches covered.">                if (temp.charAt(0) == 'T') {</span>
+                    //若第一个字符为T，则说明是机票相关的属性
+                    //将属性添加到ticketList中
+<span class="fc" id="L47">                    ticketList.append(temp).append(&quot;;&quot;);</span>
+                } else {
+                    //若第一个字符不为T，则说明是其余商品相关的属性
+                    //将属性添加到itemsList中
+<span class="fc" id="L51">                    itemsList.append(temp).append(&quot;;&quot;);</span>
+                }
+<span class="fc" id="L53">            }</span>
+            //若是ticketList为空，或者goodList为空，则是无意义的频繁项集，直接跳过
+<span class="fc bfc" id="L55" title="All 4 branches covered.">            if ((ticketList.length() == 0) || (itemsList.length() == 0)) {</span>
+<span class="fc" id="L56">                continue;</span>
+            }
+            //将ticketList和itemsList转化到Row之中
+<span class="fc" id="L59">            row.add(ticketList.toString());</span>
+<span class="fc" id="L60">            row.add(itemsList.toString());</span>
+            //将频率添加到Row之中
+<span class="fc" id="L62">            row.add(&quot;Frequency::&quot; + r.get(1).toString());</span>
+            //将Row添加到dataList之中
+<span class="fc" id="L64">            dataList.add(row);</span>
+<span class="fc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
+
+    //将每一行Row转化为String[]
+    public static String[] row2rule(Row row) {
+<span class="fc" id="L70">        StringBuilder stringBuilder = new StringBuilder();</span>
+<span class="fc" id="L71">        String[] columns = new String[3];</span>
+        //初始化columns
+<span class="fc" id="L73">        columns[1] = &quot;&quot;;</span>
+<span class="fc" id="L74">        columns[2] = &quot;&quot;;</span>
+        //处理第0列antecedent
+        String temp;
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (Object s : row.getList(0)) {</span>
+<span class="fc" id="L78">            temp = s.toString();</span>
+            //如果前件之中包含有一个非机票类型的属性，则跳过
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            if (temp.charAt(0) != 'T') {</span>
+                //如果前件之中包含有一个非机票类型的属性，则返回空String[]
+<span class="fc" id="L82">                return new String[0];</span>
+            }
+            //否则，将属性添加到antecedent中
+<span class="fc" id="L85">            stringBuilder.append(temp).append(&quot;; &quot;);</span>
+<span class="fc" id="L86">        }</span>
+        //将antecedent转化到columns[0]中
+<span class="fc" id="L88">        columns[0] = stringBuilder.toString();</span>
+<span class="fc" id="L89">        stringBuilder.delete(0, stringBuilder.length());</span>
+        //处理第1列(consequent)
+<span class="fc" id="L91">        temp = row.getList(1).get(0).toString() + &quot;; &quot;;</span>
+        //判断后件是否为机票类型的属性
+        //如果temp是机票类型的属性，则返回空String[]
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (temp.charAt(0) == 'T') {</span>
+<span class="fc" id="L95">            return new String[0];</span>
+        }
+        //否则，将属性添加到columns[1]中
+<span class="fc" id="L98">        columns[1] += temp;</span>
+        //赋值置信度列
+<span class="fc" id="L100">        columns[2] = &quot;Confidence::&quot;+row.get(2).toString();</span>
+        //返回结果
+<span class="fc" id="L102">        return columns;</span>
+    }
+
+    /**
+     * 获取dataset中的数据，并转化为list
+     * @param dataSet 需要转化的Dataset
+     * @return 转化后的list
+     */
+    public static List&lt;List&lt;String&gt;&gt; dataset2stringlist(Dataset&lt;Row&gt; dataSet){
+        //初始化list
+<span class="nc" id="L112">        List&lt;List&lt;String&gt;&gt; list = new ArrayList&lt;&gt;();</span>
+        //遍历dataSet中的每一行，将每一行转化为List&lt;String&gt;
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (Row r : dataSet.collectAsList()) {</span>
+<span class="nc" id="L115">            List&lt;String&gt; temp = new ArrayList&lt;&gt;();</span>
+            //将每个string添加到temp中
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            for (Object s : r.getList(0)) {</span>
+<span class="nc" id="L118">                temp.add(s.toString());</span>
+<span class="nc" id="L119">            }</span>
+            //将temp添加到list中
+<span class="nc" id="L121">            list.add(temp);</span>
+<span class="nc" id="L122">        }</span>
+        //返回list
+<span class="nc" id="L124">        return list;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
