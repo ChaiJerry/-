@@ -7,7 +7,7 @@ import org.junit.*;
 import java.io.*;
 
 import static data_processer.DataConverter.*;
-import static main_system.FPGrowth.*;
+import static data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 public class TestDataConverter {

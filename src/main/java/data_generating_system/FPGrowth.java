@@ -1,4 +1,4 @@
-package main_system;
+package data_generating_system;
 
 import java.io.*;
 import java.util.*;

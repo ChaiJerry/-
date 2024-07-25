@@ -1,4 +1,6 @@
-package main_system;
+package main_class;
+
+import data_generating_system.*;
 
 import java.io.*;
 

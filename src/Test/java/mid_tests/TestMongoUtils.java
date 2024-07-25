@@ -10,7 +10,7 @@ import org.apache.spark.sql.*;
 import org.bson.*;
 import org.junit.*;
 
-import static main_system.FPGrowth.*;
+import static data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 import java.io.*;

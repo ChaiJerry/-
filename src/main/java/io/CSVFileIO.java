@@ -11,7 +11,7 @@ import java.util.logging.*;
 import static data_processer.DataConverter.*;
 import static data_processer.DataParser.*;
 import static io.IOMonitor.*;
-import static main_system.FPGrowth.*;
+import static data_generating_system.FPGrowth.*;
 
 public class CSVFileIO {
 

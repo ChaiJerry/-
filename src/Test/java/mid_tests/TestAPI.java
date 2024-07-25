@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.*;
 
 import static api.API.*;
-import static main_system.FPGrowth.*;
+import static data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 public class TestAPI {
