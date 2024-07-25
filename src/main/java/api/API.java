@@ -4,7 +4,7 @@ import org.apache.spark.sql.*;
 
 import java.util.*;
 
-import static main_system.FPGrowth.*;
+import static data_generating_system.FPGrowth.*;
 
 public class API {
     private API() {}

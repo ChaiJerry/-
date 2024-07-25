@@ -11,6 +11,9 @@ import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 import org.bson.*;
+import org.bson.conversions.*;
+
+import static com.mongodb.client.model.Projections.*;
 import static io.IOMonitor.*;
 
 public class MongoUtils {
@@ -33,6 +36,8 @@ public class MongoUtils {
 
     private static boolean isClosed= false;
 
+    private static String[] ates={"T_CARRIER",
+            "T_GRADE","T_PASSENGER","S_SHOFARE","MONTH","TO"};
 
 
     /*
@@ -205,6 +210,36 @@ public class MongoUtils {
             }
             isClosed = true;
         }
+    }
+
+    public static void baggageSearchDemo(String[] args){
+        initialMongoClient();
+        MongoCollection<Document> collection = mongoDatabase.getCollection("r_Baggage");
+        List<Bson> bsonList = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+            bsonList.add(Filters.eq("antecedent."+ates[i],args[i]));
+        }
+        FindIterable<Document> search= collection.find(Filters.and(bsonList)).projection(fields(include(
+                "consequence", "confidence"), excludeId()));
+        if(search.iterator().hasNext()){
+            System.out.println("有符合条件的规则");
+            System.out.println("推荐"+search.iterator().next().get("consequence"));
+            return;
+        }else{
+            System.out.println("降低标准搜索");
+            for (int i = 0; i < args.length-1; i++) {
+                bsonList.set(i,Filters.eq(ates[i],null));
+                search= collection.find(Filters.and(bsonList))
+                        .projection(fields(include(
+                                "consequence", "confidence"), excludeId()));
+                if(search.iterator().hasNext()){
+                    System.out.println("有符合条件的规则");
+                    System.out.println(search.iterator().next());
+                    return;
+                }
+            }
+        }
+        System.out.println("没有符合条件的规则!!!");
     }
 
 }
