@@ -123,4 +123,24 @@ public class DataConverter {
         //返回list
         return list;
     }
+
+    /**
+     * 根据列表中每个“有效”的元素位置设置位。
+     * @param list 列表
+     * @return 一个整数，其中列表中的每个有效元素位置都对应一个被设置的位
+     */
+    public static <T> int listToBits(List<T> list) {
+        int result = 0;
+        int size = list.size();
+        for (int i = 0; i < size; i++) {
+            if (list.get(i) != null) {
+                result |= (1 << i);
+            }
+        }
+        return result;
+    }
+
+    public static int setBitPos2zero(int num, int bitPos) {
+        return num & ~(1 << bitPos);
+    }
 }

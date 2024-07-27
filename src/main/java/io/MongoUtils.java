@@ -10,21 +10,23 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.logging.*;
-import org.bson.*;
-import org.bson.conversions.*;
 
-import static com.mongodb.client.model.Projections.*;
+import org.bson.*;
+
 import static io.IOMonitor.*;
 
 public class MongoUtils {
-    private MongoUtils(){
+    private MongoUtils() {
     }
+
     private static MongoClient mongoClient = null;
-    private static MongoDatabase mongoDatabase;
+    private static MongoDatabase mongoOrdersDatabase;
+    private static MongoDatabase mongoKnowledgeDatabase;
     private static final Properties properties;
     private static final String HOST;
     private static final int PORT;
-    private static final String DB_NAME;
+    private static final String ORDERS_DB_NAME;
+    private static final String KNOWLEDGE_DB_NAME;
     private static final String PASSWORD;
     private static final String USER;
     private static final String DB_SOURCE;
@@ -34,38 +36,28 @@ public class MongoUtils {
     //训练的起始时间和结束时间
     private static String startTime;
 
-    private static boolean isClosed= false;
-
-    private static String[] ates={"T_CARRIER",
-            "T_GRADE","T_PASSENGER","S_SHOFARE","MONTH","TO"};
-
+    private static boolean isClosed = false;
 
     /*
      * 读取配置文件
      */
-    static{
+    static {
         properties = new Properties();
-        try{
+        try {
             InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream("MongoDB.properties");
             properties.load(stream);
-        }catch (IOException e){
+        } catch (IOException e) {
             logger.info("读取配置文件失败！" + e.getClass().getName() + ": " + e.getMessage());
         }
         HOST = properties.getProperty("host");
-        DB_NAME = properties.getProperty("dbname");
+        ORDERS_DB_NAME = properties.getProperty("OrdersDbname");
+        KNOWLEDGE_DB_NAME = properties.getProperty("KnowledgeDbname");
         PORT = Integer.parseInt(properties.getProperty("port"));
         USER = properties.getProperty("user");
         PASSWORD = properties.getProperty("password");
         DB_SOURCE = properties.getProperty("dbSource");
         trainingNumber = properties.getProperty(TRAINING_NUMBER_FIELD);
         initialMongoClient();
-    }
-
-    public static MongoCollection<Document> getRulesCollection(int type){
-        //获取集合名称
-        String collectionName = "r_"+FULL_NAMES[type];
-        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
-        return collection;
     }
 
     /*
@@ -88,11 +80,12 @@ public class MongoUtils {
             //通过连接认证获取MongoDB连接
             mongoClient = new MongoClient(addresses, credentials);
             //获取数据库
-            mongoDatabase = mongoClient.getDatabase(DB_NAME);
+            mongoKnowledgeDatabase = mongoClient.getDatabase(KNOWLEDGE_DB_NAME);
+            mongoOrdersDatabase = mongoClient.getDatabase(ORDERS_DB_NAME);
             //获取训练编号,若是auto则自动获取实现自增
-            if(trainingNumber.equals("auto")){
+            if (trainingNumber.equals("auto")) {
                 //获取TrainingController集合
-                MongoCollection<Document> collection = mongoDatabase.getCollection("TrainingController");
+                MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("TrainingController");
                 //查询最近的TrainingNumber
                 FindIterable<Document> records = collection
                         .find().sort(Sorts.descending(TRAINING_NUMBER_FIELD));
@@ -104,7 +97,7 @@ public class MongoUtils {
                     trainingNumber = Integer.toString(number);
                     String info = "自动获取训练编号：" + number;
                     logger.info(info);
-                }else {
+                } else {
                     //否则自动获取1
                     logger.info("自动获取训练编号：1");
                     trainingNumber = "1";
@@ -116,19 +109,57 @@ public class MongoUtils {
         }
     }
 
+    public static void createOrdersCollections() {
+        for (String name : FULL_NAMES) {
+            //创建集合
+            mongoOrdersDatabase.createCollection(name + "Orders");
+            if (!Objects.equals(name, FULL_NAMES[TICKET])) {
+                mongoOrdersDatabase.createCollection(FULL_NAMES[TICKET]+"-" + name + "Orders");
+            }
+        }
+    }
+
+    public static void ordersMap2DB(Map<String, List<String>> ordersMap ,int type){
+        HeaderStorage headerStorage = getHeaderStorage()[type];
+        //获取集合名称
+        String collectionName = FULL_NAMES[type] + "Orders";
+        MongoCollection<Document> collection = mongoOrdersDatabase.getCollection(collectionName);
+        for (Map.Entry<String, List<String>> entry : ordersMap.entrySet()) {
+            Document doc = new Document();
+            doc.append("orderId", entry.getKey());
+            List<String> values = entry.getValue();
+            if (!values.isEmpty()) {
+                //借用频繁项集的存储结构，将属性存入
+                doc.append("attributes", headerStorage.getFrequentItemSetsDocument(values));
+            }
+            collection.insertOne(doc);
+        }
+    }
+
+    public static MongoCollection<Document> getRulesCollection(int type) {
+        //获取集合名称
+        String collectionName = "r_" + FULL_NAMES[type];
+        return mongoKnowledgeDatabase.getCollection(collectionName);
+    }
+
+    public static MongoCollection<Document> getOrdersCollection(int type) {
+        //获取集合名称
+        String collectionName = FULL_NAMES[type] + "Orders";
+        return mongoOrdersDatabase.getCollection(collectionName);
+    }
 
 
     /**
      * 读取规则，并存入MongoDB
      */
-    public static void rules2db(Dataset<Row> rules, int type){
+    public static void rules2db(Dataset<Row> rules, int type) {
         for (Row r : rules.collectAsList()) {
             //处理第0列antecedent
             Document doc = new Document();
             Document antecedent = new Document();
             //得到对应的集合
-            MongoCollection<Document> collection = mongoDatabase.getCollection("r_"+FULL_NAMES[type]);
-            if (headerStorage[TICKET].getRulesDocument(r.getList(0),antecedent)) {
+            MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + FULL_NAMES[type]);
+            if (headerStorage[TICKET].getRulesDocument(r.getList(0), antecedent)) {
                 doc.append("antecedent", antecedent);
                 //处理(consequent)
                 String[] parts = r.getList(1).get(0).toString().split(":");
@@ -137,7 +168,7 @@ public class MongoUtils {
                     continue;
                 }
                 //添加consequent
-                doc.append("consequence", parts[1]+":"+parts[2]);
+                doc.append("consequence", parts[1] + ":" + parts[2]);
                 //添加置信度
                 doc.append("confidence", Float.parseFloat(r.get(2).toString()));
                 //添加训练编号
@@ -148,8 +179,8 @@ public class MongoUtils {
         }
     }
 
-    public static void frequentItemSets2db(Dataset<Row> itemSets, int type){
-        MongoCollection<Document> collection = mongoDatabase.getCollection("f_"+FULL_NAMES[type]);
+    public static void frequentItemSets2db(Dataset<Row> itemSets, int type) {
+        MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + FULL_NAMES[type]);
         for (Row r : itemSets.collectAsList()) {
             //写入数据库的doc
             Document doc = new Document();
@@ -160,15 +191,15 @@ public class MongoUtils {
             for (Object s : r.getList(0)) {
                 String temp = s.toString();
                 //如果频繁项集是机票类型的属性，则加入ticketAttributes
-                if(temp.charAt(0) == 'T' ){
+                if (temp.charAt(0) == 'T') {
                     ticketAttributes.add(temp);
-                }else {
+                } else {
                     //否则加入goodAttributes
                     goodAttributes.add(temp);
                 }
             }
             //如果ticketAttributes或goodAttributes为空则无意义，跳过
-            if(ticketAttributes.isEmpty() || goodAttributes.isEmpty()) {
+            if (ticketAttributes.isEmpty() || goodAttributes.isEmpty()) {
                 continue;
             }
             //将ticketAttributes添加到doc
@@ -187,12 +218,12 @@ public class MongoUtils {
     /*
      * 关闭MongoDB连接
      */
-    public static void closeMongoClient(int orderNumber,String comments,float minSupport){
+    public static void closeMongoClient(int orderNumber, String comments, float minSupport) {
         if (!isClosed) {
             //得到当前时间作为结束时间
             String endTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
             //获取TrainingController集合
-            MongoCollection<Document> collection = mongoDatabase.getCollection("TrainingController");
+            MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("TrainingController");
             //写入训练信息
             Document doc = new Document();
             //训练编号以整数形式存储
@@ -209,78 +240,14 @@ public class MongoUtils {
             doc.append("minSupport", minSupport);
             //将doc加入数据库
             collection.insertOne(doc);
-            try{
+            try {
                 //关闭MongoDB连接
                 mongoClient.close();
-            }catch(Exception e){
+            } catch (Exception e) {
                 logger.info("关闭MongoDB连接失败！" + e.getClass().getName() + ": " + e.getMessage());
             }
             isClosed = true;
         }
     }
-
-
-
-    public static void bsonSearchDemo(List<Bson> bsonList,List<Bson> fixedList,MongoCollection<Document> collection,String[] args){
-
-        FindIterable<Document> search= collection.find(Filters.and(bsonList)).projection(fields(include(
-                "consequence", "confidence"), excludeId()));
-        if(search.iterator().hasNext()){
-            System.out.println("有符合条件的规则");
-            System.out.println("推荐"+search.iterator().next().get("consequence"));
-            return;
-        }else{
-            System.out.println("降低标准搜索");
-            for (int i = 0; i < args.length-1; i++) {
-                bsonList.set(i,Filters.eq(ates[i],null));
-                search= collection.find(Filters.and(bsonList))
-                        .projection(fields(include(
-                                "consequence", "confidence"), excludeId()));
-                if(search.iterator().hasNext()){
-                    System.out.println("有符合条件的规则");
-                    System.out.println(search.iterator().next());
-                    return;
-                }
-            }
-        }
-        System.out.println("没有符合条件的规则!!!");
-    }
-
-    public static void baggageSearchDemo(String[] args){
-        MongoCollection<Document> collection = mongoDatabase.getCollection("r_Baggage");
-        List<Bson> bsonList = new ArrayList<>();
-        for (int i = 0; i < args.length; i++) {
-            bsonList.add(Filters.eq("antecedent."+ates[i],args[i]));
-        }
-
-        FindIterable<Document> search= collection.find(Filters.and(bsonList)).projection(fields(include(
-                "consequence", "confidence"), excludeId()));
-        if(search.iterator().hasNext()){
-            System.out.println("有符合条件的规则");
-            System.out.println("推荐"+search.iterator().next().get("consequence"));
-            return;
-        }else{
-            System.out.println("降低标准搜索");
-            for (int i = 0; i < args.length-1; i++) {
-                bsonList.set(i,Filters.eq(ates[i],null));
-                search= collection.find(Filters.and(bsonList))
-                        .projection(fields(include(
-                                "consequence", "confidence"), excludeId()));
-                if(search.iterator().hasNext()){
-                    System.out.println("有符合条件的规则");
-                    System.out.println(search.iterator().next());
-                    return;
-                }
-            }
-        }
-        System.out.println("没有符合条件的规则!!!");
-    }
-    //问题一，如何通过MongoDB搜索？
-    //方案一：从通过所有机票属性搜索到通过一个机票属性搜索，通过递归逐渐减少满足的机票属性，逐渐找出所有商品属性（时间复杂度会比较高）
-    //方案二：状态压缩算法搜索，逐渐找出所有可以得到的置信度最高的商品属性（时间复杂度相对较低）
-    //方案三：通过手写搜索的方法，找出所有商品属性（时间复杂度相对最低）
-    //问题二，找到的商品属性将处理成怎样的结果？
-    //从商品属性搜索到商品还是直接用属性？
-
 
 }

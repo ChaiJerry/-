@@ -11,7 +11,7 @@ import java.util.logging.*;
 import static data_processer.DataConverter.*;
 import static data_processer.DataParser.*;
 import static io.IOMonitor.*;
-import static main_system.FPGrowth.*;
+import static data_generating_system.FPGrowth.*;
 
 public class CSVFileIO {
 
@@ -167,6 +167,11 @@ public class CSVFileIO {
 <span class="nc" id="L167">        csvWriter.close();</span>
 <span class="nc" id="L168">    }</span>
 
+
+    public Map&lt;String, List&lt;String&gt;&gt; read(int type) throws IOException {
+<span class="fc" id="L172">        return CSVFileIO.read(csvPaths[type], types[type]);</span>
+    }
+
     /**
      * 读取CSV文件
      * @param path 文件路径
@@ -174,83 +179,84 @@ public class CSVFileIO {
      * @return 返回订单号和订单对应的商品属性之间的键值对 Map&lt;String, List&lt;String&gt;&gt;
      */
     public static Map&lt;String, List&lt;String&gt;&gt; read(String path, String type) throws IOException {
-<span class="fc" id="L177">        HashMap&lt;String, List&lt;String&gt;&gt; map = new HashMap&lt;&gt;();</span>
+        // 创建HashMap，key为订单号，value为订单对应的属性键值对
+<span class="fc" id="L183">        HashMap&lt;String, List&lt;String&gt;&gt; map = new HashMap&lt;&gt;();</span>
         // 第一参数：读取文件的路径 第二个参数：分隔符 第三个参数：字符集
-<span class="fc" id="L179">        CsvReader csvReader = new CsvReader(path, ',', StandardCharsets.UTF_8);</span>
+<span class="fc" id="L185">        CsvReader csvReader = new CsvReader(path, ',', StandardCharsets.UTF_8);</span>
         // 读取表头
-<span class="fc" id="L181">        csvReader.readHeaders();</span>
+<span class="fc" id="L187">        csvReader.readHeaders();</span>
         //通过type判断调用哪个方法
         //将表头存入HeaderStorage之中，方便后续存入数据库
-<span class="fc" id="L184">        headerStorage[type2index.get(type)] = new HeaderStorage();</span>
+<span class="fc" id="L190">        headerStorage[type2index.get(type)] = new HeaderStorage();</span>
         //得到对应的属性头类
-<span class="fc" id="L186">        HeaderStorage header = headerStorage[type2index.get(type)];</span>
-<span class="fc bfc" id="L187" title="All 2 branches covered.">        for(int i=1;i&lt;csvReader.getHeaderCount();i++) {</span>
+<span class="fc" id="L192">        HeaderStorage header = headerStorage[type2index.get(type)];</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        for(int i=1;i&lt;csvReader.getHeaderCount();i++) {</span>
             //将表头存入HeaderStorage之中，方便后续存入数据库
-<span class="fc" id="L189">            header.addHeader(csvReader.getHeader(i));</span>
+<span class="fc" id="L195">            header.addHeader(csvReader.getHeader(i));</span>
         }
-<span class="pc bpc" id="L191" title="5 of 7 branches missed.">        switch (type) {</span>
+<span class="pc bpc" id="L197" title="5 of 7 branches missed.">        switch (type) {</span>
             case &quot;M&quot;:
                 //处理餐食数据
-<span class="nc bnc" id="L194" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
                     //订单数量计数
-<span class="nc" id="L196">                    orderNumber++;</span>
-<span class="nc" id="L197">                    dealM(csvReader, map);</span>
+<span class="nc" id="L202">                    orderNumber++;</span>
+<span class="nc" id="L203">                    dealM(csvReader, map);</span>
                 }
                 break;
             case &quot;T&quot;:
                 //特殊处理机票数据的属性
                 //添加处理后得到的属性头
-<span class="fc" id="L203">                header.addHeader(&quot;MONTH&quot;);</span>
-<span class="fc" id="L204">                header.addHeader(&quot;TO&quot;);</span>
+<span class="fc" id="L209">                header.addHeader(&quot;MONTH&quot;);</span>
+<span class="fc" id="L210">                header.addHeader(&quot;TO&quot;);</span>
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
-<span class="fc" id="L207">                header.removeHeader(&quot;T_VOYAGE&quot;);</span>
+<span class="fc" id="L213">                header.removeHeader(&quot;T_VOYAGE&quot;);</span>
                 //遍历csv每一行中的内容
-<span class="fc bfc" id="L209" title="All 2 branches covered.">                while (csvReader.readRecord()) {</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">                while (csvReader.readRecord()) {</span>
                     //订单数量计数
-<span class="fc" id="L211">                    orderNumber++;</span>
-<span class="fc" id="L212">                    dealT(csvReader, map);</span>
+<span class="fc" id="L217">                    orderNumber++;</span>
+<span class="fc" id="L218">                    dealT(csvReader, map);</span>
                 }
                 break;
             case &quot;B&quot;:
                 //处理行李数据
-<span class="nc bnc" id="L217" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
                     //订单数量计数
-<span class="nc" id="L219">                    orderNumber++;</span>
-<span class="nc" id="L220">                    dealB(csvReader, map);</span>
+<span class="nc" id="L225">                    orderNumber++;</span>
+<span class="nc" id="L226">                    dealB(csvReader, map);</span>
                 }
                 break;
             case &quot;H&quot;:
                 //删除入住和退房时间属性头
-<span class="fc" id="L225">                header.removeHeader(&quot;IN_DATE&quot;);</span>
-<span class="fc" id="L226">                header.removeHeader(&quot;OUT_DATE&quot;);</span>
+<span class="fc" id="L231">                header.removeHeader(&quot;IN_DATE&quot;);</span>
+<span class="fc" id="L232">                header.removeHeader(&quot;OUT_DATE&quot;);</span>
                 //处理酒店数据
-<span class="fc bfc" id="L228" title="All 2 branches covered.">                while (csvReader.readRecord()) {</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">                while (csvReader.readRecord()) {</span>
                     //订单数量计数
-<span class="fc" id="L230">                    orderNumber++;</span>
-<span class="fc" id="L231">                    dealH(csvReader, map);</span>
+<span class="fc" id="L236">                    orderNumber++;</span>
+<span class="fc" id="L237">                    dealH(csvReader, map);</span>
                 }
                 break;
             case &quot;I&quot;:
                 //处理保险数据
-<span class="nc bnc" id="L236" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
                     //订单数量计数
-<span class="nc" id="L238">                    orderNumber++;</span>
-<span class="nc" id="L239">                    dealI(csvReader, map);</span>
+<span class="nc" id="L244">                    orderNumber++;</span>
+<span class="nc" id="L245">                    dealI(csvReader, map);</span>
                 }
                 break;
             case &quot;S&quot;:
                 //处理座位数据
-<span class="nc bnc" id="L244" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">                while (csvReader.readRecord()) {</span>
                     //订单数量计数
-<span class="nc" id="L246">                    orderNumber++;</span>
-<span class="nc" id="L247">                    dealS(csvReader, map);</span>
+<span class="nc" id="L252">                    orderNumber++;</span>
+<span class="nc" id="L253">                    dealS(csvReader, map);</span>
                 }
                 break;
             default:
                 break;
         }
-<span class="fc" id="L253">        return map;</span>
+<span class="fc" id="L259">        return map;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

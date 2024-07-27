@@ -11,12 +11,15 @@ import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 import org.bson.*;
+import org.bson.conversions.*;
+
+import static com.mongodb.client.model.Projections.*;
 import static io.IOMonitor.*;
 
 public class MongoUtils {
     private MongoUtils(){
     }
-<span class="fc" id="L19">    private static MongoClient mongoClient = null;</span>
+<span class="fc" id="L22">    private static MongoClient mongoClient = null;</span>
     private static MongoDatabase mongoDatabase;
     private static final Properties properties;
     private static final String HOST;
@@ -25,84 +28,93 @@ public class MongoUtils {
     private static final String PASSWORD;
     private static final String USER;
     private static final String DB_SOURCE;
-<span class="fc" id="L28">    private static final Logger logger = Logger.getLogger(MongoUtils.class.getName());</span>
+<span class="fc" id="L31">    private static final Logger logger = Logger.getLogger(MongoUtils.class.getName());</span>
     private static String trainingNumber;
     private static final String TRAINING_NUMBER_FIELD = &quot;trainingNumber&quot;;
     //训练的起始时间和结束时间
     private static String startTime;
 
-<span class="fc" id="L34">    private static boolean isClosed= false;</span>
+<span class="fc" id="L37">    private static boolean isClosed= false;</span>
 
+<span class="fc" id="L39">    private static String[] ates={&quot;T_CARRIER&quot;,</span>
+            &quot;T_GRADE&quot;,&quot;T_PASSENGER&quot;,&quot;S_SHOFARE&quot;,&quot;MONTH&quot;,&quot;TO&quot;};
 
 
     /*
      * 读取配置文件
      */
     static{
-<span class="fc" id="L42">        properties = new Properties();</span>
+<span class="fc" id="L47">        properties = new Properties();</span>
         try{
-<span class="fc" id="L44">            InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream(&quot;MongoDB.properties&quot;);</span>
-<span class="fc" id="L45">            properties.load(stream);</span>
-<span class="nc" id="L46">        }catch (IOException e){</span>
-<span class="nc" id="L47">            logger.info(&quot;读取配置文件失败！&quot; + e.getClass().getName() + &quot;: &quot; + e.getMessage());</span>
-<span class="fc" id="L48">        }</span>
-<span class="fc" id="L49">        HOST = properties.getProperty(&quot;host&quot;);</span>
-<span class="fc" id="L50">        DB_NAME = properties.getProperty(&quot;dbname&quot;);</span>
-<span class="fc" id="L51">        PORT = Integer.parseInt(properties.getProperty(&quot;port&quot;));</span>
-<span class="fc" id="L52">        USER = properties.getProperty(&quot;user&quot;);</span>
-<span class="fc" id="L53">        PASSWORD = properties.getProperty(&quot;password&quot;);</span>
-<span class="fc" id="L54">        DB_SOURCE = properties.getProperty(&quot;dbSource&quot;);</span>
-<span class="fc" id="L55">        trainingNumber = properties.getProperty(TRAINING_NUMBER_FIELD);</span>
-<span class="fc" id="L56">        initialMongoClient();</span>
-<span class="fc" id="L57">    }</span>
+<span class="fc" id="L49">            InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream(&quot;MongoDB.properties&quot;);</span>
+<span class="fc" id="L50">            properties.load(stream);</span>
+<span class="nc" id="L51">        }catch (IOException e){</span>
+<span class="nc" id="L52">            logger.info(&quot;读取配置文件失败！&quot; + e.getClass().getName() + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L53">        }</span>
+<span class="fc" id="L54">        HOST = properties.getProperty(&quot;host&quot;);</span>
+<span class="fc" id="L55">        DB_NAME = properties.getProperty(&quot;dbname&quot;);</span>
+<span class="fc" id="L56">        PORT = Integer.parseInt(properties.getProperty(&quot;port&quot;));</span>
+<span class="fc" id="L57">        USER = properties.getProperty(&quot;user&quot;);</span>
+<span class="fc" id="L58">        PASSWORD = properties.getProperty(&quot;password&quot;);</span>
+<span class="fc" id="L59">        DB_SOURCE = properties.getProperty(&quot;dbSource&quot;);</span>
+<span class="fc" id="L60">        trainingNumber = properties.getProperty(TRAINING_NUMBER_FIELD);</span>
+<span class="fc" id="L61">        initialMongoClient();</span>
+<span class="fc" id="L62">    }</span>
+
+    public static MongoCollection&lt;Document&gt; getRulesCollection(int type){
+        //获取集合名称
+<span class="nc" id="L66">        String collectionName = &quot;r_&quot;+FULL_NAMES[type];</span>
+<span class="nc" id="L67">        MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(collectionName);</span>
+<span class="nc" id="L68">        return collection;</span>
+    }
 
     /*
      * 初始化MongoDB连接
      */
     private static void initialMongoClient() {
         //得到当前时间作为开始时间
-<span class="fc" id="L64">        startTime = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).format(new Date());</span>
+<span class="fc" id="L76">        startTime = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).format(new Date());</span>
         try {
             //获取ip和端口号
-<span class="fc" id="L67">            ServerAddress serverAddress = new ServerAddress(HOST, PORT);</span>
-<span class="fc" id="L68">            List&lt;ServerAddress&gt; addresses = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L69">            addresses.add(serverAddress);</span>
+<span class="fc" id="L79">            ServerAddress serverAddress = new ServerAddress(HOST, PORT);</span>
+<span class="fc" id="L80">            List&lt;ServerAddress&gt; addresses = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L81">            addresses.add(serverAddress);</span>
             //MongoCredential.createScramSha1Credential()三个参数分别为 用户名 数据库名称 密码
-<span class="fc" id="L71">            MongoCredential credential = MongoCredential.createScramSha1Credential(USER,</span>
-<span class="fc" id="L72">                    DB_SOURCE, PASSWORD.toCharArray());</span>
-<span class="fc" id="L73">            List&lt;MongoCredential&gt; credentials = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L83">            MongoCredential credential = MongoCredential.createScramSha1Credential(USER,</span>
+<span class="fc" id="L84">                    DB_SOURCE, PASSWORD.toCharArray());</span>
+<span class="fc" id="L85">            List&lt;MongoCredential&gt; credentials = new ArrayList&lt;&gt;();</span>
             //将认证信息添加到列表
-<span class="fc" id="L75">            credentials.add(credential);</span>
+<span class="fc" id="L87">            credentials.add(credential);</span>
             //通过连接认证获取MongoDB连接
-<span class="fc" id="L77">            mongoClient = new MongoClient(addresses, credentials);</span>
+<span class="fc" id="L89">            mongoClient = new MongoClient(addresses, credentials);</span>
             //获取数据库
-<span class="fc" id="L79">            mongoDatabase = mongoClient.getDatabase(DB_NAME);</span>
+<span class="fc" id="L91">            mongoDatabase = mongoClient.getDatabase(DB_NAME);</span>
             //获取训练编号,若是auto则自动获取实现自增
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if(trainingNumber.equals(&quot;auto&quot;)){</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">            if(trainingNumber.equals(&quot;auto&quot;)){</span>
                 //获取TrainingController集合
-<span class="fc" id="L83">                MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;TrainingController&quot;);</span>
+<span class="fc" id="L95">                MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;TrainingController&quot;);</span>
                 //查询最近的TrainingNumber
-<span class="fc" id="L85">                FindIterable&lt;Document&gt; records = collection</span>
-<span class="fc" id="L86">                        .find().sort(Sorts.descending(TRAINING_NUMBER_FIELD));</span>
+<span class="fc" id="L97">                FindIterable&lt;Document&gt; records = collection</span>
+<span class="fc" id="L98">                        .find().sort(Sorts.descending(TRAINING_NUMBER_FIELD));</span>
                 //如果存在训练编号，则自动获取
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">                if (records.iterator().hasNext()) {</span>
-<span class="fc" id="L89">                    Document doc = records.iterator().next();</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">                if (records.iterator().hasNext()) {</span>
+<span class="fc" id="L101">                    Document doc = records.iterator().next();</span>
                     //获取训练编号
-<span class="fc" id="L91">                    int number = Integer.parseInt(doc.get(TRAINING_NUMBER_FIELD).toString()) + 1;</span>
-<span class="fc" id="L92">                    trainingNumber = Integer.toString(number);</span>
-<span class="fc" id="L93">                    String info = &quot;自动获取训练编号：&quot; + number;</span>
-<span class="fc" id="L94">                    logger.info(info);</span>
-<span class="fc" id="L95">                }else {</span>
+<span class="fc" id="L103">                    int number = Integer.parseInt(doc.get(TRAINING_NUMBER_FIELD).toString()) + 1;</span>
+<span class="fc" id="L104">                    trainingNumber = Integer.toString(number);</span>
+<span class="fc" id="L105">                    String info = &quot;自动获取训练编号：&quot; + number;</span>
+<span class="fc" id="L106">                    logger.info(info);</span>
+<span class="fc" id="L107">                }else {</span>
                     //否则自动获取1
-<span class="nc" id="L97">                    logger.info(&quot;自动获取训练编号：1&quot;);</span>
-<span class="nc" id="L98">                    trainingNumber = &quot;1&quot;;</span>
+<span class="nc" id="L109">                    logger.info(&quot;自动获取训练编号：1&quot;);</span>
+<span class="nc" id="L110">                    trainingNumber = &quot;1&quot;;</span>
                 }
             }
-<span class="fc" id="L101">            logger.info(&quot;MongoDB连接成功！&quot;);</span>
-<span class="nc" id="L102">        } catch (Exception e) {</span>
-<span class="nc" id="L103">            logger.info(&quot;MongoDB连接失败！&quot; + e.getClass().getName() + &quot;: &quot; + e.getMessage());</span>
-<span class="fc" id="L104">        }</span>
-<span class="fc" id="L105">    }</span>
+<span class="fc" id="L113">            logger.info(&quot;MongoDB连接成功！&quot;);</span>
+<span class="nc" id="L114">        } catch (Exception e) {</span>
+<span class="nc" id="L115">            logger.info(&quot;MongoDB连接失败！&quot; + e.getClass().getName() + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L116">        }</span>
+<span class="fc" id="L117">    }</span>
 
 
 
@@ -110,102 +122,166 @@ public class MongoUtils {
      * 读取规则，并存入MongoDB
      */
     public static void rules2db(Dataset&lt;Row&gt; rules, int type){
-<span class="fc bfc" id="L113" title="All 2 branches covered.">        for (Row r : rules.collectAsList()) {</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        for (Row r : rules.collectAsList()) {</span>
             //处理第0列antecedent
-<span class="fc" id="L115">            Document doc = new Document();</span>
-<span class="fc" id="L116">            Document antecedent = new Document();</span>
+<span class="fc" id="L127">            Document doc = new Document();</span>
+<span class="fc" id="L128">            Document antecedent = new Document();</span>
             //得到对应的集合
-<span class="fc" id="L118">            MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;r_&quot;+FULL_NAMES[type]);</span>
-<span class="fc bfc" id="L119" title="All 2 branches covered.">            if (headerStorage[TICKET].getRulesDocument(r.getList(0),antecedent)) {</span>
-<span class="fc" id="L120">                doc.append(&quot;antecedent&quot;, antecedent);</span>
+<span class="fc" id="L130">            MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;r_&quot;+FULL_NAMES[type]);</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            if (headerStorage[TICKET].getRulesDocument(r.getList(0),antecedent)) {</span>
+<span class="fc" id="L132">                doc.append(&quot;antecedent&quot;, antecedent);</span>
                 //处理(consequent)
-<span class="fc" id="L122">                String[] parts = r.getList(1).get(0).toString().split(&quot;:&quot;);</span>
+<span class="fc" id="L134">                String[] parts = r.getList(1).get(0).toString().split(&quot;:&quot;);</span>
                 //如果consequent是机票类型的属性，则跳过
-<span class="fc bfc" id="L124" title="All 2 branches covered.">                if (parts[0].charAt(0) == 'T') {</span>
-<span class="fc" id="L125">                    continue;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                if (parts[0].charAt(0) == 'T') {</span>
+<span class="fc" id="L137">                    continue;</span>
                 }
                 //添加consequent
-<span class="fc" id="L128">                doc.append(&quot;consequence&quot;, parts[1]+&quot;:&quot;+parts[2]);</span>
+<span class="fc" id="L140">                doc.append(&quot;consequence&quot;, parts[1]+&quot;:&quot;+parts[2]);</span>
                 //添加置信度
-<span class="fc" id="L130">                doc.append(&quot;confidence&quot;, Float.parseFloat(r.get(2).toString()));</span>
+<span class="fc" id="L142">                doc.append(&quot;confidence&quot;, Float.parseFloat(r.get(2).toString()));</span>
                 //添加训练编号
-<span class="fc" id="L132">                doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));</span>
+<span class="fc" id="L144">                doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));</span>
                 //加入数据库
-<span class="fc" id="L134">                collection.insertOne(doc);</span>
+<span class="fc" id="L146">                collection.insertOne(doc);</span>
             }
-<span class="fc" id="L136">        }</span>
-<span class="fc" id="L137">    }</span>
+<span class="fc" id="L148">        }</span>
+<span class="fc" id="L149">    }</span>
 
     public static void frequentItemSets2db(Dataset&lt;Row&gt; itemSets, int type){
-<span class="fc" id="L140">        MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;f_&quot;+FULL_NAMES[type]);</span>
-<span class="fc bfc" id="L141" title="All 2 branches covered.">        for (Row r : itemSets.collectAsList()) {</span>
+<span class="fc" id="L152">        MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;f_&quot;+FULL_NAMES[type]);</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (Row r : itemSets.collectAsList()) {</span>
             //写入数据库的doc
-<span class="fc" id="L143">            Document doc = new Document();</span>
+<span class="fc" id="L155">            Document doc = new Document();</span>
             //初始化ticketAttributes和goodAttributes用于存储频繁项集
-<span class="fc" id="L145">            List&lt;String&gt; ticketAttributes = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L146">            List&lt;String&gt; goodAttributes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L157">            List&lt;String&gt; ticketAttributes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L158">            List&lt;String&gt; goodAttributes = new ArrayList&lt;&gt;();</span>
             //得到频繁项集
-<span class="fc bfc" id="L148" title="All 2 branches covered.">            for (Object s : r.getList(0)) {</span>
-<span class="fc" id="L149">                String temp = s.toString();</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            for (Object s : r.getList(0)) {</span>
+<span class="fc" id="L161">                String temp = s.toString();</span>
                 //如果频繁项集是机票类型的属性，则加入ticketAttributes
-<span class="fc bfc" id="L151" title="All 2 branches covered.">                if(temp.charAt(0) == 'T' ){</span>
-<span class="fc" id="L152">                    ticketAttributes.add(temp);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">                if(temp.charAt(0) == 'T' ){</span>
+<span class="fc" id="L164">                    ticketAttributes.add(temp);</span>
                 }else {
                     //否则加入goodAttributes
-<span class="fc" id="L155">                    goodAttributes.add(temp);</span>
+<span class="fc" id="L167">                    goodAttributes.add(temp);</span>
                 }
-<span class="fc" id="L157">            }</span>
+<span class="fc" id="L169">            }</span>
             //如果ticketAttributes或goodAttributes为空则无意义，跳过
-<span class="fc bfc" id="L159" title="All 4 branches covered.">            if(ticketAttributes.isEmpty() || goodAttributes.isEmpty()) {</span>
-<span class="fc" id="L160">                continue;</span>
+<span class="fc bfc" id="L171" title="All 4 branches covered.">            if(ticketAttributes.isEmpty() || goodAttributes.isEmpty()) {</span>
+<span class="fc" id="L172">                continue;</span>
             }
             //将ticketAttributes添加到doc
-<span class="fc" id="L163">            doc.append(&quot;ticketAttributes&quot;, headerStorage[TICKET].getFrequentItemSetsDocument(ticketAttributes));</span>
+<span class="fc" id="L175">            doc.append(&quot;ticketAttributes&quot;, headerStorage[TICKET].getFrequentItemSetsDocument(ticketAttributes));</span>
             //将goodAttributes添加到doc
-<span class="fc" id="L165">            doc.append(&quot;itemAttributes&quot;, headerStorage[type].getFrequentItemSetsDocument(goodAttributes));</span>
+<span class="fc" id="L177">            doc.append(&quot;itemAttributes&quot;, headerStorage[type].getFrequentItemSetsDocument(goodAttributes));</span>
             //添加训练编号
-<span class="fc" id="L167">            doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));</span>
+<span class="fc" id="L179">            doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));</span>
             //添加频次
-<span class="fc" id="L169">            doc.append(&quot;Freq&quot;, Integer.parseInt(r.get(1).toString()));</span>
+<span class="fc" id="L181">            doc.append(&quot;Freq&quot;, Integer.parseInt(r.get(1).toString()));</span>
             //加入数据库
-<span class="fc" id="L171">            collection.insertOne(doc);</span>
-<span class="fc" id="L172">        }</span>
-<span class="fc" id="L173">    }</span>
+<span class="fc" id="L183">            collection.insertOne(doc);</span>
+<span class="fc" id="L184">        }</span>
+<span class="fc" id="L185">    }</span>
 
     /*
      * 关闭MongoDB连接
      */
     public static void closeMongoClient(int orderNumber,String comments,float minSupport){
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        if (!isClosed) {</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (!isClosed) {</span>
             //得到当前时间作为结束时间
-<span class="fc" id="L181">            String endTime = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).format(new Date());</span>
+<span class="fc" id="L193">            String endTime = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;).format(new Date());</span>
             //获取TrainingController集合
-<span class="fc" id="L183">            MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;TrainingController&quot;);</span>
+<span class="fc" id="L195">            MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;TrainingController&quot;);</span>
             //写入训练信息
-<span class="fc" id="L185">            Document doc = new Document();</span>
+<span class="fc" id="L197">            Document doc = new Document();</span>
             //训练编号以整数形式存储
-<span class="fc" id="L187">            doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));</span>
+<span class="fc" id="L199">            doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));</span>
             //训练开始时间
-<span class="fc" id="L189">            doc.append(&quot;startTime&quot;, startTime);</span>
+<span class="fc" id="L201">            doc.append(&quot;startTime&quot;, startTime);</span>
             //训练结束时间
-<span class="fc" id="L191">            doc.append(&quot;endTime&quot;, endTime);</span>
+<span class="fc" id="L203">            doc.append(&quot;endTime&quot;, endTime);</span>
             //训练的订单数量
-<span class="fc" id="L193">            doc.append(&quot;orderNumber&quot;, orderNumber);</span>
+<span class="fc" id="L205">            doc.append(&quot;orderNumber&quot;, orderNumber);</span>
             //备注
-<span class="fc" id="L195">            doc.append(&quot;comments&quot;, comments);</span>
+<span class="fc" id="L207">            doc.append(&quot;comments&quot;, comments);</span>
             //最小支持度
-<span class="fc" id="L197">            doc.append(&quot;minSupport&quot;, minSupport);</span>
+<span class="fc" id="L209">            doc.append(&quot;minSupport&quot;, minSupport);</span>
             //将doc加入数据库
-<span class="fc" id="L199">            collection.insertOne(doc);</span>
+<span class="fc" id="L211">            collection.insertOne(doc);</span>
             try{
                 //关闭MongoDB连接
-<span class="fc" id="L202">                mongoClient.close();</span>
-<span class="nc" id="L203">            }catch(Exception e){</span>
-<span class="nc" id="L204">                logger.info(&quot;关闭MongoDB连接失败！&quot; + e.getClass().getName() + &quot;: &quot; + e.getMessage());</span>
-<span class="fc" id="L205">            }</span>
-<span class="fc" id="L206">            isClosed = true;</span>
+<span class="fc" id="L214">                mongoClient.close();</span>
+<span class="nc" id="L215">            }catch(Exception e){</span>
+<span class="nc" id="L216">                logger.info(&quot;关闭MongoDB连接失败！&quot; + e.getClass().getName() + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L217">            }</span>
+<span class="fc" id="L218">            isClosed = true;</span>
         }
-<span class="fc" id="L208">    }</span>
+<span class="fc" id="L220">    }</span>
+
+
+
+    public static void bsonSearchDemo(List&lt;Bson&gt; bsonList,List&lt;Bson&gt; fixedList,MongoCollection&lt;Document&gt; collection,String[] args){
+
+<span class="nc" id="L226">        FindIterable&lt;Document&gt; search= collection.find(Filters.and(bsonList)).projection(fields(include(</span>
+<span class="nc" id="L227">                &quot;consequence&quot;, &quot;confidence&quot;), excludeId()));</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        if(search.iterator().hasNext()){</span>
+<span class="nc" id="L229">            System.out.println(&quot;有符合条件的规则&quot;);</span>
+<span class="nc" id="L230">            System.out.println(&quot;推荐&quot;+search.iterator().next().get(&quot;consequence&quot;));</span>
+<span class="nc" id="L231">            return;</span>
+        }else{
+<span class="nc" id="L233">            System.out.println(&quot;降低标准搜索&quot;);</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">            for (int i = 0; i &lt; args.length-1; i++) {</span>
+<span class="nc" id="L235">                bsonList.set(i,Filters.eq(ates[i],null));</span>
+<span class="nc" id="L236">                search= collection.find(Filters.and(bsonList))</span>
+<span class="nc" id="L237">                        .projection(fields(include(</span>
+<span class="nc" id="L238">                                &quot;consequence&quot;, &quot;confidence&quot;), excludeId()));</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                if(search.iterator().hasNext()){</span>
+<span class="nc" id="L240">                    System.out.println(&quot;有符合条件的规则&quot;);</span>
+<span class="nc" id="L241">                    System.out.println(search.iterator().next());</span>
+<span class="nc" id="L242">                    return;</span>
+                }
+            }
+        }
+<span class="nc" id="L246">        System.out.println(&quot;没有符合条件的规则!!!&quot;);</span>
+<span class="nc" id="L247">    }</span>
+
+    public static void baggageSearchDemo(String[] args){
+<span class="nc" id="L250">        MongoCollection&lt;Document&gt; collection = mongoDatabase.getCollection(&quot;r_Baggage&quot;);</span>
+<span class="nc" id="L251">        List&lt;Bson&gt; bsonList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        for (int i = 0; i &lt; args.length; i++) {</span>
+<span class="nc" id="L253">            bsonList.add(Filters.eq(&quot;antecedent.&quot;+ates[i],args[i]));</span>
+        }
+
+<span class="nc" id="L256">        FindIterable&lt;Document&gt; search= collection.find(Filters.and(bsonList)).projection(fields(include(</span>
+<span class="nc" id="L257">                &quot;consequence&quot;, &quot;confidence&quot;), excludeId()));</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        if(search.iterator().hasNext()){</span>
+<span class="nc" id="L259">            System.out.println(&quot;有符合条件的规则&quot;);</span>
+<span class="nc" id="L260">            System.out.println(&quot;推荐&quot;+search.iterator().next().get(&quot;consequence&quot;));</span>
+<span class="nc" id="L261">            return;</span>
+        }else{
+<span class="nc" id="L263">            System.out.println(&quot;降低标准搜索&quot;);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">            for (int i = 0; i &lt; args.length-1; i++) {</span>
+<span class="nc" id="L265">                bsonList.set(i,Filters.eq(ates[i],null));</span>
+<span class="nc" id="L266">                search= collection.find(Filters.and(bsonList))</span>
+<span class="nc" id="L267">                        .projection(fields(include(</span>
+<span class="nc" id="L268">                                &quot;consequence&quot;, &quot;confidence&quot;), excludeId()));</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">                if(search.iterator().hasNext()){</span>
+<span class="nc" id="L270">                    System.out.println(&quot;有符合条件的规则&quot;);</span>
+<span class="nc" id="L271">                    System.out.println(search.iterator().next());</span>
+<span class="nc" id="L272">                    return;</span>
+                }
+            }
+        }
+<span class="nc" id="L276">        System.out.println(&quot;没有符合条件的规则!!!&quot;);</span>
+<span class="nc" id="L277">    }</span>
+    //问题一，如何通过MongoDB搜索？
+    //方案一：从通过所有机票属性搜索到通过一个机票属性搜索，通过递归逐渐减少满足的机票属性，逐渐找出所有商品属性（时间复杂度会比较高）
+    //方案二：状态压缩算法搜索，逐渐找出所有可以得到的置信度最高的商品属性（时间复杂度相对较低）
+    //方案三：通过手写搜索的方法，找出所有商品属性（时间复杂度相对最低）
+    //问题二，找到的商品属性将处理成怎样的结果？
+    //从商品属性搜索到商品还是直接用属性？
+
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

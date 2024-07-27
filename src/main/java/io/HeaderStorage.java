@@ -71,6 +71,23 @@ public class HeaderStorage {
         return doc;
     }
 
-
+    public List<String> getAttributeLists(List<String> list) {
+        Map<String, String> headerMap = new HashMap<>();
+        List<String> attributeLists = new ArrayList<>();
+        //遍历属性列表，获得属性和属性值
+        for (String s : list) {
+            //划分属性名和属性值
+            //这里的字符串格式是"商品类型标识:属性名:属性值"
+            String key= s.split(":")[1];
+            String value = s.split(":")[2];
+            headerMap.put(key, value);
+        }
+        for(String Header: headers){
+            //如果属性在属性头列表之中不存在，则添加一个空值
+            //如果属性在关联规则属性列表之中存在，则添加其对应的属性值
+            attributeLists.add(headerMap.getOrDefault(Header,null));
+        }
+        return attributeLists;
+    }
 
 }

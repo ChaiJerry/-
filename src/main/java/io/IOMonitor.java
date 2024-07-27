@@ -1,7 +1,5 @@
 package io;
 
-import data_generating_system.*;
-
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
@@ -23,6 +21,11 @@ public class IOMonitor {
     protected static Map<String, List<String>> ticketMap;
     //将type与index对应，用于快速查找
     protected static HashMap<String, Integer> type2index = new HashMap<>();
+
+    public static HeaderStorage[] getHeaderStorage() {
+        return headerStorage;
+    }
+
     //存储每个品类下的商品属性，用于快速查找，主要从CSV文件的头文件读取
     protected static HeaderStorage[] headerStorage = new HeaderStorage[6];
 
@@ -50,6 +53,9 @@ public class IOMonitor {
     public static String resultForm;
     // 训练备注
     public static String comment;
+
+    public static final String[] targetItemNames = {null,"HOTEL_NAME", "MEAL_NAME"
+            , "BAGGAGE_SPECIFICATION", "INSURANCE_COMPANY", "SEAT_NO"};
 
     static {
         // 创建Properties对象
@@ -87,6 +93,7 @@ public class IOMonitor {
         minSupport = properties.getProperty("minSupport") != null ? Float.parseFloat(properties.getProperty("minSupport")) : 0;
         // 获取训练备注
         comment = properties.getProperty("comment");
+
     }
 
 }

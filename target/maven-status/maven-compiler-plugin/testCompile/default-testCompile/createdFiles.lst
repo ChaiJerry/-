@@ -1,3 +1,4 @@
 mid_tests\TestDataConverter.class
+mid_tests\TestQuerySystem.class
 mid_tests\TestMongoUtils.class
 mid_tests\TestAPI.class
