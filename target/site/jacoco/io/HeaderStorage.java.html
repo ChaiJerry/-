@@ -71,7 +71,24 @@ import org.bson.*;
 <span class="fc" id="L71">        return doc;</span>
     }
 
-
+    public List&lt;String&gt; getAttributeLists(List&lt;String&gt; list) {
+<span class="fc" id="L75">        Map&lt;String, String&gt; headerMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L76">        List&lt;String&gt; attributeLists = new ArrayList&lt;&gt;();</span>
+        //遍历属性列表，获得属性和属性值
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (String s : list) {</span>
+            //划分属性名和属性值
+            //这里的字符串格式是&quot;商品类型标识:属性名:属性值&quot;
+<span class="fc" id="L81">            String key= s.split(&quot;:&quot;)[1];</span>
+<span class="fc" id="L82">            String value = s.split(&quot;:&quot;)[2];</span>
+<span class="fc" id="L83">            headerMap.put(key, value);</span>
+<span class="fc" id="L84">        }</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for(String Header: headers){</span>
+            //如果属性在属性头列表之中不存在，则添加一个空值
+            //如果属性在关联规则属性列表之中存在，则添加其对应的属性值
+<span class="fc" id="L88">            attributeLists.add(headerMap.getOrDefault(Header,null));</span>
+<span class="fc" id="L89">        }</span>
+<span class="fc" id="L90">        return attributeLists;</span>
+    }
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

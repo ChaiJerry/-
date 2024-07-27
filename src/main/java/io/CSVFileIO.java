@@ -12,6 +12,7 @@ import static data_processer.DataConverter.*;
 import static data_processer.DataParser.*;
 import static io.IOMonitor.*;
 import static data_generating_system.FPGrowth.*;
+import static io.MongoUtils.*;
 
 public class CSVFileIO {
 
@@ -60,6 +61,24 @@ public class CSVFileIO {
         // 初始化日志
         logger = Logger.getLogger(getClass().getName());
 
+    }
+
+    public void CSV2DB() throws IOException {
+        for(int i = 0; i < types.length; i++) {
+            singleTypeCsv2database(i);
+        }
+    }
+
+    public void singleTypeCsv2database(int type) throws IOException {
+        //订单与属性之间的映射map
+        Map<String, List<String>> attributeMap;
+        if (type != TICKET) {
+            // 当读取的csv文件不是Ticket时，直接处理
+            attributeMap = CSVFileIO.read(csvPaths[type], types[type]);
+            ordersMap2DB(attributeMap, type);
+        } else {
+            ordersMap2DB(ticketMap, type);
+        }
     }
 
     /**
@@ -167,6 +186,11 @@ public class CSVFileIO {
         csvWriter.close();
     }
 
+
+    public Map<String, List<String>> read(int type) throws IOException {
+        return CSVFileIO.read(csvPaths[type], types[type]);
+    }
+
     /**
      * 读取CSV文件
      * @param path 文件路径
@@ -174,6 +198,7 @@ public class CSVFileIO {
      * @return 返回订单号和订单对应的商品属性之间的键值对 Map<String, List<String>>
      */
     public static Map<String, List<String>> read(String path, String type) throws IOException {
+        // 创建HashMap，key为订单号，value为订单对应的属性键值对
         HashMap<String, List<String>> map = new HashMap<>();
         // 第一参数：读取文件的路径 第二个参数：分隔符 第三个参数：字符集
         CsvReader csvReader = new CsvReader(path, ',', StandardCharsets.UTF_8);

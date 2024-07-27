@@ -1,11 +1,15 @@
 package main_class;
 
-import data_generating_system.*;
+import io.*;
 
 import java.io.*;
 
+import static io.IOMonitor.*;
+import static io.MongoUtils.*;
+import static query_system.QuerySystem.*;
+
 public class Main {
     public static void main(String[] args) throws IOException {
-          FPGrowth.fpGrowthTest();
+        queryTest();
     }
 }
