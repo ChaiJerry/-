@@ -1,7 +1,10 @@
 package io;
 
+import data_generating_system.*;
+
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 
 public class IOMonitor {
     private IOMonitor() {
@@ -56,6 +59,7 @@ public class IOMonitor {
             InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream("System.properties");
             properties.load(stream);
         } catch (IOException e) {
+            Logger logger = Logger.getLogger(IOMonitor.class.getName());
             logger.info("加载配置文件失败");
         }
         // 获取配置文件中的属性
