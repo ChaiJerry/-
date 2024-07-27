@@ -12,33 +12,10 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
 
 import static data_processer.DataConverter.*;
+import static io.IOMonitor.*;
 
 public class FPGrowth {
     private static SparkSession spark = null;
-    // 最小置信度
-    private static float minConfidence;
-    // 最小支持度
-    private static float minSupport;
-    //csv文件结果输出目录路径，若是不以csv文件的格式输出，则该属性可以为null
-    private static String resultDirPath;
-    // 机票订单csv文件路径
-    private static String pathT;
-    // 酒店订单csv文件路径
-    private static String pathH;
-    // 餐饮订单csv文件路径
-    private static String pathM;
-    // 保险订单csv文件路径
-    private static String pathB;
-    // 保险订单csv文件路径
-    private static String pathI;
-    // 选座订单csv文件路径
-    private static String pathS;
-    // 模式(若是debug模式，则会输出一部分频繁项集和关联规则，否则不输出)
-    private static String mode;
-    // 结果输出格式（可以是csv或者是db），csv则会将结果以csv文件的形式输出，db则会将结果存入数据库中
-    private static String resultForm;
-    // 训练备注
-    private static String comment;
     private static Logger logger = null;
     //spark是否已经初始化
     private static boolean isSparkInitialed =false;
@@ -64,48 +41,9 @@ public class FPGrowth {
         // 创建日志对象
         logger = Logger.getLogger(FPGrowth.class.getName());
 
-        //读取配置文件
-        readProperties();
-
         isSparkInitialed = true;
     }
 
-    private static void readProperties() {
-        // 创建Properties对象
-        Properties properties = new Properties();
-        // 读取配置文件
-        try {
-            InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream("System.properties");
-            properties.load(stream);
-        } catch (IOException e) {
-            logger.info("加载配置文件失败");
-        }
-        // 获取配置文件中的属性
-        // 获取csv文件结果输出目录，若是不以csv文件的格式输出，则该属性可以为null
-        resultDirPath = properties.getProperty("resultDirPath");
-        // 获取机票订单csv文件路径
-        pathT = properties.getProperty("ticketFilePath");
-        // 获取酒店订单csv文件路径
-        pathH = properties.getProperty("hotelFilePath");
-        // 获取餐饮订单csv文件路径
-        pathM = properties.getProperty("mealFilePath");
-        // 获取保险订单csv文件路径
-        pathB = properties.getProperty("baggageFilePath");
-        // 获取保险订单csv文件路径
-        pathI = properties.getProperty("insuranceFilePath");
-        // 获取选座订单csv文件路径
-        pathS = properties.getProperty("seatFilePath");
-        // 获取模式(若是debug模式，则会输出一部分频繁项集和关联规则，否则不输出)
-        mode = properties.getProperty("mode");
-        // 获取结果输出格式
-        resultForm = properties.getProperty("resultForm");
-        // 获取最小置信度
-        minConfidence = properties.getProperty("minConfidence") != null ? Float.parseFloat(properties.getProperty("minConfidence")) : 0;
-        // 获取最小支持度
-        minSupport = properties.getProperty("minSupport") != null ? Float.parseFloat(properties.getProperty("minSupport")) : 0;
-        // 获取训练备注
-        comment = properties.getProperty("comment");
-    }
 
     /**
      * 训练FPGrowth模型
