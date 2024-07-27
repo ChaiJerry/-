@@ -61,6 +61,13 @@ public class MongoUtils {
         initialMongoClient();
     }
 
+    public static MongoCollection<Document> getRulesCollection(int type){
+        //获取集合名称
+        String collectionName = "r_"+FULL_NAMES[type];
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        return collection;
+    }
+
     /*
      * 初始化MongoDB连接
      */
@@ -212,13 +219,10 @@ public class MongoUtils {
         }
     }
 
-    public static void baggageSearchDemo(String[] args){
-        initialMongoClient();
-        MongoCollection<Document> collection = mongoDatabase.getCollection("r_Baggage");
-        List<Bson> bsonList = new ArrayList<>();
-        for (int i = 0; i < args.length; i++) {
-            bsonList.add(Filters.eq("antecedent."+ates[i],args[i]));
-        }
+
+
+    public static void bsonSearchDemo(List<Bson> bsonList,List<Bson> fixedList,MongoCollection<Document> collection,String[] args){
+
         FindIterable<Document> search= collection.find(Filters.and(bsonList)).projection(fields(include(
                 "consequence", "confidence"), excludeId()));
         if(search.iterator().hasNext()){
@@ -241,5 +245,42 @@ public class MongoUtils {
         }
         System.out.println("没有符合条件的规则!!!");
     }
+
+    public static void baggageSearchDemo(String[] args){
+        MongoCollection<Document> collection = mongoDatabase.getCollection("r_Baggage");
+        List<Bson> bsonList = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+            bsonList.add(Filters.eq("antecedent."+ates[i],args[i]));
+        }
+
+        FindIterable<Document> search= collection.find(Filters.and(bsonList)).projection(fields(include(
+                "consequence", "confidence"), excludeId()));
+        if(search.iterator().hasNext()){
+            System.out.println("有符合条件的规则");
+            System.out.println("推荐"+search.iterator().next().get("consequence"));
+            return;
+        }else{
+            System.out.println("降低标准搜索");
+            for (int i = 0; i < args.length-1; i++) {
+                bsonList.set(i,Filters.eq(ates[i],null));
+                search= collection.find(Filters.and(bsonList))
+                        .projection(fields(include(
+                                "consequence", "confidence"), excludeId()));
+                if(search.iterator().hasNext()){
+                    System.out.println("有符合条件的规则");
+                    System.out.println(search.iterator().next());
+                    return;
+                }
+            }
+        }
+        System.out.println("没有符合条件的规则!!!");
+    }
+    //问题一，如何通过MongoDB搜索？
+    //方案一：从通过所有机票属性搜索到通过一个机票属性搜索，通过递归逐渐减少满足的机票属性，逐渐找出所有商品属性（时间复杂度会比较高）
+    //方案二：状态压缩算法搜索，逐渐找出所有可以得到的置信度最高的商品属性（时间复杂度相对较低）
+    //方案三：通过手写搜索的方法，找出所有商品属性（时间复杂度相对最低）
+    //问题二，找到的商品属性将处理成怎样的结果？
+    //从商品属性搜索到商品还是直接用属性？
+
 
 }
