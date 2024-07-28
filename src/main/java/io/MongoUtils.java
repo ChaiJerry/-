@@ -13,6 +13,7 @@ import java.util.logging.*;
 
 import org.bson.*;
 
+import static com.mongodb.client.model.Projections.*;
 import static io.IOMonitor.*;
 
 public class MongoUtils {
@@ -114,12 +115,12 @@ public class MongoUtils {
             //创建集合
             mongoOrdersDatabase.createCollection(name + "Orders");
             if (!Objects.equals(name, FULL_NAMES[TICKET])) {
-                mongoOrdersDatabase.createCollection(FULL_NAMES[TICKET]+"-" + name + "Orders");
+                mongoOrdersDatabase.createCollection(FULL_NAMES[TICKET] + "-" + name + "Orders");
             }
         }
     }
 
-    public static void ordersMap2DB(Map<String, List<String>> ordersMap ,int type){
+    public static void ordersMap2DB(Map<String, List<String>> ordersMap, int type) {
         HeaderStorage headerStorage = getHeaderStorage()[type];
         //获取集合名称
         String collectionName = FULL_NAMES[type] + "Orders";
@@ -148,6 +149,18 @@ public class MongoUtils {
         return mongoOrdersDatabase.getCollection(collectionName);
     }
 
+    public static String getTargetItemFromOrderNum(String orderNumber, int type
+            , MongoCollection<Document> collection) {
+        FindIterable<Document> records = collection.find(Filters
+                .eq("orderId", orderNumber)).projection(fields(include(
+                "attributes." + targetItemNames[type]), excludeId()));
+        if (records.iterator().hasNext()) {
+            return  ((Document)(records.iterator().next().get("attributes")))
+                    .getString(targetItemNames[type]);
+        } else {
+            return "";
+        }
+    }
 
     /**
      * 读取规则，并存入MongoDB

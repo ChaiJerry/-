@@ -39,7 +39,7 @@ public class ItemSearchUnit {
         FindIterable<Document> search;
         if (bsonList.isEmpty()) {
             search = collection.find().projection(fields(include(
-                    "attributes" + targetItemNames[type]), excludeId()));
+                    "attributes." + targetItemNames[type]), excludeId()));
         } else {
             search = collection.find(Filters.and(bsonList)).projection(fields(include(
                     "attributes." + targetItemNames[type]), excludeId()));
@@ -47,7 +47,7 @@ public class ItemSearchUnit {
 
         if (search.iterator().hasNext()) {
             Document next = search.iterator().next();
-            //return next.get("attributes");
+            return (Document) next.get("attributes");
             //需要先得到document才行
         }
 

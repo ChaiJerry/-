@@ -55,7 +55,7 @@ public class IOMonitor {
     public static String comment;
 
     public static final String[] targetItemNames = {null,"HOTEL_NAME", "MEAL_NAME"
-            , "BAGGAGE_SPECIFICATION", "INSURANCE_COMPANY", "SEAT_NO"};
+            , "BAGGAGE_SPECIFICATION", "INSUR_PRO_NAME", "SEAT_NO"};
 
     static {
         // 创建Properties对象

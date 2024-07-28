@@ -48,7 +48,7 @@ public class AttributesSearchUnit {
             bsonList.add(Filters.eq("antecedent." + ates[i], ticketAttributes.get(i)));
         }
         FindIterable<Document> search = collection.find(Filters.and(bsonList)).projection(fields(include(
-                "consequence", "confidence"), excludeId()));
+                "consequence", "confidence"), excludeId())).sort(Sorts.descending("confidence"));
         for (Document document : search) {
             String consequence = document.getString("consequence");
             double confidence = document.getDouble("confidence");
