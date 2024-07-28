@@ -202,7 +202,7 @@ public class QuerySystem {
         }
         //遍历ticketDocument，将其中的每个属性键值对都加入到itemAttributeMap中
         for (String key : ticketDocument.keySet()) {
-            itemAttributeMap.put(key, ticketDocument.getString(key));
+            ticketAttributesMap.put(key, ticketDocument.getString(key));
         }
         return singleItemQuery(itemAttributeMap, ordersCollection, type);
     }
