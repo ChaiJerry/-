@@ -2,6 +2,7 @@ package query_system;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
+import data_processer.*;
 import org.bson.*;
 import org.bson.conversions.*;
 
@@ -18,8 +19,9 @@ public class AttributesSearchUnit {
     private final List<String> ticketAttributes;
     private final int fixedPos;
     private final MongoCollection<Document> collection;
-    private final Map<String, String> itemAttributeMap;
-    private final Map<String, Double> attributeConfidenceMap;
+    private Map<String, String> itemAttributeMap = null;
+    private Map<String, Double> attributeConfidenceMap = null;
+    private DocFreqPair docFreqMap = null;
     private final Queue<AttributesSearchUnit> bfsQueue;
     private final Set<Integer> haveVisited;
 
@@ -42,13 +44,26 @@ public class AttributesSearchUnit {
         this.haveVisited = haveVisited;
     }
 
-    public void search() {
+    public AttributesSearchUnit(int level, List<String> ticketAttributes
+            , int fixedPos, MongoCollection<Document> collection
+            ,DocFreqPair docFreqMap
+            , Queue<AttributesSearchUnit> bfsQueue, Set<Integer> haveVisited) {
+        this.level = level;
+        this.ticketAttributes = ticketAttributes;
+        this.fixedPos = fixedPos;
+        this.collection = collection;
+        this.docFreqMap = docFreqMap;
+        this.bfsQueue = bfsQueue;
+        this.haveVisited = haveVisited;
+    }
+
+    public void searchByRules() {
         List<Bson> bsonList = new ArrayList<>();
         for (int i = 0; i < ticketAttributes.size(); i++) {
             bsonList.add(Filters.eq("antecedent." + ates[i], ticketAttributes.get(i)));
         }
         FindIterable<Document> search = collection.find(Filters.and(bsonList)).projection(fields(include(
-                "consequence", "confidence"), excludeId())).sort(Sorts.descending("confidence"));
+                "consequence", "confidence"), excludeId()));
         for (Document document : search) {
             String consequence = document.getString("consequence");
             double confidence = document.getDouble("confidence");
@@ -63,18 +78,55 @@ public class AttributesSearchUnit {
         //运用状态压缩的技巧，将已经访问过的节点状态压缩到整数中
         int status = listToBits(ticketAttributes);
         for (int i = 0; i < ates.length; i++) {
-            int nextStatus = setBitPos2zero(status, i);
-            if (ticketAttributes.get(i) == null || haveVisited.contains(nextStatus) || i == fixedPos) {
+            List<String> temp = checkViability(status, i);
+            if(temp.isEmpty()){
                 continue;
             }
-            haveVisited.add(nextStatus);
-            List<String> temp = new ArrayList<>(ticketAttributes);
-            temp.set(i, null);
-            bfsQueue.add(
-                    new AttributesSearchUnit(level + 1
+            bfsQueue.add(new AttributesSearchUnit(level + 1
                             , temp, fixedPos, collection, itemAttributeMap
                             , attributeConfidenceMap, bfsQueue, haveVisited));
         }
+    }
+
+    public void searchByFreq() {
+        List<Bson> bsonList = new ArrayList<>();
+        for (int i = 0; i < ticketAttributes.size(); i++) {
+            bsonList.add(Filters.eq("ticketAttributes." + ates[i], ticketAttributes.get(i)));
+        }
+        FindIterable<Document> search = collection
+                .find(Filters.and(bsonList)).sort(Sorts.descending("Freq"));
+
+        if(search.iterator().hasNext()){
+            Document document = search.iterator().next();
+            int freq = document.getInteger("Freq");
+            if(freq > docFreqMap.getFreq()){
+                docFreqMap.setFreq(freq);
+                docFreqMap.setDoc(document);
+            }
+        }
+
+        //运用状态压缩的技巧，将已经访问过的节点状态压缩到整数中
+        int status = listToBits(ticketAttributes);
+        for (int i = 0; i < ates.length; i++) {
+            List<String> temp = checkViability(status, i);
+            if(temp.isEmpty()){
+                continue;
+            }
+            bfsQueue.add(new AttributesSearchUnit(level + 1
+                            , temp, fixedPos, collection,docFreqMap
+                            , bfsQueue, haveVisited));
+        }
+    }
+    
+    private List<String> checkViability(int status, int i){
+        int nextStatus = setBitPos2zero(status, i);
+        if (ticketAttributes.get(i) == null || haveVisited.contains(nextStatus) || i == fixedPos) {
+            return new ArrayList<>();
+        }
+        haveVisited.add(nextStatus);
+        List<String> temp = new ArrayList<>(ticketAttributes);
+        temp.set(i, null);
+        return temp;
     }
 
     @Override

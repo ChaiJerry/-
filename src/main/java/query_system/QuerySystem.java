@@ -1,6 +1,7 @@
 package query_system;
 
 import com.mongodb.client.*;
+import data_processer.*;
 import io.*;
 import org.bson.*;
 
@@ -10,7 +11,6 @@ import java.util.*;
 import static data_processer.DataConverter.*;
 import static io.IOMonitor.*;
 import static io.MongoUtils.*;
-
 
 public class QuerySystem {
     private static final int[] colNum = {0, 5, 4, 2, 4, 2};
@@ -57,13 +57,8 @@ public class QuerySystem {
             fileIO.read(i);
         }
 
-        if (mode.equals("eva")) {
-            //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
-            ticketOrderNumAttributeMap = getTicketOrderNumAttributeMap(fileIO, TICKET);
-        } else if (mode.equals("generate")) {
-            //生成模式获取ticketAttributeValuesList，用于查询属性
-            ticketAttributeValuesList = getTicketAttributeValuesList(fileIO, TICKET);
-        }
+        //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
+        ticketOrderNumAttributeMap = getTicketOrderNumAttributeMap(fileIO, TICKET);
 
         String head = "orderNum,Ticket,Hotel,Meal,Baggage,Insurance,Seat";
         strs.add(head);
@@ -86,17 +81,16 @@ public class QuerySystem {
                 List<String> attributeValues = ticketOrderNumAttributeMap.get(orderNum);
                 //根据attributeValues，查询ordersCollection中对应的订单
                 Map<String, String> singleAttributeQuery =
-                        singleAttributeQuery(attributeValues, fixedPos, rulesCollection, i);
+                        singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
                 String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
                 sb.append(singleItemQuery).append(":").append(correctTargetItem).append(",");
             }
             strs.add(sb.toString());
         }
-
         return strs;
     }
 
-    public static void queryTest() throws IOException {
+    public static void queryTest(String mode) throws IOException {
         CSVFileIO fileIO = new CSVFileIO(resultDirPath, pathT, pathH, pathM, pathB, pathI, pathS);
         for (int i = 0; i < colNum.length; i++) {
             fileIO.read(i);
@@ -127,7 +121,7 @@ public class QuerySystem {
                     List<String> attributeValues = ticketOrderNumAttributeMap.get(orderNum);
                     //根据attributeValues，查询ordersCollection中对应的订单
                     Map<String, String> singleAttributeQuery =
-                            singleAttributeQuery(attributeValues, fixedPos, rulesCollection, i);
+                            singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
                     String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
                     System.out.println(singleItemQuery + ":" + correctTargetItem);
                 }
@@ -135,7 +129,7 @@ public class QuerySystem {
             } else if (mode.equals("generate")) {
                 for (List<String> ticketAttributeValues : ticketAttributeValuesList) {
                     Map<String, String> singleAttributeQuery =
-                            singleAttributeQuery(ticketAttributeValues, fixedPos, rulesCollection, i);
+                            singleAttributeRuleQuery(ticketAttributeValues, fixedPos, rulesCollection, i);
                     String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
                     System.out.println(singleItemQuery);
                 }
@@ -143,7 +137,31 @@ public class QuerySystem {
         }
     }
 
-    private static Map<String, String> singleAttributeQuery(List<String> ticketAttributes
+    public static Document singleAttributeFreqQuery(List<String> ticketAttributes
+            , int fixedPos //-1表示没有必须满足的属性，否则表示必须满足的属性在ticketAttributes中的位置
+            , MongoCollection<Document> RulesCollection) {
+        Queue<AttributesSearchUnit> bfsQueue = new LinkedList<>();
+        Set<Integer> haveVisited = new HashSet<>();
+        DocFreqPair docFreqPair = new DocFreqPair(null, 0);
+        //开始bfs搜索，设定根节点，并加入队列
+        AttributesSearchUnit root = new AttributesSearchUnit(0, ticketAttributes
+                , fixedPos, RulesCollection, docFreqPair, bfsQueue, haveVisited);
+        haveVisited.add(listToBits(ticketAttributes));
+        bfsQueue.add(root);
+        int currentLevel = 0;
+        while (!bfsQueue.isEmpty()) {
+            AttributesSearchUnit current = bfsQueue.poll();
+            if (current.getLevel() != currentLevel) {
+                if (docFreqPair.getDoc() != null) {
+                    break;
+                }
+            }
+            current.searchByFreq();
+        }
+        return docFreqPair.getDoc();
+    }
+
+    private static Map<String, String> singleAttributeRuleQuery(List<String> ticketAttributes
             , int fixedPos //-1表示没有必须满足的属性，否则表示必须满足的属性在ticketAttributes中的位置
             , MongoCollection<Document> RulesCollection
             , int type) {
@@ -168,12 +186,29 @@ public class QuerySystem {
                 //将attributeConfidenceMap中的所有值都变为2，这样在搜索的时候，不会改变上一层已经得到的属性
                 attributeConfidenceMap.replaceAll((k, v) -> 2.0);
             }
-            current.search();
+            current.searchByRules();
         }
         return itemAttributeMap;
     }
 
-    private static String singleItemQuery(Map<String, String> itemAttributeMap, MongoCollection<Document> ordersCollection, int type) {
+    public static String singleFreqQuery(Document document
+            , MongoCollection<Document> ordersCollection, int type, Map<String, String> ticketAttributesMap) {
+        Map<String, String> itemAttributeMap = new HashMap<>();
+        Document itemDocument = (Document) document.get("itemAttributes");
+        Document ticketDocument = (Document) document.get("ticketAttributes");
+        //遍历itemDocument，将其中的每个属性键值对都加入到itemAttributeMap中
+        for (String key : itemDocument.keySet()) {
+            itemAttributeMap.put(key, itemDocument.getString(key));
+        }
+        //遍历ticketDocument，将其中的每个属性键值对都加入到itemAttributeMap中
+        for (String key : ticketDocument.keySet()) {
+            itemAttributeMap.put(key, ticketDocument.getString(key));
+        }
+        return singleItemQuery(itemAttributeMap, ordersCollection, type);
+    }
+
+    private static String singleItemQuery(Map<String, String> itemAttributeMap
+            , MongoCollection<Document> ordersCollection, int type) {
         //根据itemAttributeMap中的属性，查询ordersCollection中对应的订单
         Queue<ItemSearchUnit> bfsQueue = new LinkedList<>();
         Set<Integer> haveVisited = new HashSet<>();
@@ -191,30 +226,6 @@ public class QuerySystem {
             }
         }
         return "";
-    }
-
-    private static List<Map.Entry<String, String>> map2List(Map<String, String> map, int type) {
-        switch (type) {
-            case HOTEL:
-                map.remove("HOTEL_NAME");
-                break;
-            case MEAL:
-                map.remove("MEAL_NAME");
-                map.remove("MEAL_CODE");
-                break;
-            case BAGGAGE:
-                break;
-            case INSURANCE:
-                map.remove("INSURANCE_COMPANY");
-                map.remove("INSURANCE_COMPANYCODE");
-                break;
-            case SEAT:
-                break;
-            default:
-                break;
-        }
-
-        return new ArrayList<>(map.entrySet());
     }
 
 }

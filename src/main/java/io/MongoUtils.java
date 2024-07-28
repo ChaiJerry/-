@@ -143,6 +143,12 @@ public class MongoUtils {
         return mongoKnowledgeDatabase.getCollection(collectionName);
     }
 
+    public static MongoCollection<Document> getFrequentItemSetsCollection(int type) {
+        //获取集合名称
+        String collectionName = "f_" + FULL_NAMES[type];
+        return mongoKnowledgeDatabase.getCollection(collectionName);
+    }
+
     public static MongoCollection<Document> getOrdersCollection(int type) {
         //获取集合名称
         String collectionName = FULL_NAMES[type] + "Orders";

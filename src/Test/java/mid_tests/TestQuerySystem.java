@@ -1,24 +1,49 @@
 package mid_tests;
 
+import com.mongodb.client.*;
+import data_processer.*;
 import io.*;
+import org.bson.*;
 import org.junit.*;
+
 
 import java.io.*;
 import java.util.*;
 
+import static data_processer.DataConverter.*;
 import static io.IOMonitor.*;
+import static io.MongoUtils.*;
 import static org.junit.Assert.*;
 import static query_system.QuerySystem.*;
 
 public class TestQuerySystem {
     @Test
     public void testGetTicketAttributeValuesList() throws IOException {
-        CSVFileIO fileIO = new CSVFileIO(resultDirPath, pathT, pathH, pathM, pathB, pathI, pathS);
-        List<List<String>> ticketAttributeValuesList = getTicketAttributeValuesList(fileIO,0);
+        CSVFileIO fileIO =
+                new CSVFileIO(resultDirPath, pathT, pathH, pathM, pathB, pathI, pathS);
+        List<List<String>> ticketAttributeValuesList = getTicketAttributeValuesList(fileIO, 0);
         assertTrue(ticketAttributeValuesList.size() > 200);
         for (List<String> ticketAttributeValues : ticketAttributeValuesList) {
-            assertTrue(ticketAttributeValues.size() == 6);
+            assertEquals(6, ticketAttributeValues.size());
         }
     }
+
+    @Test
+    public void testSingleAttributeFreqQuery() throws IOException {
+        CSVFileIO fileIO = new CSVFileIO(resultDirPath, pathT, pathH, pathM, pathB, pathI, pathS);
+        for (int i = 0; i < 6; i++) {
+            fileIO.read(i);
+        }
+        int type = 1;
+        MongoCollection<Document> FreqCollection = getFrequentItemSetsCollection(type);
+        List<String> ticketAttributes = new ArrayList<>();
+        ticketAttributes.add("Ticket:T_CARRIER" + ":HU");
+        Document doc = singleAttributeFreqQuery(ticketAttributes, -1, FreqCollection);
+        Map < String, String > ticketAttributesMap = new HashMap < > ();
+        String ret = singleFreqQuery(doc, getOrdersCollection(type), type, ticketAttributesMap);
+        assertFalse(ret.isEmpty());
+        assertFalse(ticketAttributesMap.isEmpty());
+    }
+
 
 }
