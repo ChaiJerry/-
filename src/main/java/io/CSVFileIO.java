@@ -63,7 +63,7 @@ public class CSVFileIO {
 
     }
 
-    public void CSV2DB() throws IOException {
+    public void csv2DB() throws IOException {
         for(int i = 0; i < types.length; i++) {
             singleTypeCsv2database(i);
         }

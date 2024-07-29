@@ -1,7 +1,6 @@
 package mid_tests;
 
 import com.mongodb.client.*;
-import data_processer.*;
 import io.*;
 import org.bson.*;
 import org.junit.*;
@@ -10,7 +9,6 @@ import org.junit.*;
 import java.io.*;
 import java.util.*;
 
-import static data_processer.DataConverter.*;
 import static io.IOMonitor.*;
 import static io.MongoUtils.*;
 import static org.junit.Assert.*;
@@ -20,7 +18,7 @@ public class TestQuerySystem {
     @Test
     public void testGetTicketAttributeValuesList() throws IOException {
         CSVFileIO fileIO =
-                new CSVFileIO(resultDirPath, pathT, pathH, pathM, pathB, pathI, pathS);
+                new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
         List<List<String>> ticketAttributeValuesList = getTicketAttributeValuesList(fileIO, 0);
         assertTrue(ticketAttributeValuesList.size() > 200);
         for (List<String> ticketAttributeValues : ticketAttributeValuesList) {
@@ -30,7 +28,7 @@ public class TestQuerySystem {
 
     @Test
     public void testSingleAttributeFreqQuery() throws IOException {
-        CSVFileIO fileIO = new CSVFileIO(resultDirPath, pathT, pathH, pathM, pathB, pathI, pathS);
+        CSVFileIO fileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
         for (int i = 0; i < 6; i++) {
             fileIO.read(i);
         }

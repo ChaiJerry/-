@@ -113,9 +113,9 @@ public class MongoUtils {
     public static void createOrdersCollections() {
         for (String name : FULL_NAMES) {
             //创建集合
-            mongoOrdersDatabase.createCollection(name + "Orders");
+            mongoOrdersDatabase.createCollection(name + ORDERS_FIELD_NAME);
             if (!Objects.equals(name, FULL_NAMES[TICKET])) {
-                mongoOrdersDatabase.createCollection(FULL_NAMES[TICKET] + "-" + name + "Orders");
+                mongoOrdersDatabase.createCollection(FULL_NAMES[TICKET] + "-" + name + ORDERS_FIELD_NAME);
             }
         }
     }
@@ -123,7 +123,7 @@ public class MongoUtils {
     public static void ordersMap2DB(Map<String, List<String>> ordersMap, int type) {
         HeaderStorage headerStorage = getHeaderStorage()[type];
         //获取集合名称
-        String collectionName = FULL_NAMES[type] + "Orders";
+        String collectionName = FULL_NAMES[type] + ORDERS_FIELD_NAME;
         MongoCollection<Document> collection = mongoOrdersDatabase.getCollection(collectionName);
         for (Map.Entry<String, List<String>> entry : ordersMap.entrySet()) {
             Document doc = new Document();
@@ -151,7 +151,7 @@ public class MongoUtils {
 
     public static MongoCollection<Document> getOrdersCollection(int type) {
         //获取集合名称
-        String collectionName = FULL_NAMES[type] + "Orders";
+        String collectionName = FULL_NAMES[type] + ORDERS_FIELD_NAME;
         return mongoOrdersDatabase.getCollection(collectionName);
     }
 
@@ -159,10 +159,10 @@ public class MongoUtils {
             , MongoCollection<Document> collection) {
         FindIterable<Document> records = collection.find(Filters
                 .eq("orderId", orderNumber)).projection(fields(include(
-                "attributes." + targetItemNames[type]), excludeId()));
+                "attributes." + getTargetItemNames()[type]), excludeId()));
         if (records.iterator().hasNext()) {
             return  ((Document)(records.iterator().next().get("attributes")))
-                    .getString(targetItemNames[type]);
+                    .getString(getTargetItemNames()[type]);
         } else {
             return "";
         }
