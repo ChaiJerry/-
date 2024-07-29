@@ -4,11 +4,11 @@ import org.bson.*;
 
 public class DocFreqPair {
     private Document doc;
-    private int Freq;
+    private int freq;
 
-    public DocFreqPair(Document doc, int Freq) {
+    public DocFreqPair(Document doc, int freq) {
         this.doc = doc;
-        this.Freq = Freq;
+        this.freq = freq;
     }
 
     public Document getDoc() {
@@ -20,11 +20,11 @@ public class DocFreqPair {
     }
 
     public int getFreq() {
-        return Freq;
+        return freq;
     }
 
     public void setFreq(int freq) {
-        Freq = freq;
+        this.freq = freq;
     }
 
 

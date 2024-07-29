@@ -30,31 +30,34 @@ public class IOMonitor {
     protected static HeaderStorage[] headerStorage = new HeaderStorage[6];
 
     // 最小置信度
-    public static float minConfidence;
+    public static final float MIN_CONFIDENCE;
     // 最小支持度
-    public static float minSupport;
+    public static final float MIN_SUPPORT;
     //csv文件结果输出目录路径，若是不以csv文件的格式输出，则该属性可以为null
-    public static String resultDirPath;
+    public static final String RESULT_DIR_PATH;
     // 机票订单csv文件路径
-    public static String pathT;
+    public static final String PATH_T;
     // 酒店订单csv文件路径
-    public static String pathH;
+    public static final String PATH_H;
     // 餐饮订单csv文件路径
-    public static String pathM;
+    public static final String PATH_M;
     // 保险订单csv文件路径
-    public static String pathB;
+    public static final String PATH_B;
     // 保险订单csv文件路径
-    public static String pathI;
+    public static final String PATH_I;
     // 选座订单csv文件路径
-    public static String pathS;
+    public static final String PATH_S;
     // 模式(若是debug模式，则会输出一部分频繁项集和关联规则，否则不输出)
-    public static String mode;
+    public static final String MODE;
     // 结果输出格式（可以是csv或者是db），csv则会将结果以csv文件的形式输出，db则会将结果存入数据库中
-    public static String resultForm;
+    public static final String RESULT_FORM;
     // 训练备注
-    public static String comment;
+    public static final String COMMENT;
 
-    public static final String[] targetItemNames = {null,"HOTEL_NAME", "MEAL_NAME"
+    public static final String ORDERS_FIELD_NAME = "Orders";
+
+
+    protected static final String[] TARGET_ITEM_NAMES = {null,"HOTEL_NAME", "MEAL_NAME"
             , "BAGGAGE_SPECIFICATION", "INSUR_PRO_NAME", "SEAT_NO"};
 
     static {
@@ -70,30 +73,33 @@ public class IOMonitor {
         }
         // 获取配置文件中的属性
         // 获取csv文件结果输出目录，若是不以csv文件的格式输出，则该属性可以为null
-        resultDirPath = properties.getProperty("resultDirPath");
+        RESULT_DIR_PATH = properties.getProperty("resultDirPath");
         // 获取机票订单csv文件路径
-        pathT = properties.getProperty("ticketFilePath");
+        PATH_T = properties.getProperty("ticketFilePath");
         // 获取酒店订单csv文件路径
-        pathH = properties.getProperty("hotelFilePath");
+        PATH_H = properties.getProperty("hotelFilePath");
         // 获取餐饮订单csv文件路径
-        pathM = properties.getProperty("mealFilePath");
+        PATH_M = properties.getProperty("mealFilePath");
         // 获取保险订单csv文件路径
-        pathB = properties.getProperty("baggageFilePath");
+        PATH_B = properties.getProperty("baggageFilePath");
         // 获取保险订单csv文件路径
-        pathI = properties.getProperty("insuranceFilePath");
+        PATH_I = properties.getProperty("insuranceFilePath");
         // 获取选座订单csv文件路径
-        pathS = properties.getProperty("seatFilePath");
+        PATH_S = properties.getProperty("seatFilePath");
         // 获取模式(若是debug模式，则会输出一部分频繁项集和关联规则，否则不输出)
-        mode = properties.getProperty("mode");
+        MODE = properties.getProperty("mode");
         // 获取结果输出格式
-        resultForm = properties.getProperty("resultForm");
+        RESULT_FORM = properties.getProperty("resultForm");
         // 获取最小置信度
-        minConfidence = properties.getProperty("minConfidence") != null ? Float.parseFloat(properties.getProperty("minConfidence")) : 0;
+        MIN_CONFIDENCE = properties.getProperty("minConfidence") != null ? Float.parseFloat(properties.getProperty("minConfidence")) : 0;
         // 获取最小支持度
-        minSupport = properties.getProperty("minSupport") != null ? Float.parseFloat(properties.getProperty("minSupport")) : 0;
+        MIN_SUPPORT = properties.getProperty("minSupport") != null ? Float.parseFloat(properties.getProperty("minSupport")) : 0;
         // 获取训练备注
-        comment = properties.getProperty("comment");
+        COMMENT = properties.getProperty("comment");
 
     }
 
+    public static String[] getTargetItemNames() {
+        return TARGET_ITEM_NAMES;
+    }
 }

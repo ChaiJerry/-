@@ -144,10 +144,8 @@ public class DataConverter {
         return result;
     }
 
-    public boolean strs2txt() throws IOException {
+    public static boolean strs2txt(String filePath) throws IOException {
         List<String> strings = queryTest2();
-        // 指定要写入的文件路径
-        String filePath = "C:\\Users\\mille\\Desktop\\output.txt";
 
         // 使用try-with-resources语句来自动关闭资源
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
@@ -161,13 +159,11 @@ public class DataConverter {
             // 但为了明确性，这里也可以显式调用flush方法（虽然不是必需的）
             writer.flush();
 
-            System.out.println("Successfully wrote strings to the file.");
+            return true;
         } catch (IOException e) {
             // 处理异常
-            e.printStackTrace();
             return false;
         }
-        return true;
     }
 
     public static int setBitPos2zero(int num, int bitPos) {

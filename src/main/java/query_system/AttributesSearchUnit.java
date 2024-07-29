@@ -15,7 +15,7 @@ public class AttributesSearchUnit {
     private static final String[] ates = {"T_CARRIER",
             "T_GRADE", "T_PASSENGER", "S_SHOFARE", "MONTH", "TO"};
 
-    private final int level;
+    private int level = 0;
     private final List<String> ticketAttributes;
     private final int fixedPos;
     private final MongoCollection<Document> collection;
@@ -29,12 +29,11 @@ public class AttributesSearchUnit {
         return level;
     }
 
-    public AttributesSearchUnit(int level, List<String> ticketAttributes
+    public AttributesSearchUnit(List<String> ticketAttributes
             , int fixedPos, MongoCollection<Document> collection
             , Map<String, String> itemAttributeMap
             , Map<String, Double> attributeConfidenceMap
             , Queue<AttributesSearchUnit> bfsQueue, Set<Integer> haveVisited) {
-        this.level = level;
         this.ticketAttributes = ticketAttributes;
         this.fixedPos = fixedPos;
         this.collection = collection;
@@ -44,9 +43,14 @@ public class AttributesSearchUnit {
         this.haveVisited = haveVisited;
     }
 
+    public AttributesSearchUnit setLevel(int level) {
+        this.level = level;
+        return this;
+    }
+
     public AttributesSearchUnit(int level, List<String> ticketAttributes
             , int fixedPos, MongoCollection<Document> collection
-            ,DocFreqPair docFreqMap
+            , DocFreqPair docFreqMap
             , Queue<AttributesSearchUnit> bfsQueue, Set<Integer> haveVisited) {
         this.level = level;
         this.ticketAttributes = ticketAttributes;
@@ -57,6 +61,9 @@ public class AttributesSearchUnit {
         this.haveVisited = haveVisited;
     }
 
+    /**
+     * 根据关联规则搜索对应item的属性
+     */
     public void searchByRules() {
         List<Bson> bsonList = new ArrayList<>();
         for (int i = 0; i < ticketAttributes.size(); i++) {
@@ -79,12 +86,11 @@ public class AttributesSearchUnit {
         int status = listToBits(ticketAttributes);
         for (int i = 0; i < ates.length; i++) {
             List<String> temp = checkViability(status, i);
-            if(temp.isEmpty()){
+            if (temp.isEmpty()) {
                 continue;
             }
-            bfsQueue.add(new AttributesSearchUnit(level + 1
-                            , temp, fixedPos, collection, itemAttributeMap
-                            , attributeConfidenceMap, bfsQueue, haveVisited));
+            bfsQueue.add(new AttributesSearchUnit(temp, fixedPos, collection, itemAttributeMap
+                    , attributeConfidenceMap, bfsQueue, haveVisited).setLevel(level + 1));
         }
     }
 
@@ -96,10 +102,10 @@ public class AttributesSearchUnit {
         FindIterable<Document> search = collection
                 .find(Filters.and(bsonList)).sort(Sorts.descending("Freq"));
 
-        if(search.iterator().hasNext()){
+        if (search.iterator().hasNext()) {
             Document document = search.iterator().next();
             int freq = document.getInteger("Freq");
-            if(freq > docFreqMap.getFreq()){
+            if (freq > docFreqMap.getFreq()) {
                 docFreqMap.setFreq(freq);
                 docFreqMap.setDoc(document);
             }
@@ -109,16 +115,16 @@ public class AttributesSearchUnit {
         int status = listToBits(ticketAttributes);
         for (int i = 0; i < ates.length; i++) {
             List<String> temp = checkViability(status, i);
-            if(temp.isEmpty()){
+            if (temp.isEmpty()) {
                 continue;
             }
             bfsQueue.add(new AttributesSearchUnit(level + 1
-                            , temp, fixedPos, collection,docFreqMap
-                            , bfsQueue, haveVisited));
+                    , temp, fixedPos, collection, docFreqMap
+                    , bfsQueue, haveVisited));
         }
     }
-    
-    private List<String> checkViability(int status, int i){
+
+    private List<String> checkViability(int status, int i) {
         int nextStatus = setBitPos2zero(status, i);
         if (ticketAttributes.get(i) == null || haveVisited.contains(nextStatus) || i == fixedPos) {
             return new ArrayList<>();

@@ -18,6 +18,9 @@ public class ItemSearchUnit {
     private final Set<Integer> haveVisited;
     private final int type;
 
+    private static final String ATTRIBUTE_FIELD = "attributes.";
+
+
     public ItemSearchUnit(List<Map.Entry<String, String>> itemAttributes
             , MongoCollection<Document> collection, int type
             , Queue<ItemSearchUnit> bfsQueue, Set<Integer> haveVisited) {
@@ -33,16 +36,16 @@ public class ItemSearchUnit {
         //从头到尾遍历List<Map.Entry<String, String>> itemAttributes的每个键值对，将键值对添加到bsonList中
         for (Map.Entry<String, String> entry : itemAttributes) {
             if (entry != null) {
-                bsonList.add(Filters.eq("attributes." + entry.getKey(), entry.getValue()));
+                bsonList.add(Filters.eq(ATTRIBUTE_FIELD + entry.getKey(), entry.getValue()));
             }
         }
         FindIterable<Document> search;
         if (bsonList.isEmpty()) {
             search = collection.find().projection(fields(include(
-                    "attributes." + targetItemNames[type]), excludeId()));
+                    ATTRIBUTE_FIELD + getTargetItemNames()[type]), excludeId()));
         } else {
             search = collection.find(Filters.and(bsonList)).projection(fields(include(
-                    "attributes." + targetItemNames[type]), excludeId()));
+                    ATTRIBUTE_FIELD + getTargetItemNames()[type]), excludeId()));
         }
 
         if (search.iterator().hasNext()) {

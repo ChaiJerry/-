@@ -54,8 +54,8 @@ public class FPGrowth {
         logger.info("正在使用FPGrowth算法训练模型");
         return new org.apache.spark.ml.fpm.FPGrowth()
                 .setItemsCol("items")//设置items列名
-                .setMinSupport(minSupport)//最小支持度
-                .setMinConfidence(minConfidence)//最小置信度
+                .setMinSupport(MIN_SUPPORT)//最小支持度
+                .setMinConfidence(MIN_CONFIDENCE)//最小置信度
                 .fit(itemsDF);//让模型适应输入数据
     }
 
@@ -93,7 +93,7 @@ public class FPGrowth {
             return;
         }
         // 创建CSVFileIO对象
-        fileIO = new CSVFileIO(resultDirPath, pathT, pathH, pathM, pathB, pathI, pathS);
+        fileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
     }
 
     public static void fpGrowthTest() throws IOException{
@@ -114,7 +114,7 @@ public class FPGrowth {
             Dataset<Row> freqItemSets = model.freqItemsets();
 
             // 可以选择显示频繁项集(freqItemSets.show();)
-            if (mode.equals("debug")) {
+            if (MODE.equals("debug")) {
                 logger.info("显示频繁项集");
                 freqItemSets.show();
             }
@@ -122,23 +122,23 @@ public class FPGrowth {
 
 
             //保存频繁项集到csv
-            if (resultForm.equals("csv")) {
+            if (RESULT_FORM.equals("csv")) {
                 fileIO.freItemSet2CSV(freqItemSets, i);
-            }else if (resultForm.equals("db")) {
+            }else if (RESULT_FORM.equals("db")) {
                 MongoUtils.frequentItemSets2db(freqItemSets, i);
             }
 
             // 显示生成的关联规则并保存到csv
             Dataset<Row> rules = model.associationRules();
-            if (mode.equals("debug")) {
+            if (MODE.equals("debug")) {
                 logger.info("显示关联规则");
                 rules.show();
             }
 
-            if (resultForm.equals("csv")) {
+            if (RESULT_FORM.equals("csv")) {
                 //保存关联规则到csv
                 fileIO.rules2CSV(rules, i);
-            } else if (resultForm.equals("db")) {
+            } else if (RESULT_FORM.equals("db")) {
                 //保存关联规则到数据库
                 MongoUtils.rules2db(rules, i);
             }
@@ -147,7 +147,7 @@ public class FPGrowth {
         // 停止SparkSession
         logger.info("SparkSession停止");
         //停止MongoDB
-        MongoUtils.closeMongoClient(fileIO.getOrderNumber(),comment,minSupport);
+        MongoUtils.closeMongoClient(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
         spark.stop();
     }
 
