@@ -36,17 +36,20 @@ public class ItemPack {
     }
 
     //计算打包系统正确率的函数
-    public double calculateCorrectionRate(){
+    public double calculateAccuracy(){
         double div = 5;
-        double correctionRate=0;
+        double Accuracy=0;
         for(int i=1;i<6;i++){
-            if ((recommendedItems[i].isEmpty() && orderItemsList.get(i).isEmpty())) {
+            if ((orderItemsList.get(i).isEmpty())) {
                 div-=1;
             }else if(orderItemsList.get(i).contains(recommendedItems[i])){
-                correctionRate++;
+                Accuracy++;
             }
         }
-        return correctionRate/div;
+        if(div == 0){
+            return -1;
+        }
+        return Accuracy/div;
     }
 
     //计算打包系统召回率的函数
@@ -60,6 +63,9 @@ public class ItemPack {
             }else if(orderItemsList.get(i).contains(recommendedItems[i])){
                 recallRate +=  1.0 /orderItemsList.get(i).size();
             }
+        }
+        if(div==0){
+            return -1;
         }
         return recallRate/div;
     }
