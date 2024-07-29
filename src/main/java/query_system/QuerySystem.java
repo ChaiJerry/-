@@ -94,6 +94,7 @@ public class QuerySystem {
                 MongoCollection<Document> ordersCollection = getOrdersCollection(i);
                 int fixedPos = -1;
                 if (i == 1) {
+                    //当推荐的是酒店时，固定在位置5的属性（飞机目的地，避免推荐到其它城市）
                     fixedPos = 5;
                 }
                 String correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
@@ -110,16 +111,32 @@ public class QuerySystem {
                 itemPack.addRecommendedItem(singleItemQuery, i);
             }
         }
-        double averageCorrectionRate = 0;
+        double averageAccuracy = 0;
         double averageRecallRate = 0;
+        int correctRateDiv = itemPackMap.size();
+        int recallRateDiv = itemPackMap.size();
+
         for(ItemPack itemPack : itemPackMap.values()) {
-            averageCorrectionRate += itemPack.calculateCorrectionRate();
-            averageRecallRate += itemPack.calculateRecallRate();
+          double aRate = itemPack.calculateAccuracy();
+          double rRate = itemPack.calculateRecallRate();
+          //-1说明是无效值，应当将相应的div减1
+            if(aRate == -1) {
+                correctRateDiv--;
+            }else{
+                averageAccuracy += aRate;
+            }
+            if(rRate == -1) {
+                recallRateDiv--;
+            }else {
+                averageRecallRate += rRate;
+            }
         }
-        averageCorrectionRate /= itemPackMap.size();
-        averageRecallRate /= itemPackMap.size();
-        System.out.println("averageCorrectionRate: " + averageCorrectionRate);
-        System.out.println("averageRecallRate: " + averageRecallRate);
+        averageAccuracy /= correctRateDiv;
+        averageRecallRate /= recallRateDiv;
+        String accuracyInfo = "averageAccuracy: " + averageAccuracy;
+        String recallInfo = "averageRecallRate: " + averageRecallRate;
+        logger.info(accuracyInfo);
+        logger.info(recallInfo);
     }
 
     public static List<String> queryTest2() throws IOException {
