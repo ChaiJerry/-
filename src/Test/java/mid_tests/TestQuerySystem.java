@@ -9,7 +9,7 @@ import org.junit.*;
 import java.io.*;
 import java.util.*;
 
-import static io.IOMonitor.*;
+import static io.SharedAttributes.*;
 import static io.MongoUtils.*;
 import static org.junit.Assert.*;
 import static query_system.QuerySystem.*;

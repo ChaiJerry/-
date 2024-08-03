@@ -9,7 +9,7 @@ import java.util.*;
 
 import static com.mongodb.client.model.Projections.*;
 import static data_processer.DataConverter.*;
-import static io.IOMonitor.*;
+import static io.SharedAttributes.*;
 
 public class ItemSearchUnit {
     private final List<Map.Entry<String, String>> itemAttributes;
@@ -17,8 +17,6 @@ public class ItemSearchUnit {
     private final Queue<ItemSearchUnit> bfsQueue;
     private final Set<Integer> haveVisited;
     private final int type;
-
-    private static final String ATTRIBUTE_FIELD = "attributes.";
 
 
     public ItemSearchUnit(List<Map.Entry<String, String>> itemAttributes
@@ -36,21 +34,21 @@ public class ItemSearchUnit {
         //从头到尾遍历List<Map.Entry<String, String>> itemAttributes的每个键值对，将键值对添加到bsonList中
         for (Map.Entry<String, String> entry : itemAttributes) {
             if (entry != null) {
-                bsonList.add(Filters.eq(ATTRIBUTE_FIELD + entry.getKey(), entry.getValue()));
+                bsonList.add(Filters.eq(ATTRIBUTES_FIELD + entry.getKey(), entry.getValue()));
             }
         }
         FindIterable<Document> search;
         if (bsonList.isEmpty()) {
             search = collection.find().projection(fields(include(
-                    ATTRIBUTE_FIELD + getTargetItemNames()[type]), excludeId()));
+                    ATTRIBUTES_FIELD + getTargetItemNames()[type]), excludeId()));
         } else {
             search = collection.find(Filters.and(bsonList)).projection(fields(include(
-                    ATTRIBUTE_FIELD + getTargetItemNames()[type]), excludeId()));
+                    ATTRIBUTES_FIELD + getTargetItemNames()[type]), excludeId()));
         }
 
         if (search.iterator().hasNext()) {
             Document next = search.iterator().next();
-            return (Document) next.get("attributes");
+            return (Document) next.get(ATTRIBUTES_FIELD_NAME);
             //需要先得到document才行
         }
 

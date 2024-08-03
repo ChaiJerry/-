@@ -14,9 +14,10 @@ import java.util.logging.*;
 import org.bson.*;
 
 import static com.mongodb.client.model.Projections.*;
-import static io.IOMonitor.*;
+import static io.SharedAttributes.*;
 
 public class MongoUtils {
+
     private MongoUtils() {
     }
 
@@ -33,7 +34,7 @@ public class MongoUtils {
     private static final String DB_SOURCE;
     private static final Logger logger = Logger.getLogger(MongoUtils.class.getName());
     private static String trainingNumber;
-    private static final String TRAINING_NUMBER_FIELD = "trainingNumber";
+    private static final String TRAINING_NUMBER_FIELD_NAME = "trainingNumber";
     //训练的起始时间和结束时间
     private static String startTime;
 
@@ -57,7 +58,7 @@ public class MongoUtils {
         USER = properties.getProperty("user");
         PASSWORD = properties.getProperty("password");
         DB_SOURCE = properties.getProperty("dbSource");
-        trainingNumber = properties.getProperty(TRAINING_NUMBER_FIELD);
+        trainingNumber = properties.getProperty(TRAINING_NUMBER_FIELD_NAME);
         initialMongoClient();
     }
 
@@ -89,12 +90,12 @@ public class MongoUtils {
                 MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("TrainingController");
                 //查询最近的TrainingNumber
                 FindIterable<Document> records = collection
-                        .find().sort(Sorts.descending(TRAINING_NUMBER_FIELD));
+                        .find().sort(Sorts.descending(TRAINING_NUMBER_FIELD_NAME));
                 //如果存在训练编号，则自动获取
                 if (records.iterator().hasNext()) {
                     Document doc = records.iterator().next();
                     //获取训练编号
-                    int number = Integer.parseInt(doc.get(TRAINING_NUMBER_FIELD).toString()) + 1;
+                    int number = Integer.parseInt(doc.get(TRAINING_NUMBER_FIELD_NAME).toString()) + 1;
                     trainingNumber = Integer.toString(number);
                     String info = "自动获取训练编号：" + number;
                     logger.info(info);
@@ -121,7 +122,7 @@ public class MongoUtils {
     }
 
     public static void ordersMap2DB(Map<String, List<String>> ordersMap, int type) {
-        HeaderStorage headerStorage = getHeaderStorage()[type];
+        ItemAttributesStorage itemAttributesStorage = getHeaderStorage()[type];
         //获取集合名称
         String collectionName = FULL_NAMES[type] + ORDERS_FIELD_NAME;
         MongoCollection<Document> collection = mongoOrdersDatabase.getCollection(collectionName);
@@ -131,7 +132,7 @@ public class MongoUtils {
             List<String> values = entry.getValue();
             if (!values.isEmpty()) {
                 //借用频繁项集的存储结构，将属性存入
-                doc.append("attributes", headerStorage.getFrequentItemSetsDocument(values));
+                doc.append("attributes", itemAttributesStorage.getFrequentItemSetsDocument(values));
             }
             collection.insertOne(doc);
         }
@@ -155,13 +156,38 @@ public class MongoUtils {
         return mongoOrdersDatabase.getCollection(collectionName);
     }
 
+    public static void initializeItemAttributesStorages() {
+        for(int type = 1;type <types.length;type++) {
+            itemAttributesStorage[type] = new ItemAttributesStorage();
+            MongoCollection<Document> collection = getFrequentItemSetsCollection(type);
+            FindIterable<Document> records = collection.find().sort(Sorts.descending(TRAINING_NUMBER_FIELD_NAME));
+            //只用找到一个频繁项集中的itemAttributes中的所有属性名即可
+            if (records.iterator().hasNext()) {
+                Document doc = records.iterator().next();
+                if(type==1){
+                    itemAttributesStorage[0] = new ItemAttributesStorage();
+                    Set<String> strings = ((Document) (doc.get(TICKET_ATTRIBUTES_FIELD_NAME))).keySet();
+                    for (String s : strings) {
+                        itemAttributesStorage[0].addAttribute(s);
+                    }
+                }
+                Set<String> strings = ((Document) (doc.get(ITEM_ATTRIBUTES_FIELD_NAME))).keySet();
+                for (String s : strings) {
+                    itemAttributesStorage[type].addAttribute(s);
+                }
+            }
+
+
+        }
+    }
+
     public static String getTargetItemFromOrderNum(String orderNumber, int type
             , MongoCollection<Document> collection) {
         FindIterable<Document> records = collection.find(Filters
                 .eq("orderId", orderNumber)).projection(fields(include(
-                "attributes." + getTargetItemNames()[type]), excludeId()));
+                ATTRIBUTES_FIELD + getTargetItemNames()[type]), excludeId()));
         if (records.iterator().hasNext()) {
-            return  ((Document)(records.iterator().next().get("attributes")))
+            return  ((Document)(records.iterator().next().get(ATTRIBUTES_FIELD_NAME)))
                     .getString(getTargetItemNames()[type]);
         } else {
             return "";
@@ -178,7 +204,7 @@ public class MongoUtils {
             Document antecedent = new Document();
             //得到对应的集合
             MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + FULL_NAMES[type]);
-            if (headerStorage[TICKET].getRulesDocument(r.getList(0), antecedent)) {
+            if (itemAttributesStorage[TICKET].getRulesDocument(r.getList(0), antecedent)) {
                 doc.append("antecedent", antecedent);
                 //处理(consequent)
                 String[] parts = r.getList(1).get(0).toString().split(":");
@@ -191,7 +217,7 @@ public class MongoUtils {
                 //添加置信度
                 doc.append("confidence", Float.parseFloat(r.get(2).toString()));
                 //添加训练编号
-                doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));
+                doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(trainingNumber));
                 //加入数据库
                 collection.insertOne(doc);
             }
@@ -222,11 +248,11 @@ public class MongoUtils {
                 continue;
             }
             //将ticketAttributes添加到doc
-            doc.append("ticketAttributes", headerStorage[TICKET].getFrequentItemSetsDocument(ticketAttributes));
+            doc.append(TICKET_ATTRIBUTES_FIELD_NAME, itemAttributesStorage[TICKET].getFrequentItemSetsDocument(ticketAttributes));
             //将goodAttributes添加到doc
-            doc.append("itemAttributes", headerStorage[type].getFrequentItemSetsDocument(goodAttributes));
+            doc.append("itemAttributes", itemAttributesStorage[type].getFrequentItemSetsDocument(goodAttributes));
             //添加训练编号
-            doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));
+            doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(trainingNumber));
             //添加频次
             doc.append("Freq", Integer.parseInt(r.get(1).toString()));
             //加入数据库
@@ -246,7 +272,7 @@ public class MongoUtils {
             //写入训练信息
             Document doc = new Document();
             //训练编号以整数形式存储
-            doc.append(TRAINING_NUMBER_FIELD, Integer.parseInt(trainingNumber));
+            doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(trainingNumber));
             //训练开始时间
             doc.append("startTime", startTime);
             //训练结束时间
