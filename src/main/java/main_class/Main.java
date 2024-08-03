@@ -5,7 +5,6 @@ package main_class;
 import java.io.*;
 
 
-import static data_processer.DataConverter.*;
 import static query_system.QuerySystem.*;
 
 public class Main {

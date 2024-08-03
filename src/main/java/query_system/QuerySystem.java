@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import static data_processer.DataConverter.*;
-import static io.IOMonitor.*;
+import static io.SharedAttributes.*;
 import static io.MongoUtils.*;
 import static query_system.ItemPack.*;
 
@@ -42,9 +42,9 @@ public class QuerySystem {
         Map<String, List<String>> stringListMap = fileIO.read(type);
         //遍历Map<String, List<String>> stringListMap的所有值
         List<List<String>> ticketAttributeValuesList = new ArrayList<>();
-        HeaderStorage headerStorage = getHeaderStorage()[type];
+        ItemAttributesStorage itemAttributesStorage = getHeaderStorage()[type];
         for (List<String> list : stringListMap.values()) {
-            ticketAttributeValuesList.add(headerStorage.getAttributeLists(list));
+            ticketAttributeValuesList.add(itemAttributesStorage.getAttributeLists(list));
         }
         return ticketAttributeValuesList;
     }
@@ -53,24 +53,20 @@ public class QuerySystem {
         //读取文件，返回Map<String, List<String>>，但是此时还不能使用，可能有不需要的属性或者属性顺序不对
         Map<String, List<String>> ticketOrderNumAttributeMap = fileIO.read(type);
         //获取HeaderStorage，用于获取调整后规范的属性列表
-        HeaderStorage headerStorage = getHeaderStorage()[type];
+        ItemAttributesStorage itemAttributesStorage = getHeaderStorage()[type];
         //遍历Map<String, List<String>> stringListMap的所有键值对
         for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
             String key = iterator.next();
             //获取key对应的List<String>，即属性列表
             List<String> attributeList = ticketOrderNumAttributeMap.get(key);
             //将attributeList中的元素调整为规范格式
-            ticketOrderNumAttributeMap.put(key, headerStorage.getAttributeLists(attributeList));
+            ticketOrderNumAttributeMap.put(key, itemAttributesStorage.getAttributeLists(attributeList));
         }
         return ticketOrderNumAttributeMap;
     }
 
     public static void queryTest3() throws IOException {
-        CSVFileIO fileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
-        for (int i = 0; i < colNum.length; i++) {
-            fileIO.read(i);
-        }
-
+        initializeItemAttributesStorages();
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
         ticketOrderNumAttributeMap = getTicketOrderNumAttributeMap(fileIO, TICKET);
         for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
@@ -92,7 +88,7 @@ public class QuerySystem {
                 MongoCollection<Document> rulesCollection = getRulesCollection(i);
                 //获取ordersCollection，用于查询订单
                 MongoCollection<Document> ordersCollection = getOrdersCollection(i);
-                int fixedPos = -1;
+                int fixedPos =  -1;
                 if (i == 1) {
                     //当推荐的是酒店时，固定在位置5的属性（飞机目的地，避免推荐到其它城市）
                     fixedPos = 5;
@@ -111,28 +107,9 @@ public class QuerySystem {
                 itemPack.addRecommendedItem(singleItemQuery, i);
             }
         }
-        double averageAccuracy = 0;
-        double averageRecallRate = 0;
-        int correctRateDiv = itemPackMap.size();
-        int recallRateDiv = itemPackMap.size();
-
-        for(ItemPack itemPack : itemPackMap.values()) {
-          double aRate = itemPack.calculateAccuracy();
-          double rRate = itemPack.calculateRecallRate();
-          //-1说明是无效值，应当将相应的div减1
-            if(aRate == -1) {
-                correctRateDiv--;
-            }else{
-                averageAccuracy += aRate;
-            }
-            if(rRate == -1) {
-                recallRateDiv--;
-            }else {
-                averageRecallRate += rRate;
-            }
-        }
-        averageAccuracy /= correctRateDiv;
-        averageRecallRate /= recallRateDiv;
+        Evaluator evaluator = new Evaluator(itemPackMap);
+        double averageAccuracy = evaluator.getAverageAccuracy();
+        double averageRecallRate = evaluator.getAverageRecallRate();
         String accuracyInfo = "averageAccuracy: " + averageAccuracy;
         String recallInfo = "averageRecallRate: " + averageRecallRate;
         logger.info(accuracyInfo);

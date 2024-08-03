@@ -10,7 +10,7 @@ import java.util.logging.*;
 
 import static data_processer.DataConverter.*;
 import static data_processer.DataParser.*;
-import static io.IOMonitor.*;
+import static io.SharedAttributes.*;
 import static data_generating_system.FPGrowth.*;
 import static io.MongoUtils.*;
 
@@ -206,12 +206,12 @@ public class CSVFileIO {
         csvReader.readHeaders();
         //通过type判断调用哪个方法
         //将表头存入HeaderStorage之中，方便后续存入数据库
-        headerStorage[type2index.get(type)] = new HeaderStorage();
+        itemAttributesStorage[type2index.get(type)] = new ItemAttributesStorage();
         //得到对应的属性头类
-        HeaderStorage header = headerStorage[type2index.get(type)];
+        ItemAttributesStorage header = itemAttributesStorage[type2index.get(type)];
         for(int i=1;i<csvReader.getHeaderCount();i++) {
             //将表头存入HeaderStorage之中，方便后续存入数据库
-            header.addHeader(csvReader.getHeader(i));
+            header.addAttribute(csvReader.getHeader(i));
         }
         switch (type) {
             case "M":
@@ -225,11 +225,11 @@ public class CSVFileIO {
             case "T":
                 //特殊处理机票数据的属性
                 //添加处理后得到的属性头
-                header.addHeader("MONTH");
-                header.addHeader("TO");
+                header.addAttribute("MONTH");
+                header.addAttribute("TO");
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
-                header.removeHeader("T_VOYAGE");
+                header.removeAttribute("T_VOYAGE");
                 //遍历csv每一行中的内容
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -247,8 +247,8 @@ public class CSVFileIO {
                 break;
             case "H":
                 //删除入住和退房时间属性头
-                header.removeHeader("IN_DATE");
-                header.removeHeader("OUT_DATE");
+                header.removeAttribute("IN_DATE");
+                header.removeAttribute("OUT_DATE");
                 //处理酒店数据
                 while (csvReader.readRecord()) {
                     //订单数量计数

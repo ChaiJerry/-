@@ -3,22 +3,22 @@ import java.util.*;
 import org.bson.*;
 
 
-public class HeaderStorage {
+public class ItemAttributesStorage {
     //属性头列表
-    private List<String> headers = new ArrayList<>();
+    private List<String> attributes = new ArrayList<>();
 
     //添加属性头
-    public void addHeader(String header) {
+    public void addAttribute(String header) {
         //如果属性头在属性头列表之中或是订单号，则跳过
-        if (headers.contains(header) || header.equals("ORDER_NO")) {
+        if (attributes.contains(header) || header.equals("ORDER_NO")) {
             return;
         }
-        headers.add(header);
+        attributes.add(header);
     }
 
     //删除属性头
-    public void removeHeader(String header) {
-        headers.remove(header);
+    public void removeAttribute(String header) {
+        attributes.remove(header);
     }
 
     /**
@@ -40,7 +40,7 @@ public class HeaderStorage {
             String value = temp.split(":")[2];
             headerMap.put(key, value);
         }
-        for(String Header: headers){
+        for(String Header: attributes){
             //如果属性在属性头列表之中不存在，则添加一个空值
             doc.append(Header, headerMap.getOrDefault(Header,null));
         }
@@ -63,7 +63,7 @@ public class HeaderStorage {
             String value = s.split(":")[2];
             headerMap.put(key, value);
         }
-        for(String Header: headers){
+        for(String Header: attributes){
             //如果属性在属性头列表之中不存在，则添加一个空值
             //如果属性在关联规则属性列表之中存在，则添加其对应的属性值
             doc.append(Header, headerMap.getOrDefault(Header,null));
@@ -82,7 +82,7 @@ public class HeaderStorage {
             String value = s.split(":")[2];
             headerMap.put(key, value);
         }
-        for(String Header: headers){
+        for(String Header: attributes){
             //如果属性在属性头列表之中不存在，则添加一个空值
             //如果属性在关联规则属性列表之中存在，则添加其对应的属性值
             attributeLists.add(headerMap.getOrDefault(Header,null));

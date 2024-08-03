@@ -5,7 +5,7 @@ import org.apache.spark.sql.*;
 import java.io.*;
 import java.util.*;
 
-import static io.IOMonitor.*;
+import static io.SharedAttributes.*;
 import static query_system.QuerySystem.*;
 
 public class DataConverter {

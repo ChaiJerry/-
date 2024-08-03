@@ -4,8 +4,10 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
-public class IOMonitor {
-    private IOMonitor() {
+public class SharedAttributes {
+    public static final String TICKET_ATTRIBUTES_FIELD_NAME = "ticketAttributes";
+
+    private SharedAttributes() {
     }
     //下面用于定义商品品类对应的编号，其实可以换成枚举类
     public static final int TICKET = 0;
@@ -22,12 +24,12 @@ public class IOMonitor {
     //将type与index对应，用于快速查找
     protected static HashMap<String, Integer> type2index = new HashMap<>();
 
-    public static HeaderStorage[] getHeaderStorage() {
-        return headerStorage;
+    public static ItemAttributesStorage[] getHeaderStorage() {
+        return itemAttributesStorage;
     }
 
     //存储每个品类下的商品属性，用于快速查找，主要从CSV文件的头文件读取
-    protected static HeaderStorage[] headerStorage = new HeaderStorage[6];
+    protected static ItemAttributesStorage[] itemAttributesStorage = new ItemAttributesStorage[6];
 
     // 最小置信度
     public static final float MIN_CONFIDENCE;
@@ -60,7 +62,16 @@ public class IOMonitor {
     protected static final String[] TARGET_ITEM_NAMES = {null,"HOTEL_NAME", "MEAL_NAME"
             , "BAGGAGE_SPECIFICATION", "INSUR_PRO_NAME", "SEAT_NO"};
 
+    public static final String ATTRIBUTES_FIELD = "attributes.";
+    public static final String ATTRIBUTES_FIELD_NAME = "attributes";
+    public static final String ITEM_ATTRIBUTES_FIELD_NAME = "itemAttributes";
+
+    // 创建CSVFileIO对象
+    public static final CSVFileIO fileIO;
+
     static {
+        CSVFileIO tmpFileIO;
+        Logger logger = Logger.getLogger(SharedAttributes.class.getName());
         // 创建Properties对象
         Properties properties = new Properties();
         // 读取配置文件
@@ -68,7 +79,6 @@ public class IOMonitor {
             InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream("System.properties");
             properties.load(stream);
         } catch (IOException e) {
-            Logger logger = Logger.getLogger(IOMonitor.class.getName());
             logger.info("加载配置文件失败");
         }
         // 获取配置文件中的属性
@@ -97,6 +107,13 @@ public class IOMonitor {
         // 获取训练备注
         COMMENT = properties.getProperty("comment");
 
+        try {
+            tmpFileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
+        } catch (IOException e) {
+            tmpFileIO = null;
+            logger.info("创建CSVFileIO对象失败");
+        }
+        fileIO = tmpFileIO;
     }
 
     public static String[] getTargetItemNames() {
