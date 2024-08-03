@@ -10,6 +10,7 @@ import java.util.*;
 
 import static com.mongodb.client.model.Projections.*;
 import static data_processer.DataConverter.*;
+import static io.SharedAttributes.*;
 
 public class AttributesSearchUnit {
     private static final String[] ates = {"T_CARRIER",
@@ -64,11 +65,12 @@ public class AttributesSearchUnit {
     /**
      * 根据关联规则搜索对应item的属性
      */
-    public void searchByRules() {
+    public void searchByRules(int trainingNumber) {
         List<Bson> bsonList = new ArrayList<>();
         for (int i = 0; i < ticketAttributes.size(); i++) {
             bsonList.add(Filters.eq("antecedent." + ates[i], ticketAttributes.get(i)));
         }
+        bsonList.add(Filters.eq(TRAINING_NUMBER_FIELD_NAME, trainingNumber));
         FindIterable<Document> search = collection.find(Filters.and(bsonList)).projection(fields(include(
                 "consequence", "confidence"), excludeId()));
         for (Document document : search) {

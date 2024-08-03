@@ -6,10 +6,10 @@ public class Evaluator {
     private Map<String, ItemPack> itemPackMap;
     private double averageAccuracy = 0;
     private double averageRecallRate = 0;
-    private int correctRateDiv = itemPackMap.size();
-    private int recallRateDiv = itemPackMap.size();
     public Evaluator(Map<String, ItemPack> itemPackMap) {
         this.itemPackMap = itemPackMap;
+        int correctRateDiv = itemPackMap.size();
+        int recallRateDiv = itemPackMap.size();
         for(ItemPack itemPack : itemPackMap.values()) {
             double aRate = itemPack.calculateAccuracy();
             double rRate = itemPack.calculateRecallRate();

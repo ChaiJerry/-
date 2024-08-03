@@ -245,7 +245,8 @@ public class QuerySystem {
         // 将ticketAttributes对应的状态值加入到haveVisited中
         haveVisited.add(listToBits(ticketAttributes));
         bfsQueue.add(root);
-
+        //从最新的知识库的数据开始搜索，直到找到足够的属性或者所有规则都搜索完毕
+        int latestTrainingNumber = getLatestTrainingNumber();
         int currentLevel = 0;
         while (!bfsQueue.isEmpty()) {
             // 取出队列中的节点
@@ -263,7 +264,7 @@ public class QuerySystem {
             }
 
             // 根据规则进行搜索
-            current.searchByRules();
+            current.searchByRules(latestTrainingNumber);
         }
 
         return itemAttributeMap;
