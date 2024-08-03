@@ -65,6 +65,7 @@ public class SharedAttributes {
     public static final String ATTRIBUTES_FIELD = "attributes.";
     public static final String ATTRIBUTES_FIELD_NAME = "attributes";
     public static final String ITEM_ATTRIBUTES_FIELD_NAME = "itemAttributes";
+    public static final String TRAINING_NUMBER_FIELD_NAME = "trainingNumber";
 
     // 创建CSVFileIO对象
     public static final CSVFileIO fileIO;

@@ -33,6 +33,11 @@ public class MongoUtils {
     private static final String USER;
     private static final String DB_SOURCE;
     private static final Logger logger = Logger.getLogger(MongoUtils.class.getName());
+
+    public static int getLatestTrainingNumber() {
+        return Integer.parseInt(trainingNumber)-1;
+    }
+
     private static String trainingNumber;
     private static final String TRAINING_NUMBER_FIELD_NAME = "trainingNumber";
     //训练的起始时间和结束时间
