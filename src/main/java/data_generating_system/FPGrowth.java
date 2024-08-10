@@ -19,8 +19,6 @@ public class FPGrowth {
     private static Logger logger = null;
     //spark是否已经初始化
     private static boolean isSparkInitialed =false;
-    // csv文件输入输出工具类
-    private static CSVFileIO fileIO = null;
 
     private FPGrowth() {
     }
@@ -88,19 +86,9 @@ public class FPGrowth {
         }
     }
 
-    public static void initializeFileIO() throws IOException {
-        if(fileIO!=null){
-            return;
-        }
-        // 创建CSVFileIO对象
-        fileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
-    }
-
     public static void fpGrowthTest() throws IOException{
         // 启动SparkSession
         initializeSpark();
-        // 创建数据转换器对象
-        initializeFileIO();
         for (int i = 1; i < 6; i++) {
 
             // 准备数据

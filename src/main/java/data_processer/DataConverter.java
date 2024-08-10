@@ -1,6 +1,7 @@
 package data_processer;
 
 import org.apache.spark.sql.*;
+import org.bson.*;
 
 import java.io.*;
 import java.util.*;
@@ -11,6 +12,8 @@ import static query_system.QuerySystem.*;
 public class DataConverter {
     private DataConverter() {
     }
+
+    private static ArrayList<String> economicGrades =new ArrayList<>(Arrays.asList("B", "H", "K", "L", "M", "Q", "X", "E"));
 
 
     //将训练得到的包含关联规则信息的dataset中的数据转化为List<String>
@@ -174,15 +177,14 @@ public class DataConverter {
         switch (type) {
             case HOTEL:
                 map.remove("HOTEL_NAME");
+                map.remove("PRODUCT_NAME");
                 break;
             case MEAL:
-                map.remove("MEAL_NAME");
                 map.remove("MEAL_CODE");
                 break;
             case BAGGAGE:
                 break;
             case INSURANCE:
-                map.remove("INSURANCE_COMPANY");
                 map.remove("INSURANCE_COMPANYCODE");
                 break;
             case SEAT:
@@ -190,7 +192,25 @@ public class DataConverter {
             default:
                 break;
         }
-
         return new ArrayList<>(map.entrySet());
+    }
+
+    public static String TicketGrade2Specific(String ticketGrade) {
+        if(economicGrades.contains(ticketGrade)) {
+            return "经济舱";
+        }else {
+            return ticketGrade;
+        }
+    }
+
+    public static String getItemNameFromDocument(Document document,int type) {
+        List<String> targetItemNames = getTargetItemNames(type);
+        StringBuilder sb = new StringBuilder();
+        for (String itemName : targetItemNames) {
+            if(document.get(ATTRIBUTES_FIELD_NAME) != null){
+                sb.append(((Document)document.get(ATTRIBUTES_FIELD_NAME)).getString(itemName)).append(";");
+            }
+        }
+        return sb.toString();
     }
 }

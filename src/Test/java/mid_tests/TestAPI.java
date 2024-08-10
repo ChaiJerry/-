@@ -16,7 +16,6 @@ public class TestAPI {
     @Before
     public void start() throws IOException {
         initializeSpark();
-        initializeFileIO();
     }
 
     @org.junit.Test

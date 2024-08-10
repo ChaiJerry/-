@@ -58,6 +58,10 @@ public class CSVFileIO {
         }
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
         ticketMap = CSVFileIO.read(csvPaths[TICKET], "T");
+        //训练用机票订单
+        testTicketMap = getTestMap();
+        //测试用机票订单
+        trainingTicketsMap = getTrainingMap();
         // 初始化日志
         logger = Logger.getLogger(getClass().getName());
 
@@ -71,13 +75,13 @@ public class CSVFileIO {
 
     public void singleTypeCsv2database(int type) throws IOException {
         //订单与属性之间的映射map
-        Map<String, List<String>> attributeMap;
+        Map<String, List<List<String>>> attributeMap;
         if (type != TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
             attributeMap = CSVFileIO.read(csvPaths[type], types[type]);
             ordersMap2DB(attributeMap, type);
         } else {
-            ordersMap2DB(ticketMap, type);
+            ordersMap2DB(getTestMap(), type);
         }
     }
 
@@ -86,7 +90,7 @@ public class CSVFileIO {
      */
     public Dataset<Row> singelTypeCsv2dataset(int type) throws IOException {
         //订单与属性之间的映射map
-        Map<String, List<String>> attributeMap;
+        Map<String, List<List<String>>> attributeMap;
         if (type != TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
             attributeMap = CSVFileIO.read(csvPaths[type], types[type]);
@@ -94,15 +98,17 @@ public class CSVFileIO {
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
             // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到data中
-            for (Iterator<String> iterator = ticketMap.keySet().iterator(); iterator.hasNext(); ) {
+            for (Iterator<String> iterator = trainingTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
                 String key = iterator.next();
                 // 得到属性列表
-                List<String> temp = attributeMap.get(key);
+                List<List<String>> attributeLists = attributeMap.get(key);
                 // 如果temp不为空，则将temp添加到data中
                 // 若是为空则说明没有商品可以和该订单匹配，则跳过
-                if (temp != null) {
-                    temp.addAll(ticketMap.get(key));
-                    data.add(RowFactory.create(temp));
+                if (attributeLists != null) {
+                    for(List<String> attributeList : attributeLists) {
+                        attributeList.addAll(trainingTicketsMap.get(key).get(0));
+                        data.add(RowFactory.create(attributeList));
+                    }
                 }
             }
             // 创建DataFrame，并指定模式，将List<Row>数据转换为Dataset<Row>
@@ -111,11 +117,7 @@ public class CSVFileIO {
         } else {
             // 当读取的csv文件是Ticket时
             List<Row> data = new ArrayList<>();
-            //将ticketMap的属性添加到data中
-            for (List<String> list : ticketMap.values()) {
-                data.add(RowFactory.create(list));
-            }
-            // 创建DataFrame，并指定模式，将List<Row>数据转换为Dataset<Row>
+            // 暂时不会有等于TICKET的情况，若是以后有，则可以添加在这个地方
             return getDataFrame(data);
         }
     }
@@ -187,7 +189,7 @@ public class CSVFileIO {
     }
 
 
-    public Map<String, List<String>> read(int type) throws IOException {
+    public Map<String, List<List<String>>> read(int type) throws IOException {
         return CSVFileIO.read(csvPaths[type], types[type]);
     }
 
@@ -197,9 +199,9 @@ public class CSVFileIO {
      * @param type 商品类型
      * @return 返回订单号和订单对应的商品属性之间的键值对 Map<String, List<String>>
      */
-    public static Map<String, List<String>> read(String path, String type) throws IOException {
+    public static Map<String, List<List<String>>> read(String path, String type) throws IOException {
         // 创建HashMap，key为订单号，value为订单对应的属性键值对
-        HashMap<String, List<String>> map = new HashMap<>();
+        HashMap<String, List<List<String>>> map = new HashMap<>();
         // 第一参数：读取文件的路径 第二个参数：分隔符 第三个参数：字符集
         CsvReader csvReader = new CsvReader(path, ',', StandardCharsets.UTF_8);
         // 读取表头
@@ -227,9 +229,12 @@ public class CSVFileIO {
                 //添加处理后得到的属性头
                 header.addAttribute("MONTH");
                 header.addAttribute("TO");
+                header.addAttribute("FROM");
+                header.addAttribute("HAVE_CHILD");
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
                 header.removeAttribute("T_VOYAGE");
+                header.removeAttribute("T_PASSENGER");
                 //遍历csv每一行中的内容
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -276,5 +281,67 @@ public class CSVFileIO {
                 break;
         }
         return map;
+    }
+
+    //为了将训练集和测试集分开，读取csv中的训练集keys
+    public static Set<String> getTrainingKeys() throws IOException {
+        Set<String> keys = new HashSet<>();
+        String filePath = "C:\\Users\\mille\\Desktop\\数据集\\ticket - 副本.csv";
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                int commaIndex = line.indexOf(',');
+                // 对每一行进行处理，这里只是简单地打印出来
+                String result = line.substring(commaIndex+1) + ",";
+                keys.add(result);
+            }
+        }
+        return keys;
+    }
+
+    //得到训练集
+    public static Map<String, List<List<String>>> getTrainingMap() throws IOException {
+        Set<String> keys = getTrainingKeys();
+        Map<String, List<List<String>>> trainingMap = new HashMap<>();
+        //遍历ticketMap
+        for(Map.Entry<String, List<List<String>>> entry : ticketMap.entrySet()) {
+            //如果key在keys中，则加入到trainingMap中
+            if(keys.contains(generateItemKeyFromAttributes(entry.getValue().get(0)))) {
+                trainingMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return trainingMap;
+    }
+
+    //得到测试集
+    public static Map<String, List<List<String>>> getTestMap() throws IOException {
+        Set<String> keys = getTrainingKeys();
+        Map<String, List<List<String>>> testMap = new HashMap<>();
+        //遍历ticketMap
+        for(String key : ticketMap.keySet()) {
+            String itemKey = generateItemKeyFromAttributes(ticketMap.get(key).get(0));
+            if(key.equals("202203010403035972")){
+                System.out.println("wa");
+            }
+
+            //如果key在keys中，则加入到trainingMap中
+            if(!keys.contains(itemKey)) {
+
+                testMap.put(key, ticketMap.get(key));
+            }
+        }
+        if(testMap.containsValue("202202202003284774")) {
+            System.out.println("bad");
+        }
+
+        return testMap;
+    }
+
+    public static String generateItemKeyFromAttributes(List<String> attributes){
+        StringBuilder stringBuilder=new StringBuilder();
+        for(int i = 0; i < attributes.size()-1;i++){
+            stringBuilder.append(attributes.get(i).split(":")[2]).append(",");
+        }
+        return stringBuilder.toString();
     }
 }

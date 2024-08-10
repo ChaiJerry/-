@@ -4,6 +4,7 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import org.bson.*;
 import org.bson.conversions.*;
+import scala.tools.nsc.doc.html.*;
 
 import java.util.*;
 
@@ -40,15 +41,14 @@ public class ItemSearchUnit {
         FindIterable<Document> search;
         if (bsonList.isEmpty()) {
             search = collection.find().projection(fields(include(
-                    ATTRIBUTES_FIELD + getTargetItemNames()[type]), excludeId()));
+                    getTargetItemFieldNames(type)), excludeId()));
         } else {
             search = collection.find(Filters.and(bsonList)).projection(fields(include(
-                    ATTRIBUTES_FIELD + getTargetItemNames()[type]), excludeId()));
+                    getTargetItemFieldNames(type)), excludeId()));
         }
 
         if (search.iterator().hasNext()) {
-            Document next = search.iterator().next();
-            return (Document) next.get(ATTRIBUTES_FIELD_NAME);
+            return search.iterator().next();
             //需要先得到document才行
         }
 

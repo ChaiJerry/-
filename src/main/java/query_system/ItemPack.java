@@ -70,14 +70,10 @@ public class ItemPack {
         return recallRate/div;
     }
 
+    //得到每个机票属性特征键
     public static String generateItemPackKey(List<String> attributeValues){
         StringBuilder stringBuilder=new StringBuilder();
-        for(int i = 0; i < attributeValues.size();i++){
-            if(i==3||i==4) {
-                //i==3或者i==4的时候对应着机票属性之中的价格和日期
-                // ，除此之外的机票属性若是都相同则会认为是近似机票订单
-                continue;
-            }
+        for(int i = 0; i < attributeValues.size()-1;i++){
             stringBuilder.append(attributeValues.get(i)).append(",");
         }
         return stringBuilder.toString();

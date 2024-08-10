@@ -14,7 +14,6 @@ public class TestDataConverter {
     @Before
     public void start() throws IOException {
         initializeSpark();
-        initializeFileIO();
     }
 
     @Test

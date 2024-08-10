@@ -13,8 +13,9 @@ import static data_processer.DataConverter.*;
 import static io.SharedAttributes.*;
 
 public class AttributesSearchUnit {
-    private static final String[] ates = {"T_CARRIER",
-            "T_GRADE", "T_PASSENGER", "S_SHOFARE", "MONTH", "TO"};
+    //机票的属性，用于搜索中作为前件
+    private static final String[] ates = {"T_CARRIER", "T_GRADE", "S_SHOFARE"
+            , "MONTH", "TO" , "FROM" , "HAVE_CHILD"};
 
     private int level = 0;
     private final List<String> ticketAttributes;
@@ -67,6 +68,7 @@ public class AttributesSearchUnit {
      */
     public void searchByRules(int trainingNumber) {
         List<Bson> bsonList = new ArrayList<>();
+        //ticketAttributes是输入的机票属性列表
         for (int i = 0; i < ticketAttributes.size(); i++) {
             bsonList.add(Filters.eq("antecedent." + ates[i], ticketAttributes.get(i)));
         }
