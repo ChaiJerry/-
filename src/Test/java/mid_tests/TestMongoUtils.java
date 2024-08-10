@@ -49,7 +49,6 @@ public class TestMongoUtils {
         int trainingNumber = getTrainingNumber(mongoDatabase
                 .getCollection("TrainingController")) + 1;
         initializeSpark();
-        initializeFileIO();
         Dataset<Row> rowDataset = getFileIO().singelTypeCsv2dataset(1);
         FPGrowthModel model = train(rowDataset);
         Dataset<Row> frequentItemSet = model.freqItemsets();

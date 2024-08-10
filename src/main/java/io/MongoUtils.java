@@ -14,6 +14,7 @@ import java.util.logging.*;
 import org.bson.*;
 
 import static com.mongodb.client.model.Projections.*;
+import static data_processer.DataConverter.*;
 import static io.SharedAttributes.*;
 
 public class MongoUtils {
@@ -126,20 +127,22 @@ public class MongoUtils {
         }
     }
 
-    public static void ordersMap2DB(Map<String, List<String>> ordersMap, int type) {
+    public static void ordersMap2DB(Map<String, List<List<String>>> ordersMap, int type) {
         ItemAttributesStorage itemAttributesStorage = getHeaderStorage()[type];
         //获取集合名称
         String collectionName = FULL_NAMES[type] + ORDERS_FIELD_NAME;
         MongoCollection<Document> collection = mongoOrdersDatabase.getCollection(collectionName);
-        for (Map.Entry<String, List<String>> entry : ordersMap.entrySet()) {
-            Document doc = new Document();
-            doc.append("orderId", entry.getKey());
-            List<String> values = entry.getValue();
-            if (!values.isEmpty()) {
-                //借用频繁项集的存储结构，将属性存入
-                doc.append("attributes", itemAttributesStorage.getFrequentItemSetsDocument(values));
+        for (Map.Entry<String, List<List<String>>> entry : ordersMap.entrySet()) {
+            List<List<String>> values = entry.getValue();
+            for (List<String> value : values) {
+                Document doc = new Document();
+                doc.append("orderId", entry.getKey());
+                if (!values.isEmpty()) {
+                    //借用频繁项集的存储结构，将属性存入
+                    doc.append("attributes", itemAttributesStorage.getFrequentItemSetsDocument(value));
+                    collection.insertOne(doc);
+                }
             }
-            collection.insertOne(doc);
         }
     }
 
@@ -190,10 +193,9 @@ public class MongoUtils {
             , MongoCollection<Document> collection) {
         FindIterable<Document> records = collection.find(Filters
                 .eq("orderId", orderNumber)).projection(fields(include(
-                ATTRIBUTES_FIELD + getTargetItemNames()[type]), excludeId()));
+                getTargetItemFieldNames(type)), excludeId()));
         if (records.iterator().hasNext()) {
-            return  ((Document)(records.iterator().next().get(ATTRIBUTES_FIELD_NAME)))
-                    .getString(getTargetItemNames()[type]);
+            return  getItemNameFromDocument((records.iterator().next()),type);
         } else {
             return "";
         }

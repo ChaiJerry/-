@@ -9,6 +9,7 @@ public class SharedAttributes {
 
     private SharedAttributes() {
     }
+
     //下面用于定义商品品类对应的编号，其实可以换成枚举类
     public static final int TICKET = 0;
     public static final int HOTEL = 1;
@@ -18,9 +19,14 @@ public class SharedAttributes {
     public static final int SEAT = 5;
     //缩写的商品品类，与下面的商品品类全称对应
     protected static final String[] types = {"T", "H", "M", "B", "I", "S"};
-    protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance","Seat"};
+    protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
     //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
-    protected static Map<String, List<String>> ticketMap;
+    protected static Map<String, List<List<String>>> ticketMap;
+
+    protected static Map<String, List<List<String>>> testTicketMap;
+
+    protected static Map<String, List<List<String>>> trainingTicketsMap;
+
     //将type与index对应，用于快速查找
     protected static HashMap<String, Integer> type2index = new HashMap<>();
 
@@ -58,9 +64,11 @@ public class SharedAttributes {
 
     public static final String ORDERS_FIELD_NAME = "Orders";
 
+    //数据库中商品唯一标识符的field名
+    private static final List<List<String>> targetItemFieldNames;
 
-    protected static final String[] TARGET_ITEM_NAMES = {null,"HOTEL_NAME", "MEAL_NAME"
-            , "BAGGAGE_SPECIFICATION", "INSUR_PRO_NAME", "SEAT_NO"};
+    //商品唯一标识符的名字
+    private static final List<List<String>> targetItemNames;
 
     public static final String ATTRIBUTES_FIELD = "attributes.";
     public static final String ATTRIBUTES_FIELD_NAME = "attributes";
@@ -115,9 +123,31 @@ public class SharedAttributes {
             logger.info("创建CSVFileIO对象失败");
         }
         fileIO = tmpFileIO;
+        targetItemFieldNames = new ArrayList<>();
+        targetItemFieldNames.add(new ArrayList<>());
+        targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + "HOTEL_NAME", ATTRIBUTES_FIELD + "PRODUCT_NAME"));
+        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + "MEAL_CODE"));
+        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + "BAGGAGE_SPECIFICATION"));
+        targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + "INSUR_PRO_NAME", ATTRIBUTES_FIELD + "INSURANCE_COMPANYCODE"));
+        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + "SEAT_NO"));
+
+        targetItemNames = new ArrayList<>();
+        targetItemNames.add(new ArrayList<>());
+        targetItemNames.add(Arrays.asList("HOTEL_NAME", "PRODUCT_NAME"));
+        targetItemNames.add(List.of( "MEAL_CODE"));
+        targetItemNames.add(List.of("BAGGAGE_SPECIFICATION"));
+        targetItemNames.add(Arrays.asList("INSUR_PRO_NAME","INSURANCE_COMPANYCODE"));
+        targetItemNames.add(List.of("SEAT_NO"));
+
     }
 
-    public static String[] getTargetItemNames() {
-        return TARGET_ITEM_NAMES;
+    public static List<String> getTargetItemNames(int type) {
+        return targetItemNames.get(type);
     }
+
+
+    public static List<String> getTargetItemFieldNames(int type) {
+        return targetItemFieldNames.get(type);
+    }
+
 }
