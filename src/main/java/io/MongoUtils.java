@@ -189,16 +189,17 @@ public class MongoUtils {
         }
     }
 
-    public static String getTargetItemFromOrderNum(String orderNumber, int type
+    public static List<String> getTargetItemFromOrderNum(String orderNumber, int type
             , MongoCollection<Document> collection) {
         FindIterable<Document> records = collection.find(Filters
                 .eq("orderId", orderNumber)).projection(fields(include(
                 getTargetItemFieldNames(type)), excludeId()));
-        if (records.iterator().hasNext()) {
-            return  getItemNameFromDocument((records.iterator().next()),type);
-        } else {
-            return "";
+        List<String> targetItems = new ArrayList<>();
+        MongoCursor<Document> iterator = records.iterator();
+        while (iterator.hasNext()) {
+            targetItems.add(getItemNameFromDocument((iterator.next()),type));
         }
+        return targetItems;
     }
 
     /**

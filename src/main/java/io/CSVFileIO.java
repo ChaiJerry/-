@@ -21,7 +21,8 @@ public class CSVFileIO {
     //csv文件读取的路径，数组长度为types.length，数组下标与types对应
     private final String[] csvPaths = new String[types.length];
 
-    private final Logger logger;
+    // 初始化日志记录器
+    private static final Logger logger = Logger.getLogger(CSVFileIO.class.getName());
 
     //得到订单数量
     public int getOrderNumber() {
@@ -62,9 +63,6 @@ public class CSVFileIO {
         testTicketMap = getTestMap();
         //测试用机票订单
         trainingTicketsMap = getTrainingMap();
-        // 初始化日志
-        logger = Logger.getLogger(getClass().getName());
-
     }
 
     public void csv2DB() throws IOException {
@@ -81,7 +79,9 @@ public class CSVFileIO {
             attributeMap = CSVFileIO.read(csvPaths[type], types[type]);
             ordersMap2DB(attributeMap, type);
         } else {
-            ordersMap2DB(getTestMap(), type);
+            // 当读取的csv文件是Ticket时
+            // 将测试集放入数据库
+            ordersMap2DB(getTestTicketMap(), type);
         }
     }
 
@@ -283,15 +283,58 @@ public class CSVFileIO {
         return map;
     }
 
+    //得到训练集
+    public static Map<String, List<List<String>>> getTrainingMap()  {
+        //得到训练集的keys
+        Set<String> keys;
+        try {
+            keys = getTrainKeys();
+        } catch (IOException e) {
+            logger.info("无机票训练集数据");
+            return new HashMap<>();
+        }
+        //得到训练集
+        return getTargetMap(keys);
+    }
+
+    //得到测试集
+    public static Map<String, List<List<String>>> getTestMap(){
+        //得到测试集的keys
+        Set<String> keys;
+        try {
+            keys = getTestKeys();
+        } catch (IOException e) {
+            logger.info("无机票测试集数据");
+            return new HashMap<>();
+        }
+        //得到测试集
+        return getTargetMap(keys);
+    }
+
     //为了将训练集和测试集分开，读取csv中的训练集keys
-    public static Set<String> getTrainingKeys() throws IOException {
+    public static Set<String> getTrainKeys() throws IOException {
+        Set<String> trainNumsSet = getNumsSet(
+                "D:\\programms\\java_projects\\version_control\\测试数据2.0\\train_dataset.txt");
+        return getKeys(trainNumsSet);
+    }
+
+    public static Set<String> getTestKeys() throws IOException {
+        Set<String> testNumsSet = getNumsSet(
+                "D:\\programms\\java_projects\\version_control\\测试数据2.0\\test_dataset.txt");
+        return getKeys(testNumsSet);
+    }
+
+    //得到机票唯一标识符key的集合keys
+    public static Set<String> getKeys(Set<String> numsSet) throws IOException {
         Set<String> keys = new HashSet<>();
-        String filePath = "C:\\Users\\mille\\Desktop\\数据集\\ticket - 副本.csv";
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        String csvFilePath = "D:\\programms\\java_projects\\version_control\\测试数据2.0\\ticket.csv";
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             while ((line = br.readLine()) != null) {
+                if(!numsSet.contains(line.split(",")[0])){
+                    continue;
+                }
                 int commaIndex = line.indexOf(',');
-                // 对每一行进行处理，这里只是简单地打印出来
                 String result = line.substring(commaIndex+1) + ",";
                 keys.add(result);
             }
@@ -299,42 +342,46 @@ public class CSVFileIO {
         return keys;
     }
 
-    //得到训练集
-    public static Map<String, List<List<String>>> getTrainingMap() throws IOException {
-        Set<String> keys = getTrainingKeys();
-        Map<String, List<List<String>>> trainingMap = new HashMap<>();
-        //遍历ticketMap
-        for(Map.Entry<String, List<List<String>>> entry : ticketMap.entrySet()) {
-            //如果key在keys中，则加入到trainingMap中
-            if(keys.contains(generateItemKeyFromAttributes(entry.getValue().get(0)))) {
-                trainingMap.put(entry.getKey(), entry.getValue());
+
+    //从一个给定的txt文件中得到csv文件中所有订单号（训练集或测试集）
+    public static Set<String> getNumsSet(String filePath) throws IOException {
+        Set<String> nums = new HashSet<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                nums.add(line);
             }
         }
-        return trainingMap;
+        return nums;
     }
 
-    //得到测试集
-    public static Map<String, List<List<String>>> getTestMap() throws IOException {
-        Set<String> keys = getTrainingKeys();
-        Map<String, List<List<String>>> testMap = new HashMap<>();
+
+
+    //得到结果集合（是上面两个方法直接套用的方法）
+    public static Map<String, List<List<String>>> getTargetMap(Set<String> keys){
+        //返回的结果的map
+        Map<String, List<List<String>>> targetMap = new HashMap<>();
         //遍历ticketMap
-        for(String key : ticketMap.keySet()) {
-            String itemKey = generateItemKeyFromAttributes(ticketMap.get(key).get(0));
-            if(key.equals("202203010403035972")){
-                System.out.println("wa");
-            }
-
-            //如果key在keys中，则加入到trainingMap中
-            if(!keys.contains(itemKey)) {
-
-                testMap.put(key, ticketMap.get(key));
+        for (Map.Entry<String, List<List<String>>> entry : ticketMap.entrySet()) {
+            //得到key
+            String key = entry.getKey();
+            //得到ticketMap中属性列表的列表
+            List<List<String>> listOfAttributeList = entry.getValue();
+            for (List<String> attributeList : listOfAttributeList) {
+                // 得到机票的key（机票唯一标识符）
+                String itemKey = generateItemKeyFromAttributes(attributeList);
+                // 如果机票的key在keys中，则将这个属性列表加入到targetMap的对应的属性列表的列表中
+                if (keys.contains(itemKey)) {
+                    // 如果targetMap中没有这个key，则新建一个属性列表的列表,否则直接获取这个key对应的属性列表的列表
+                    List<List<String>> listOfAttributeListInDataSet = targetMap.getOrDefault(key, new ArrayList<>());
+                    // 将这个属性列表加入到属性列表的列表中
+                    listOfAttributeListInDataSet.add(attributeList);
+                    // 将这个属性列表的列表加入或更新到targetMap中
+                    targetMap.put(key, listOfAttributeListInDataSet);
+                }
             }
         }
-        if(testMap.containsValue("202202202003284774")) {
-            System.out.println("bad");
-        }
-
-        return testMap;
+        return targetMap;
     }
 
     public static String generateItemKeyFromAttributes(List<String> attributes){

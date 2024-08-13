@@ -13,7 +13,18 @@ public class DataConverter {
     private DataConverter() {
     }
 
-    private static ArrayList<String> economicGrades =new ArrayList<>(Arrays.asList("B", "H", "K", "L", "M", "Q", "X", "E"));
+    // 头等舱
+    protected static List<String> firstClassGrades = new ArrayList<>(Arrays.asList("F", "A", "P"));
+
+    // 公务舱
+    protected static List<String> businessClassGrades = new ArrayList<>(Arrays.asList("C", "D"));
+
+    // 普通舱（经济舱）及其折扣
+    protected static List<String> economicClassGrades = new ArrayList<>(Arrays.asList(
+            "B","Y", "K", "H", "M", "N", "L", "Q", "E", "T", "X", "U", "W", "R", "O"));
+
+    // 其余是特殊舱位
+
 
 
     //将训练得到的包含关联规则信息的dataset中的数据转化为List<String>
@@ -59,7 +70,7 @@ public class DataConverter {
                 }
             }
             //若是ticketList为空，或者goodList为空，则是无意义的频繁项集，直接跳过
-            if ((ticketList.length() == 0) || (itemsList.length() == 0)) {
+            if ((ticketList.isEmpty()) || (itemsList.isEmpty())) {
                 continue;
             }
             //将ticketList和itemsList转化到Row之中
@@ -195,11 +206,15 @@ public class DataConverter {
         return new ArrayList<>(map.entrySet());
     }
 
-    public static String TicketGrade2Specific(String ticketGrade) {
-        if(economicGrades.contains(ticketGrade)) {
+    public static String ticketGrade2Specific(String ticketGrade) {
+        if(economicClassGrades.contains(ticketGrade)) {
             return "经济舱";
+        }else if(businessClassGrades.contains(ticketGrade)){
+            return "公务舱";
+        }else if(firstClassGrades.contains(ticketGrade)){
+            return "头等舱";
         }else {
-            return ticketGrade;
+            return "特殊舱";
         }
     }
 
@@ -208,7 +223,8 @@ public class DataConverter {
         StringBuilder sb = new StringBuilder();
         for (String itemName : targetItemNames) {
             if(document.get(ATTRIBUTES_FIELD_NAME) != null){
-                sb.append(((Document)document.get(ATTRIBUTES_FIELD_NAME)).getString(itemName)).append(";");
+                sb.append(((Document)document.get(ATTRIBUTES_FIELD_NAME))
+                        .getString(itemName)).append(";");
             }
         }
         return sb.toString();
