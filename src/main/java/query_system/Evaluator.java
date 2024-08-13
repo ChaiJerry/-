@@ -11,8 +11,8 @@ public class Evaluator {
         int correctRateDiv = itemPackMap.size();
         int recallRateDiv = itemPackMap.size();
         for(ItemPack itemPack : itemPackMap.values()) {
-            double aRate = itemPack.calculateAccuracy();
-            double rRate = itemPack.calculateRecallRate();
+            double aRate = itemPack.calculateAverageAccuracy();
+            double rRate = itemPack.calculateAverageRecallRate();
             //-1说明是无效值，应当将相应的div减1
             if(aRate == -1) {
                 correctRateDiv--;

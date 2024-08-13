@@ -20,10 +20,13 @@ public class SharedAttributes {
     //缩写的商品品类，与下面的商品品类全称对应
     protected static final String[] types = {"T", "H", "M", "B", "I", "S"};
     protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
+
+
     //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
     protected static Map<String, List<List<String>>> ticketMap;
 
     protected static Map<String, List<List<String>>> testTicketMap;
+
 
     protected static Map<String, List<List<String>>> trainingTicketsMap;
 
@@ -148,6 +151,18 @@ public class SharedAttributes {
 
     public static List<String> getTargetItemFieldNames(int type) {
         return targetItemFieldNames.get(type);
+    }
+
+    public static Map<String, List<List<String>>> getTestTicketMap() {
+        return testTicketMap;
+    }
+
+    public static Map<String, List<List<String>>> getTrainingTicketsMap() {
+        return trainingTicketsMap;
+    }
+
+    public static String[] getFullNames() {
+        return FULL_NAMES;
     }
 
 }

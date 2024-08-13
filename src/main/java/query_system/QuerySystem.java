@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.logging.*;
 
 import static data_processer.DataConverter.*;
-import static io.CSVFileIO.*;
 import static io.SharedAttributes.*;
 import static io.MongoUtils.*;
 import static query_system.ItemPack.*;
@@ -36,9 +35,6 @@ public class QuerySystem {
         logger = Logger.getLogger(QuerySystem.class.getName());
     }
 
-
-
-
     public static List<List<String>> getTicketAttributeValuesList(CSVFileIO fileIO, int type) throws IOException {
         Map<String, List<List<String>>> stringListMap = fileIO.read(type);
         //遍历Map<String, List<String>> stringListMap的所有值
@@ -52,17 +48,19 @@ public class QuerySystem {
 
     /**
      * 获取ticketOrderNumAttributeMap，用于获得规范的订单号与属性列表的列表的对应关系
+     * （主要是处理属性列表，对于属性较多的商品，去除其商品唯一标识符相关的属性，
+     * 保留其余属性，提高模型泛化性，因此可以推荐从未见过的商品）
      */
-    public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap() throws IOException {
+    public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap() {
         //读取文件，返回Map<String, List<List<String>>>，但是此时还不能使用，可能有不需要的属性或者属性顺序不对
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTestMap();
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTestTicketMap();
         //获取HeaderStorage，用于获取调整后规范的属性列表
         ItemAttributesStorage itemAttributesStorage = getHeaderStorage()[TICKET];
         //遍历Map<String, List<List<String>>> itemAttributesStorage的所有键值对
         for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
             String key = iterator.next();
             List<List<String>> lists = ticketOrderNumAttributeMap.get(key);
-            for(int i=0;i<lists.size();i++) {
+            for (int i = 0; i < lists.size(); i++) {
                 //获取key对应的List<List<String>>，即属性列表的列表
                 List<String> attributeList = lists.get(i);
                 //将attributeList中的元素调整为规范格式
@@ -78,14 +76,15 @@ public class QuerySystem {
         ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap();
         for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
             String orderNum = iterator.next();
+            List<List<String>> listOfAttributeList = ticketOrderNumAttributeMap.get(orderNum);
             //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性列表
-            List<String> attributeValues = ticketOrderNumAttributeMap.get(orderNum).get(0);
+            List<String> attributeValues = listOfAttributeList.get(0);
             String itemPackKey = generateItemPackKey(attributeValues);
             boolean isRepeated = itemPackMap.containsKey(itemPackKey);
             ItemPack itemPack;
-            if(isRepeated) {
+            if (isRepeated) {
                 itemPack = itemPackMap.get(itemPackKey);
-            }else {
+            } else {
                 itemPack = new ItemPack(itemPackKey);
                 itemPackMap.put(itemPackKey, itemPack);
             }
@@ -95,16 +94,16 @@ public class QuerySystem {
                 MongoCollection<Document> rulesCollection = getRulesCollection(i);
                 //获取ordersCollection，用于查询订单
                 MongoCollection<Document> ordersCollection = getOrdersCollection(i);
-                int fixedPos =  -1;
+                int fixedPos = -1;
                 if (i == 1) {
                     //当推荐的是酒店时，固定在位置5的属性（飞机目的地，避免推荐到其它城市）
-                    fixedPos = 5;
+                    fixedPos = 3;
                 }
-                String correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
-                if(!correctTargetItem.isEmpty()) {
+                List<String> correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
+                if (!correctTargetItem.isEmpty()) {
                     itemPack.addOrderItem(correctTargetItem, i);
                 }
-                if(isRepeated){
+                if (isRepeated) {
                     continue;
                 }
                 //根据attributeValues，查询ordersCollection中对应的订单
@@ -141,7 +140,7 @@ public class QuerySystem {
             List<String> attributeValues = ticketOrderNumAttributeMap.get(orderNum).get(0);
             StringBuilder sb = new StringBuilder();
             sb.append(orderNum).append(",");
-            sb.append(getTargetItemFromOrderNum(orderNum, TICKET, ticketOrdersCollection)).append(",");
+            sb.append(getTargetItemFromOrderNum(orderNum, TICKET, ticketOrdersCollection).get(0)).append(",");
             for (int i = 1; i < colNum.length; i++) {
                 //获取rulesCollection，用于查询规则
                 MongoCollection<Document> rulesCollection = getRulesCollection(i);
@@ -149,9 +148,9 @@ public class QuerySystem {
                 MongoCollection<Document> ordersCollection = getOrdersCollection(i);
                 int fixedPos = -1;
                 if (i == 1) {
-                    fixedPos = 5;
+                    fixedPos = 3;
                 }
-                String correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
+                List<String> correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
                 //根据attributeValues，查询ordersCollection中对应的订单
                 Map<String, String> singleAttributeQuery =
                         singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
@@ -177,46 +176,58 @@ public class QuerySystem {
         }
 
         for (int i = 1; i < colNum.length; i++) {
+            itemPackMap.clear();
+
             //获取rulesCollection，用于查询规则
             MongoCollection<Document> rulesCollection = getRulesCollection(i);
             //获取ordersCollection，用于查询订单
             MongoCollection<Document> ordersCollection = getOrdersCollection(i);
             int fixedPos = -1;
+
             if (i == 1) {
-                fixedPos = 5;
+                fixedPos = 3;
             }
-            double correct=0;
-            double wrong = 0;
             double total = 0;
 
             if (mode.equals("eva")) {
                 for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
-                    total++;
                     String orderNum = iterator.next();
-                    String correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
-                    if(correctTargetItem.isEmpty()) {
+                    List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
+                    if (correctTargetItems.isEmpty()) {
                         continue;
                     }
 
-                    if(correctTargetItem.equals("三亚唐拉雅秀酒店;豪华山景房（大床）;")) {
-                        System.out.println("wa");
-                    }
-
                     //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性列表
-                    List<String> attributeValues = ticketOrderNumAttributeMap.get(orderNum).get(0);
-                    //根据attributeValues，查询ordersCollection中对应的订单
-                    Map<String, String> singleAttributeQuery =
-                            singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
-                    String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
-                    String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItem;
-                    logger.info(info);
-                    if(singleItemQuery.equals(correctTargetItem)) {
-                        correct++;
-                    } else {
-                        wrong++;
+                    List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
+                    for (List<String> attributeValues : listOfTicketAttributeList) {
+                        total++;
+                        String itemPackKey = generateItemPackKey(attributeValues);
+                        boolean isRepeated = itemPackMap.containsKey(itemPackKey);
+                        ItemPack itemPack;
+                        if (isRepeated) {
+                            itemPack = itemPackMap.get(itemPackKey);
+                        } else {
+                            itemPack = new ItemPack(itemPackKey);
+                            itemPackMap.put(itemPackKey, itemPack);
+                        }
+                        //根据attributeValues，查询ordersCollection中对应的订单
+                        Map<String, String> singleAttributeQuery =
+                                singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
+                        String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
+                        itemPack.addOrderItem(correctTargetItems, i);
+                        itemPack.addRecommendedItem(singleItemQuery, i);
+//                        String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
+//                        logger.info(info);
                     }
-
                 }
+                logger.info(getFullNames()[i] + "有效测试订单条数共: " + total);
+                Evaluator evaluator = new Evaluator(itemPackMap);
+                double averageAccuracy = evaluator.getAverageAccuracy();
+                double averageRecallRate = evaluator.getAverageRecallRate();
+                String accuracyInfo = "averageAccuracy: " + averageAccuracy;
+                String recallInfo = "averageRecallRate: " + averageRecallRate;
+                logger.info(accuracyInfo);
+                logger.info(recallInfo);
             } else if (mode.equals("generate")) {
                 for (List<String> ticketAttributeValues : ticketAttributeValuesList) {
                     Map<String, String> singleAttributeQuery =
@@ -225,10 +236,6 @@ public class QuerySystem {
                     logger.info(singleItemQuery);
                 }
             }
-            logger.info("correct: " + correct);
-            logger.info("wrong: " + wrong);
-            logger.info("total: " + total);
-            System.out.println("accuracy: " + correct/(correct+wrong));
         }
     }
 
@@ -315,9 +322,9 @@ public class QuerySystem {
     }
 
     //从属性名属性值键值对之中尝试直接得到商品唯一标识符
-    private static String tryGetItemNameDirectlyFromMap(Map<String, String> itemAttributeMap,int type){
+    private static String tryGetItemNameDirectlyFromMap(Map<String, String> itemAttributeMap, int type) {
         //酒店的属性较多，适合直接属性查询
-        if(type==HOTEL){
+        if (type == HOTEL) {
             return "";
         }
         StringBuilder itemName = new StringBuilder();
@@ -338,7 +345,7 @@ public class QuerySystem {
 
     private static String singleItemQuery(Map<String, String> itemAttributeMap
             , MongoCollection<Document> ordersCollection, int type) {
-        String itemName = tryGetItemNameDirectlyFromMap(itemAttributeMap,type);
+        String itemName = tryGetItemNameDirectlyFromMap(itemAttributeMap, type);
         //如果直接得到商品唯一标识符，则不进行bfs查询操作，直接返回唯一标识符即可
         if (!itemName.isEmpty()) {
             return itemName;
@@ -357,7 +364,7 @@ public class QuerySystem {
         while (!bfsQueue.isEmpty()) {
             Document item = bfsQueue.poll().search();
             if (item != null && !item.isEmpty()) {
-                return getItemNameFromDocument(item,type);
+                return getItemNameFromDocument(item, type);
             }
         }
         return "";

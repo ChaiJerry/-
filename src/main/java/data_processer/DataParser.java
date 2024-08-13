@@ -58,6 +58,23 @@ public class DataParser {
             if (!csvReader.get(4).equals("ADT")) {
                 attributeList.set(5, T_SIGN + "HAVE_CHILD" + ":" + "1");
             }
+            //处理一个机票订单之中有往返票的情况
+            if (isRoundTrip(attributeList, csvReader.get(2))) {
+                //如果之前没有添加往返票信息，则添加一次
+                if (map.get(key).size() == 1) {
+                    List<String> newAttributeList = new ArrayList<>(attributeList);
+                    newAttributeList.set(2, T_SIGN + "FROM" + ":" + csvReader.get(2).split("-")[0]);
+                    newAttributeList.set(3, T_SIGN + "TO" + ":" + csvReader.get(2).split("-")[1]);
+                    map.get(key).add(newAttributeList);
+                } else {
+                    //如果之前已经添加了往返票信息，则修改往返票信息
+                    // ，使得两个订单的除了起始地点之外的属性相同
+                    List<String> newAttributeList = new ArrayList<>(attributeList);
+                    newAttributeList.set(2, T_SIGN + "FROM" + ":" + csvReader.get(2).split("-")[1]);
+                    newAttributeList.set(3, T_SIGN + "TO" + ":" + csvReader.get(2).split("-")[0]);
+                    map.get(key).set(1, newAttributeList);
+                }
+            }
         } else {
             listofAttributeList = new ArrayList<>();
             //添加时间属性（划分到月） 0
@@ -67,7 +84,7 @@ public class DataParser {
             //添加出发地、目的地属性 2,3
             splitSegment(attributeList, csvReader.get(2));
             //添加航班号属性 4
-            attributeList.add(T_SIGN + csvReader.getHeader(3) + ":" + TicketGrade2Specific(csvReader.get(3)));
+            attributeList.add(T_SIGN + csvReader.getHeader(3) + ":" + ticketGrade2Specific(csvReader.get(3)));
             //添加是否有孩童票属性 5
             attributeList.add(T_SIGN + "HAVE_CHILD" + ":" + (csvReader.get(4).equals("ADT") ? "0" : "1"));
             //添加票价属性 6
@@ -77,6 +94,15 @@ public class DataParser {
             listofAttributeList.add(attributeList);
             map.put(key, listofAttributeList);
         }
+    }
+
+    public static boolean isRoundTrip(List<String> originAttributeList, String voyage) {
+        //获取之前的出发地
+        String originalFrom = originAttributeList.get(2).split(":")[2];
+        //获取之前的目的地
+        String originalTo = originAttributeList.get(3).split(":")[2];
+        //判断是否为往返票
+        return !voyage.equals(originalFrom + "-" + originalTo);
     }
 
     //处理行李订单

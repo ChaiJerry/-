@@ -15,17 +15,23 @@ import static query_system.QuerySystem.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        //queryTest("eva");
-        ///fpGrowthTest();
-        Map<String, List<List<String>>> testMap = fileIO.read(0);
-        for(Map.Entry<String, List<List<String>>> entry : testMap.entrySet()) {
-            System.out.print("OrderNum:"+entry.getKey());
-            for(String list : entry.getValue().get(0)) {
-                System.out.print(","+list);
-            }
-            System.out.println();
-        }
 
-        //ordersMap2DB(getTestMap(), 0);
+        queryTest("eva");
+        //fpGrowthTest();
+//        Map<String, List<List<String>>> testMap = getTestTicketMap();
+//        for(Map.Entry<String, List<List<String>>> entry : testMap.entrySet()) {
+//            System.out.print("OrderNum:"+entry.getKey());
+//            List<List<String>> value = entry.getValue();
+//            if(value.size() == 2) {
+//                for(String list : value.get(1)) {
+//                    System.out.print(","+list);
+//                }
+//            }
+//            for(String list : value.get(0)) {
+//                System.out.print(","+list);
+//            }
+//            System.out.println();
+//        }
+
     }
 }
