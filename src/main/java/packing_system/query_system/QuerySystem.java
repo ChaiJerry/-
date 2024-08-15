@@ -1,19 +1,19 @@
-package query_system;
+package packing_system.query_system;
 
 import com.mongodb.client.*;
 
 import data_processer.*;
-import io.*;
 import org.bson.*;
+import packing_system.data_processer.*;
+import packing_system.io.*;
 
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
-import static data_processer.DataConverter.*;
-import static io.SharedAttributes.*;
-import static io.MongoUtils.*;
-import static query_system.ItemPack.*;
+import static packing_system.data_processer.DataConverter.*;
+import static packing_system.io.SharedAttributes.*;
+import static packing_system.io.MongoUtils.*;
 
 public class QuerySystem {
     private QuerySystem() {
@@ -88,7 +88,7 @@ public class QuerySystem {
                 List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
                 for (List<String> attributeValues : listOfTicketAttributeList) {
                     total++;
-                    String itemPackKey = generateItemPackKey(attributeValues);
+                    String itemPackKey = ItemPack.generateItemPackKey(attributeValues);
                     boolean isRepeated = itemPackMap.containsKey(itemPackKey);
                     ItemPack itemPack;
                     if (isRepeated) {

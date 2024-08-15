@@ -1,10 +1,10 @@
-package api;
+package packing_system.api;
 
 import org.apache.spark.sql.*;
 
 import java.util.*;
 
-import static data_generating_system.FPGrowth.*;
+import static packing_system.data_generating_system.FPGrowth.*;
 
 public class API {
     private API() {}

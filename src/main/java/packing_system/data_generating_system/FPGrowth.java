@@ -1,18 +1,18 @@
-package data_generating_system;
+package packing_system.data_generating_system;
 
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
-import io.*;
 import org.apache.spark.ml.fpm.FPGrowthModel;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
+import packing_system.io.*;
 
-import static data_processer.DataConverter.*;
-import static io.SharedAttributes.*;
+import static packing_system.data_processer.DataConverter.*;
+import static packing_system.io.SharedAttributes.*;
 
 public class FPGrowth {
     private static SparkSession spark = null;

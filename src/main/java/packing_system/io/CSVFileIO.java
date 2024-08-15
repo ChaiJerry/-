@@ -1,4 +1,4 @@
-package io;
+package packing_system.io;
 
 import com.csvreader.*;
 import org.apache.spark.sql.*;
@@ -8,18 +8,16 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.logging.*;
 
-import static data_processer.DataConverter.*;
-import static data_processer.DataParser.*;
-import static io.SharedAttributes.*;
-import static data_generating_system.FPGrowth.*;
-import static io.MongoUtils.*;
+import static packing_system.data_processer.DataConverter.*;
+import static packing_system.data_processer.DataParser.*;
+import static packing_system.data_generating_system.FPGrowth.*;
 
 public class CSVFileIO {
 
     //csv文件结果输出的目录路径
     private final String resultDirPath;
     //csv文件读取的路径，数组长度为types.length，数组下标与types对应
-    private final String[] csvPaths = new String[types.length];
+    private final String[] csvPaths = new String[SharedAttributes.types.length];
 
     // 初始化日志记录器
     private static final Logger logger = Logger.getLogger(CSVFileIO.class.getName());
@@ -42,31 +40,31 @@ public class CSVFileIO {
         // 输出结果路径
         this.resultDirPath = resultDirPath;
         // 机票订单相关数据csv文件路径
-        csvPaths[TICKET] = pathT;
+        csvPaths[SharedAttributes.TICKET] = pathT;
         // 酒店相关数据csv文件路径
-        csvPaths[HOTEL] = pathH;
+        csvPaths[SharedAttributes.HOTEL] = pathH;
         // 餐食相关数据csv文件路径
-        csvPaths[MEAL] = pathM;
+        csvPaths[SharedAttributes.MEAL] = pathM;
         // 行李相关数据csv文件路径
-        csvPaths[BAGGAGE] = pathB;
+        csvPaths[SharedAttributes.BAGGAGE] = pathB;
         // 保险相关数据csv文件路径
-        csvPaths[INSURANCE] = pathI;
+        csvPaths[SharedAttributes.INSURANCE] = pathI;
         // 座位相关数据csv文件路径
-        csvPaths[SEAT] = pathS;
+        csvPaths[SharedAttributes.SEAT] = pathS;
         // 初始化类型与索引的映射
-        for (int i = 0; i < types.length; i++) {
-            type2index.put(types[i], i);
+        for (int i = 0; i < SharedAttributes.types.length; i++) {
+            SharedAttributes.type2index.put(SharedAttributes.types[i], i);
         }
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
-        ticketMap = CSVFileIO.read(csvPaths[TICKET], "T");
+        SharedAttributes.ticketMap = CSVFileIO.read(csvPaths[SharedAttributes.TICKET], "T");
         //训练用机票订单
-        testTicketMap = getTestMap();
+        SharedAttributes.testTicketMap = getTestMap();
         //测试用机票订单
-        trainingTicketsMap = getTrainingMap();
+        SharedAttributes.trainingTicketsMap = getTrainingMap();
     }
 
     public void csv2DB() throws IOException {
-        for(int i = 0; i < types.length; i++) {
+        for(int i = 0; i < SharedAttributes.types.length; i++) {
             singleTypeCsv2database(i);
         }
     }
@@ -74,14 +72,14 @@ public class CSVFileIO {
     public void singleTypeCsv2database(int type) throws IOException {
         //订单与属性之间的映射map
         Map<String, List<List<String>>> attributeMap;
-        if (type != TICKET) {
+        if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], types[type]);
-            ordersMap2DB(attributeMap, type);
+            attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+            MongoUtils.ordersMap2DB(attributeMap, type);
         } else {
             // 当读取的csv文件是Ticket时
             // 将测试集放入数据库
-            ordersMap2DB(getTestTicketMap(), type);
+            MongoUtils.ordersMap2DB(SharedAttributes.getTestTicketMap(), type);
         }
     }
 
@@ -91,14 +89,14 @@ public class CSVFileIO {
     public Dataset<Row> singelTypeCsv2dataset(int type) throws IOException {
         //订单与属性之间的映射map
         Map<String, List<List<String>>> attributeMap;
-        if (type != TICKET) {
+        if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], types[type]);
+            attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
             // 创建数据集
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
             // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到data中
-            for (Iterator<String> iterator = trainingTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+            for (Iterator<String> iterator = SharedAttributes.trainingTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
                 String key = iterator.next();
                 // 得到属性列表
                 List<List<String>> attributeLists = attributeMap.get(key);
@@ -106,7 +104,7 @@ public class CSVFileIO {
                 // 若是为空则说明没有商品可以和该订单匹配，则跳过
                 if (attributeLists != null) {
                     for(List<String> attributeList : attributeLists) {
-                        attributeList.addAll(trainingTicketsMap.get(key).get(0));
+                        attributeList.addAll(SharedAttributes.trainingTicketsMap.get(key).get(0));
                         data.add(RowFactory.create(attributeList));
                     }
                 }
@@ -133,10 +131,10 @@ public class CSVFileIO {
      */
     public void freItemSet2CSV(Dataset<Row> dataSet, int type) {
         // 创建 CSV Writer 对象, 参数说明（写入的文件路径，分隔符，编码格式)
-        CsvWriter csvWriter = new CsvWriter(resultDirPath + "\\FreqItemSet" + FULL_NAMES[type] + ".csv", ',', StandardCharsets.UTF_8);
+        CsvWriter csvWriter = new CsvWriter(resultDirPath + "\\FreqItemSet" + SharedAttributes.FULL_NAMES[type] + ".csv", ',', StandardCharsets.UTF_8);
         try {
             // 定义 header 头
-            String[] headers = {"Ticket", FULL_NAMES[type], "freq"};
+            String[] headers = {"Ticket", SharedAttributes.FULL_NAMES[type], "freq"};
             // 写入 header 头
             csvWriter.writeRecord(headers);
             for (Row r : dataSet.collectAsList()) {
@@ -170,9 +168,9 @@ public class CSVFileIO {
      */
     public void rules2CSV(Dataset<Row> rules, int type) throws IOException {
         // 定义 header 头
-        String[] headers = {"TICKET", FULL_NAMES[type], "confidence"};
+        String[] headers = {"TICKET", SharedAttributes.FULL_NAMES[type], "confidence"};
         // 创建 CSV Writer 对象, 参数说明（写入的文件路径，分隔符，编码格式)
-        CsvWriter csvWriter = new CsvWriter(resultDirPath + "\\" + "AssociationRules" + FULL_NAMES[type] + ".csv", ',', StandardCharsets.UTF_8);
+        CsvWriter csvWriter = new CsvWriter(resultDirPath + "\\" + "AssociationRules" + SharedAttributes.FULL_NAMES[type] + ".csv", ',', StandardCharsets.UTF_8);
         // 写入 header 头
         csvWriter.writeRecord(headers);
         // 遍历 rules
@@ -190,7 +188,7 @@ public class CSVFileIO {
 
 
     public Map<String, List<List<String>>> read(int type) throws IOException {
-        return CSVFileIO.read(csvPaths[type], types[type]);
+        return CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
     }
 
     /**
@@ -208,9 +206,9 @@ public class CSVFileIO {
         csvReader.readHeaders();
         //通过type判断调用哪个方法
         //将表头存入HeaderStorage之中，方便后续存入数据库
-        itemAttributesStorage[type2index.get(type)] = new ItemAttributesStorage();
+        SharedAttributes.itemAttributesStorage[SharedAttributes.type2index.get(type)] = new ItemAttributesStorage();
         //得到对应的属性头类
-        ItemAttributesStorage header = itemAttributesStorage[type2index.get(type)];
+        ItemAttributesStorage header = SharedAttributes.itemAttributesStorage[SharedAttributes.type2index.get(type)];
         for(int i=1;i<csvReader.getHeaderCount();i++) {
             //将表头存入HeaderStorage之中，方便后续存入数据库
             header.addAttribute(csvReader.getHeader(i));
@@ -362,7 +360,7 @@ public class CSVFileIO {
         //返回的结果的map
         Map<String, List<List<String>>> targetMap = new HashMap<>();
         //遍历ticketMap
-        for (Map.Entry<String, List<List<String>>> entry : ticketMap.entrySet()) {
+        for (Map.Entry<String, List<List<String>>> entry : SharedAttributes.ticketMap.entrySet()) {
             //得到key
             String key = entry.getKey();
             //得到ticketMap中属性列表的列表

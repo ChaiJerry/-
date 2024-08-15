@@ -1,4 +1,4 @@
-package io;
+package packing_system.io;
 
 import com.mongodb.*;
 import com.mongodb.MongoClient;
@@ -14,8 +14,7 @@ import java.util.logging.*;
 import org.bson.*;
 
 import static com.mongodb.client.model.Projections.*;
-import static data_processer.DataConverter.*;
-import static io.SharedAttributes.*;
+import static packing_system.data_processer.DataConverter.*;
 
 public class MongoUtils {
 
@@ -118,19 +117,19 @@ public class MongoUtils {
     }
 
     public static void createOrdersCollections() {
-        for (String name : FULL_NAMES) {
+        for (String name : SharedAttributes.FULL_NAMES) {
             //创建集合
-            mongoOrdersDatabase.createCollection(name + ORDERS_FIELD_NAME);
-            if (!Objects.equals(name, FULL_NAMES[TICKET])) {
-                mongoOrdersDatabase.createCollection(FULL_NAMES[TICKET] + "-" + name + ORDERS_FIELD_NAME);
+            mongoOrdersDatabase.createCollection(name + SharedAttributes.ORDERS_FIELD_NAME);
+            if (!Objects.equals(name, SharedAttributes.FULL_NAMES[SharedAttributes.TICKET])) {
+                mongoOrdersDatabase.createCollection(SharedAttributes.FULL_NAMES[SharedAttributes.TICKET] + "-" + name + SharedAttributes.ORDERS_FIELD_NAME);
             }
         }
     }
 
     public static void ordersMap2DB(Map<String, List<List<String>>> ordersMap, int type) {
-        ItemAttributesStorage itemAttributesStorage = getHeaderStorage()[type];
+        ItemAttributesStorage itemAttributesStorage = SharedAttributes.getHeaderStorage()[type];
         //获取集合名称
-        String collectionName = FULL_NAMES[type] + ORDERS_FIELD_NAME;
+        String collectionName = SharedAttributes.FULL_NAMES[type] + SharedAttributes.ORDERS_FIELD_NAME;
         MongoCollection<Document> collection = mongoOrdersDatabase.getCollection(collectionName);
         for (Map.Entry<String, List<List<String>>> entry : ordersMap.entrySet()) {
             List<List<String>> values = entry.getValue();
@@ -148,40 +147,40 @@ public class MongoUtils {
 
     public static MongoCollection<Document> getRulesCollection(int type) {
         //获取集合名称
-        String collectionName = "r_" + FULL_NAMES[type];
+        String collectionName = "r_" + SharedAttributes.FULL_NAMES[type];
         return mongoKnowledgeDatabase.getCollection(collectionName);
     }
 
     public static MongoCollection<Document> getFrequentItemSetsCollection(int type) {
         //获取集合名称
-        String collectionName = "f_" + FULL_NAMES[type];
+        String collectionName = "f_" + SharedAttributes.FULL_NAMES[type];
         return mongoKnowledgeDatabase.getCollection(collectionName);
     }
 
     public static MongoCollection<Document> getOrdersCollection(int type) {
         //获取集合名称
-        String collectionName = FULL_NAMES[type] + ORDERS_FIELD_NAME;
+        String collectionName = SharedAttributes.FULL_NAMES[type] + SharedAttributes.ORDERS_FIELD_NAME;
         return mongoOrdersDatabase.getCollection(collectionName);
     }
 
     public static void initializeItemAttributesStorages() {
-        for(int type = 1;type <types.length;type++) {
-            itemAttributesStorage[type] = new ItemAttributesStorage();
+        for(int type = 1; type < SharedAttributes.types.length; type++) {
+            SharedAttributes.itemAttributesStorage[type] = new ItemAttributesStorage();
             MongoCollection<Document> collection = getFrequentItemSetsCollection(type);
             FindIterable<Document> records = collection.find().sort(Sorts.descending(TRAINING_NUMBER_FIELD_NAME));
             //只用找到一个频繁项集中的itemAttributes中的所有属性名即可
             if (records.iterator().hasNext()) {
                 Document doc = records.iterator().next();
                 if(type==1){
-                    itemAttributesStorage[0] = new ItemAttributesStorage();
-                    Set<String> strings = ((Document) (doc.get(TICKET_ATTRIBUTES_FIELD_NAME))).keySet();
+                    SharedAttributes.itemAttributesStorage[0] = new ItemAttributesStorage();
+                    Set<String> strings = ((Document) (doc.get(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME))).keySet();
                     for (String s : strings) {
-                        itemAttributesStorage[0].addAttribute(s);
+                        SharedAttributes.itemAttributesStorage[0].addAttribute(s);
                     }
                 }
-                Set<String> strings = ((Document) (doc.get(ITEM_ATTRIBUTES_FIELD_NAME))).keySet();
+                Set<String> strings = ((Document) (doc.get(SharedAttributes.ITEM_ATTRIBUTES_FIELD_NAME))).keySet();
                 for (String s : strings) {
-                    itemAttributesStorage[type].addAttribute(s);
+                    SharedAttributes.itemAttributesStorage[type].addAttribute(s);
                 }
             }
 
@@ -192,8 +191,8 @@ public class MongoUtils {
     public static List<String> getTargetItemFromOrderNum(String orderNumber, int type
             , MongoCollection<Document> collection) {
         FindIterable<Document> records = collection.find(Filters
-                .eq("orderId", orderNumber)).projection(fields(include(
-                getTargetItemFieldNames(type)), excludeId()));
+                .eq("orderId", orderNumber)).projection(fields(Projections.include(
+                SharedAttributes.getTargetItemFieldNames(type)), excludeId()));
         List<String> targetItems = new ArrayList<>();
         MongoCursor<Document> iterator = records.iterator();
         while (iterator.hasNext()) {
@@ -211,8 +210,8 @@ public class MongoUtils {
             Document doc = new Document();
             Document antecedent = new Document();
             //得到对应的集合
-            MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + FULL_NAMES[type]);
-            if (itemAttributesStorage[TICKET].getRulesDocument(r.getList(0), antecedent)) {
+            MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + SharedAttributes.FULL_NAMES[type]);
+            if (SharedAttributes.itemAttributesStorage[SharedAttributes.TICKET].getRulesDocument(r.getList(0), antecedent)) {
                 doc.append("antecedent", antecedent);
                 //处理(consequent)
                 String[] parts = r.getList(1).get(0).toString().split(":");
@@ -233,7 +232,7 @@ public class MongoUtils {
     }
 
     public static void frequentItemSets2db(Dataset<Row> itemSets, int type) {
-        MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + FULL_NAMES[type]);
+        MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + SharedAttributes.FULL_NAMES[type]);
         for (Row r : itemSets.collectAsList()) {
             //写入数据库的doc
             Document doc = new Document();
@@ -256,9 +255,9 @@ public class MongoUtils {
                 continue;
             }
             //将ticketAttributes添加到doc
-            doc.append(TICKET_ATTRIBUTES_FIELD_NAME, itemAttributesStorage[TICKET].getFrequentItemSetsDocument(ticketAttributes));
+            doc.append(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME, SharedAttributes.itemAttributesStorage[SharedAttributes.TICKET].getFrequentItemSetsDocument(ticketAttributes));
             //将goodAttributes添加到doc
-            doc.append("itemAttributes", itemAttributesStorage[type].getFrequentItemSetsDocument(goodAttributes));
+            doc.append("itemAttributes", SharedAttributes.itemAttributesStorage[type].getFrequentItemSetsDocument(goodAttributes));
             //添加训练编号
             doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(trainingNumber));
             //添加频次

@@ -5,8 +5,8 @@ import org.junit.*;
 import java.io.*;
 import java.util.*;
 
-import static io.CSVFileIO.*;
-import static io.SharedAttributes.*;
+import static packing_system.io.CSVFileIO.*;
+import static packing_system.io.SharedAttributes.*;
 import static org.junit.Assert.*;
 
 public class TestCsvFileIO {

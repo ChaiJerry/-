@@ -1,18 +1,17 @@
 package mid_tests;
 
 import com.mongodb.client.*;
-import io.*;
 import org.bson.*;
 import org.junit.*;
-
+import packing_system.io.*;
 
 import java.io.*;
 import java.util.*;
 
-import static io.SharedAttributes.*;
-import static io.MongoUtils.*;
+import static packing_system.io.SharedAttributes.*;
+import static packing_system.io.MongoUtils.*;
 import static org.junit.Assert.*;
-import static query_system.QuerySystem.*;
+import static packing_system.query_system.QuerySystem.*;
 
 public class TestQuerySystem {
     @Test
