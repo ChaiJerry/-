@@ -1,14 +1,14 @@
 package mid_tests;
 
-import io.*;
 import org.apache.spark.sql.*;
 import org.junit.*;
+import packing_system.io.*;
 
 import java.io.*;
 import java.util.*;
 
-import static api.API.*;
-import static data_generating_system.FPGrowth.*;
+import static packing_system.api.API.*;
+import static packing_system.data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 public class TestAPI {

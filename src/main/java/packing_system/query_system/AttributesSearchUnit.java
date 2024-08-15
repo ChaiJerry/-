@@ -1,16 +1,17 @@
-package query_system;
+package packing_system.query_system;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import data_processer.*;
 import org.bson.*;
 import org.bson.conversions.*;
+import packing_system.data_processer.*;
 
 import java.util.*;
 
 import static com.mongodb.client.model.Projections.*;
-import static data_processer.DataConverter.*;
-import static io.SharedAttributes.*;
+import static packing_system.data_processer.DataConverter.*;
+import static packing_system.io.SharedAttributes.*;
 
 public class AttributesSearchUnit {
     //机票的属性，用于搜索中作为前件
