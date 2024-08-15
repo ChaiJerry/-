@@ -5,9 +5,12 @@ import com.csvreader.*;
 import java.io.*;
 import java.util.*;
 
+import static data_processer.DataConverter.*;
+
 public class DataParser {
     private DataParser() {
     }
+
     //用于添加到属性中的品类标识
     //机票标识
     private static final String T_SIGN = &quot;Ticket:&quot;;
@@ -22,162 +25,186 @@ public class DataParser {
     //选座标识
     private static final String S_SIGN = &quot;Seat:&quot;;
 
-
-
     //处理餐食订单
-    public static void dealM(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+    public static void dealM(CsvReader csvReader, Map&lt;String, List&lt;List&lt;String&gt;&gt;&gt; map) throws IOException {
         //餐食
-<span class="nc" id="L30">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
-        //得到订单号
-<span class="nc" id="L32">        String key = csvReader.get(0);</span>
-        //订单号相同的情况检验
-<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
-            //订单号相同的情况实际上不应该出现，因为订单号是唯一的
-<span class="nc" id="L36">            return;</span>
-        }
+<span class="fc" id="L31">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //通过订单号得到订单属性的存储列表的列表
+<span class="fc" id="L33">        List&lt;List&lt;String&gt;&gt; listOfAttributeList = getListOfAttributeList(csvReader, map);</span>
         //添加普通的类型属性
-<span class="nc bnc" id="L39" title="All 2 branches missed.">        for (int i = 1; i &lt; 3; i++) {</span>
-<span class="nc" id="L40">            attributeList.add(M_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        for (int i = 1; i &lt; 3; i++) {</span>
+<span class="fc" id="L36">            attributeList.add(M_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
         }
         //添加订单的划档位处理后的数据类属性
-<span class="nc" id="L43">        attributeList.add(M_SIGN + csvReader.getHeader(3) + &quot;:&quot;</span>
-<span class="nc" id="L44">                + floatStr2Attribute(csvReader.get(3), 4));</span>
-<span class="nc" id="L45">        attributeList.add(M_SIGN + csvReader.getHeader(4) + &quot;:&quot;</span>
-<span class="nc" id="L46">                + floatStr2Attribute(csvReader.get(4), 400));</span>
-        //将订单号和属性列表放入map中
-<span class="nc" id="L48">        map.put(key, attributeList);</span>
-<span class="nc" id="L49">    }</span>
+<span class="fc" id="L39">        attributeList.add(M_SIGN + csvReader.getHeader(3) + &quot;:&quot;</span>
+<span class="fc" id="L40">                + floatStr2Attribute(csvReader.get(3), 4));</span>
+<span class="fc" id="L41">        attributeList.add(M_SIGN + csvReader.getHeader(4) + &quot;:&quot;</span>
+<span class="fc" id="L42">                + floatStr2Attribute(csvReader.get(4), 400));</span>
+        //将属性列表放入listOfAttributeList中
+<span class="fc" id="L44">        listOfAttributeList.add(attributeList);</span>
+<span class="fc" id="L45">    }</span>
 
     //处理机票订单
-    public static void dealT(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
-        //机票
-<span class="fc" id="L54">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+    public static void dealT(CsvReader csvReader, Map&lt;String, List&lt;List&lt;String&gt;&gt;&gt; map) throws IOException {
+        //机票属性列表
+<span class="fc" id="L50">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
         //得到订单号
-<span class="fc" id="L56">        String key = csvReader.get(&quot;ORDER_NO&quot;);</span>
-        //订单号相同的情况检验
-<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (map.containsKey(key)) {</span>
-<span class="fc" id="L59">            return;</span>
-        }
-        //添加时间属性（划分到月）
-<span class="fc" id="L62">        addDate2list(attributeList, csvReader.get(0), T_SIGN);</span>
-<span class="fc" id="L63">        attributeList.add(T_SIGN + csvReader.getHeader(5) + &quot;:&quot;</span>
-<span class="fc" id="L64">                + floatStr2Attribute(csvReader.get(5), 300));</span>
-        //添加目的地属性
-<span class="fc" id="L66">        splitSegment(attributeList, csvReader.get(2));</span>
-        //添加其他属性
-<span class="fc bfc" id="L68" title="All 2 branches covered.">        for (int i = 1; i &lt; 5; i++) {</span>
-            //跳过voyage属性
-<span class="fc bfc" id="L70" title="All 2 branches covered.">            if (i == 2) {</span>
-<span class="fc" id="L71">                continue;</span>
+<span class="fc" id="L52">        String key = csvReader.get(&quot;ORDER_NO&quot;);</span>
+        List&lt;List&lt;String&gt;&gt; listofAttributeList;
+
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (map.containsKey(key)) {</span>
+            //订单号相同的情况实际上不应该出现，因为订单号是唯一的
+<span class="fc" id="L57">            attributeList = map.get(key).get(0);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            if (!csvReader.get(4).equals(&quot;ADT&quot;)) {</span>
+<span class="fc" id="L59">                attributeList.set(5, T_SIGN + &quot;HAVE_CHILD&quot; + &quot;:&quot; + &quot;1&quot;);</span>
             }
-            //添加属性
-<span class="fc" id="L74">            attributeList.add(T_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+            //处理一个机票订单之中有往返票的情况
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (isRoundTrip(attributeList, csvReader.get(2))) {</span>
+                //如果之前没有添加往返票信息，则添加一次
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                if (map.get(key).size() == 1) {</span>
+<span class="fc" id="L65">                    List&lt;String&gt; newAttributeList = new ArrayList&lt;&gt;(attributeList);</span>
+<span class="fc" id="L66">                    newAttributeList.set(2, T_SIGN + &quot;FROM&quot; + &quot;:&quot; + csvReader.get(2).split(&quot;-&quot;)[0]);</span>
+<span class="fc" id="L67">                    newAttributeList.set(3, T_SIGN + &quot;TO&quot; + &quot;:&quot; + csvReader.get(2).split(&quot;-&quot;)[1]);</span>
+<span class="fc" id="L68">                    map.get(key).add(newAttributeList);</span>
+<span class="fc" id="L69">                } else {</span>
+                    //如果之前已经添加了往返票信息，则修改往返票信息
+                    // ，使得两个订单的除了起始地点之外的属性相同
+<span class="fc" id="L72">                    List&lt;String&gt; newAttributeList = new ArrayList&lt;&gt;(attributeList);</span>
+<span class="fc" id="L73">                    newAttributeList.set(2, T_SIGN + &quot;FROM&quot; + &quot;:&quot; + csvReader.get(2).split(&quot;-&quot;)[1]);</span>
+<span class="fc" id="L74">                    newAttributeList.set(3, T_SIGN + &quot;TO&quot; + &quot;:&quot; + csvReader.get(2).split(&quot;-&quot;)[0]);</span>
+<span class="fc" id="L75">                    map.get(key).set(1, newAttributeList);</span>
+<span class="fc" id="L76">                }</span>
+            }
+        } else {
+<span class="fc" id="L79">            listofAttributeList = new ArrayList&lt;&gt;();</span>
+            //添加时间属性（划分到月） 0
+<span class="fc" id="L81">            addDate2list(attributeList, csvReader.get(0), T_SIGN);</span>
+            //添加航司属性 1
+<span class="fc" id="L83">            attributeList.add(T_SIGN + csvReader.getHeader(1) + &quot;:&quot; + csvReader.get(1));</span>
+            //添加出发地、目的地属性 2,3
+<span class="fc" id="L85">            splitSegment(attributeList, csvReader.get(2));</span>
+            //添加航班号属性 4
+<span class="fc" id="L87">            attributeList.add(T_SIGN + csvReader.getHeader(3) + &quot;:&quot; + ticketGrade2Specific(csvReader.get(3)));</span>
+            //添加是否有孩童票属性 5
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            attributeList.add(T_SIGN + &quot;HAVE_CHILD&quot; + &quot;:&quot; + (csvReader.get(4).equals(&quot;ADT&quot;) ? &quot;0&quot; : &quot;1&quot;));</span>
+            //添加票价属性 6
+<span class="fc" id="L91">            attributeList.add(T_SIGN + csvReader.getHeader(5) + &quot;:&quot;</span>
+<span class="fc" id="L92">                    + floatStr2Attribute(csvReader.get(5), 300));</span>
+            //将订单号和属性列表放入map中
+<span class="fc" id="L94">            listofAttributeList.add(attributeList);</span>
+<span class="fc" id="L95">            map.put(key, listofAttributeList);</span>
         }
-        //将订单号和属性列表放入map中
-<span class="fc" id="L77">        map.put(key, attributeList);</span>
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L97">    }</span>
+
+    public static boolean isRoundTrip(List&lt;String&gt; originAttributeList, String voyage) {
+        //获取之前的出发地
+<span class="fc" id="L101">        String originalFrom = originAttributeList.get(2).split(&quot;:&quot;)[2];</span>
+        //获取之前的目的地
+<span class="fc" id="L103">        String originalTo = originAttributeList.get(3).split(&quot;:&quot;)[2];</span>
+        //判断是否为往返票
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        return !voyage.equals(originalFrom + &quot;-&quot; + originalTo);</span>
+    }
 
     //处理行李订单
-    public  static void dealB(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
-<span class="nc" id="L82">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
-        //得到订单号
-<span class="nc" id="L84">        String key = csvReader.get(0);</span>
-        //订单号相同的情况检验
-<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
-<span class="nc" id="L87">            return;</span>
-        }
+    public static void dealB(CsvReader csvReader, Map&lt;String, List&lt;List&lt;String&gt;&gt;&gt; map) throws IOException {
+<span class="fc" id="L110">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //通过订单号得到订单属性的存储列表的列表
+<span class="fc" id="L112">        List&lt;List&lt;String&gt;&gt; listOfAttributeList = getListOfAttributeList(csvReader, map);</span>
         //添加划档处理后的数据类属性
-<span class="nc" id="L90">        attributeList.add(B_SIGN + csvReader.getHeader(1) + &quot;:&quot;</span>
-<span class="nc" id="L91">                + floatStr2Attribute(csvReader.get(1), 200));</span>
-<span class="nc" id="L92">        attributeList.add(B_SIGN + csvReader.getHeader(2) + &quot;:&quot; + csvReader.get(2));</span>
-        //添加其他属性
-<span class="nc" id="L94">        map.put(key, attributeList);</span>
-<span class="nc" id="L95">    }</span>
+<span class="fc" id="L114">        attributeList.add(B_SIGN + csvReader.getHeader(1) + &quot;:&quot;</span>
+<span class="fc" id="L115">                + floatStr2Attribute(csvReader.get(1), 200));</span>
+<span class="fc" id="L116">        attributeList.add(B_SIGN + csvReader.getHeader(2) + &quot;:&quot; + csvReader.get(2));</span>
+        //将属性列表放入listOfAttributeList中
+<span class="fc" id="L118">        listOfAttributeList.add(attributeList);</span>
+<span class="fc" id="L119">    }</span>
 
     //处理酒店订单
-    public static void dealH(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
+    public static void dealH(CsvReader csvReader, Map&lt;String, List&lt;List&lt;String&gt;&gt;&gt; map) throws IOException {
         //酒店
-<span class="fc" id="L100">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
-        //得到订单号
-<span class="fc" id="L102">        String key = csvReader.get(0);</span>
-        //订单号相同的情况检验
-<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (map.containsKey(key)) {</span>
-<span class="fc" id="L105">            return;</span>
-        }
+<span class="fc" id="L124">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        ///通过订单号得到订单属性的存储列表的列表
+<span class="fc" id="L126">        List&lt;List&lt;String&gt;&gt; listOfAttributeList = getListOfAttributeList(csvReader, map);</span>
         //可以选择用addDate2list(attributeList, csvReader.get(1), H_SIGN)导入酒店入住时间属性
-<span class="fc" id="L108">        attributeList.add(H_SIGN + &quot;HPRICE&quot; + &quot;:&quot; + floatStr2Attribute(csvReader.get(3), 300));</span>
+<span class="fc" id="L128">        attributeList.add(H_SIGN + &quot;HPRICE&quot; + &quot;:&quot; + floatStr2Attribute(csvReader.get(3), 300));</span>
         //加入其它酒店属性
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (int i = 4; i &lt; csvReader.getColumnCount(); i++) {</span>
-<span class="fc" id="L111">            attributeList.add(H_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        for (int i = 4; i &lt; csvReader.getColumnCount(); i++) {</span>
+<span class="fc" id="L131">            attributeList.add(H_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
         }
-        //将订单号和属性列表放入map中
-<span class="fc" id="L114">        map.put(key, attributeList);</span>
-<span class="fc" id="L115">    }</span>
+        //将属性列表放入listOfAttributeList中
+<span class="fc" id="L134">        listOfAttributeList.add(attributeList);</span>
+<span class="fc" id="L135">    }</span>
 
     //处理保险订单
-    public static  void dealI(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
-<span class="nc" id="L119">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
-        //得到订单号
-<span class="nc" id="L121">        String key = csvReader.get(0);</span>
-        //订单号相同的情况检验
-<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
-<span class="nc" id="L124">            return;</span>
-        }
+    public static void dealI(CsvReader csvReader, Map&lt;String, List&lt;List&lt;String&gt;&gt;&gt; map) throws IOException {
+<span class="fc" id="L139">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //通过订单号得到订单属性的存储列表的列表
+<span class="fc" id="L141">        List&lt;List&lt;String&gt;&gt; listOfAttributeList = getListOfAttributeList(csvReader, map);</span>
         //加入保险属性
-<span class="nc bnc" id="L127" title="All 2 branches missed.">        for (int i = 1; i &lt; csvReader.getColumnCount(); i++) {</span>
-<span class="nc" id="L128">            String header = csvReader.getHeader(i);</span>
-<span class="nc" id="L129">            attributeList.add(I_SIGN + header + &quot;:&quot; + csvReader.get(i));</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        for (int i = 1; i &lt; csvReader.getColumnCount(); i++) {</span>
+<span class="fc" id="L144">            String header = csvReader.getHeader(i);</span>
+<span class="fc" id="L145">            attributeList.add(I_SIGN + header + &quot;:&quot; + csvReader.get(i));</span>
         }
-        //将订单号和属性列表放入map中
-<span class="nc" id="L132">        map.put(key, attributeList);</span>
-<span class="nc" id="L133">    }</span>
+        //将属性列表放入listOfAttributeList中
+<span class="fc" id="L148">        listOfAttributeList.add(attributeList);</span>
+<span class="fc" id="L149">    }</span>
 
     //处理选座订单
-    public static void dealS(CsvReader csvReader, Map&lt;String, List&lt;String&gt;&gt; map) throws IOException {
-<span class="nc" id="L137">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
-        //得到订单号
-<span class="nc" id="L139">        String key = csvReader.get(0);</span>
-        //订单号相同的情况检验
-<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (map.containsKey(key)) {</span>
-<span class="nc" id="L142">            return;</span>
-        }
+    public static void dealS(CsvReader csvReader, Map&lt;String, List&lt;List&lt;String&gt;&gt;&gt; map) throws IOException {
+<span class="fc" id="L153">        List&lt;String&gt; attributeList = new ArrayList&lt;&gt;();</span>
+        //通过订单号得到订单属性的存储列表的列表
+<span class="fc" id="L155">        List&lt;List&lt;String&gt;&gt; listOfAttributeList = getListOfAttributeList(csvReader, map);</span>
         //加入选座属性
-<span class="nc bnc" id="L145" title="All 2 branches missed.">        for (int i = 1; i &lt; csvReader.getColumnCount(); i++) {</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        for (int i = 1; i &lt; csvReader.getColumnCount(); i++) {</span>
             //直接加入数据之中的属性
-<span class="nc" id="L147">            attributeList.add(S_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
+<span class="fc" id="L159">            attributeList.add(S_SIGN + csvReader.getHeader(i) + &quot;:&quot; + csvReader.get(i));</span>
         }
-        //将订单号和属性列表放入map中
-<span class="nc" id="L150">        map.put(key, attributeList);</span>
-<span class="nc" id="L151">    }</span>
+        //将属性列表放入listOfAttributeList中
+<span class="fc" id="L162">        listOfAttributeList.add(attributeList);</span>
+<span class="fc" id="L163">    }</span>
 
     /**
      * 浮点数划档方法
+     *
      * @param str 包含浮点数内容的字符串
      * @param div 划档的间隔
      * @return 划档后的整数
      */
     private static Integer floatStr2Attribute(String str, int div) {
         //将字符串转化为浮点数
-<span class="fc" id="L161">        float value = Float.parseFloat(str);</span>
-<span class="fc" id="L162">        return (int)value / div;</span>
+<span class="fc" id="L174">        float value = Float.parseFloat(str);</span>
+<span class="fc" id="L175">        return (int) value / div;</span>
     }
 
     //将日期拆分成月
     private static void addDate2list(List&lt;String&gt; list, String date, String sign) {
         //拆分日期
-<span class="fc" id="L168">        String[] results = date.split(&quot; &quot;)[0].split(&quot;/&quot;);</span>
+<span class="fc" id="L181">        String[] results = date.split(&quot; &quot;)[0].split(&quot;/&quot;);</span>
         //添加月
-<span class="fc" id="L170">        list.add(sign + &quot;MONTH:&quot; + results[1]);</span>
-<span class="fc" id="L171">    }</span>
+<span class="fc" id="L183">        list.add(sign + &quot;MONTH:&quot; + results[1]);</span>
+<span class="fc" id="L184">    }</span>
 
     //拆分航段
     private static void splitSegment(List&lt;String&gt; list, String segment) {
         //拆分航段
-<span class="fc" id="L176">        String[] results = segment.split(&quot;-&quot;);</span>
+<span class="fc" id="L189">        String[] results = segment.split(&quot;-&quot;);</span>
         //添加航段
-<span class="fc" id="L178">        list.add(T_SIGN + &quot;FROM&quot; + &quot;:&quot; + results[0]);</span>
-<span class="fc" id="L179">        list.add(T_SIGN + &quot;TO&quot; + &quot;:&quot; + results[1]);</span>
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L191">        list.add(T_SIGN + &quot;FROM&quot; + &quot;:&quot; + results[0]);</span>
+<span class="fc" id="L192">        list.add(T_SIGN + &quot;TO&quot; + &quot;:&quot; + results[1]);</span>
+<span class="fc" id="L193">    }</span>
+
+    private static List&lt;List&lt;String&gt;&gt; getListOfAttributeList(CsvReader csvReader, Map&lt;String, List&lt;List&lt;String&gt;&gt;&gt; map) throws IOException {
+        //得到订单号
+<span class="fc" id="L197">        String key = csvReader.get(0);</span>
+        List&lt;List&lt;String&gt;&gt; listOfAttributeList;
+        //订单号相同的情况检验
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (map.containsKey(key)) {</span>
+<span class="fc" id="L201">            listOfAttributeList = map.get(key);</span>
+        } else {
+<span class="fc" id="L203">            listOfAttributeList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L204">            map.put(key, listOfAttributeList);</span>
+        }
+<span class="fc" id="L206">        return listOfAttributeList;</span>
+    }
 }
 /*
  * 数据处理基本原则：

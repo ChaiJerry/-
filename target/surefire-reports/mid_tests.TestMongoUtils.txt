@@ -1,4 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: mid_tests.TestMongoUtils
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.278 sec - in mid_tests.TestMongoUtils
+Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.583 sec <<< FAILURE! - in mid_tests.TestMongoUtils
+testDatasets2DBFunction(mid_tests.TestMongoUtils)  Time elapsed: 0.531 sec  <<< FAILURE!
+java.lang.AssertionError
+	at mid_tests.TestMongoUtils.testDatasets2DBFunction(TestMongoUtils.java:63)
+
