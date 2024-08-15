@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 
 public class TestDataConverter {
     @Before
-    public void start() throws IOException {
+    public void start(){
         initializeSpark();
     }
 

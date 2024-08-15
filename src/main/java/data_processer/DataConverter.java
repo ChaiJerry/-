@@ -3,11 +3,10 @@ package data_processer;
 import org.apache.spark.sql.*;
 import org.bson.*;
 
-import java.io.*;
 import java.util.*;
 
 import static io.SharedAttributes.*;
-import static query_system.QuerySystem.*;
+
 
 public class DataConverter {
     private DataConverter() {
@@ -158,27 +157,7 @@ public class DataConverter {
         return result;
     }
 
-    public static boolean strs2txt(String filePath) throws IOException {
-        List<String> strings = queryTest2();
 
-        // 使用try-with-resources语句来自动关闭资源
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            // 遍历List中的每个字符串
-            for (String str : strings) {
-                // 将字符串写入文件，并在每个字符串后添加换行符
-                writer.write(str + System.lineSeparator());
-            }
-
-            // 实际上，在try-with-resources中，当退出try块时，writer会自动被关闭和刷新
-            // 但为了明确性，这里也可以显式调用flush方法（虽然不是必需的）
-            writer.flush();
-
-            return true;
-        } catch (IOException e) {
-            // 处理异常
-            return false;
-        }
-    }
 
     public static int setBitPos2zero(int num, int bitPos) {
         return num & ~(1 << bitPos);

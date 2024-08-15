@@ -35,7 +35,7 @@ public class TestCsvFileIO {
     }
 
     @Test
-    public void TestGetMaps() throws IOException {
+    public void TestGetMaps() {
         Map<String, List<List<String>>> testMap = getTestMap();
         assertFalse(testMap.isEmpty());
         Map<String, List<List<String>>> trainingMap = getTrainingMap();

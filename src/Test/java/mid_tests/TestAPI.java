@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 public class TestAPI {
 
     @Before
-    public void start() throws IOException {
+    public void start() {
         initializeSpark();
     }
 
