@@ -3,7 +3,6 @@ package query_system;
 import java.util.*;
 
 public class ItemPack {
-    private String key = null;
 
     //根据原始订单中机票信息推荐系统推荐的其它品类打包产品
     private final List<Set<String>> recommendedItems = new ArrayList<>(6);
@@ -12,13 +11,12 @@ public class ItemPack {
     //i=0时是机票信息，可以不填用来占据空位
     private final List<Set<String>> orderItemsList = new ArrayList<>(6);
 
-    public ItemPack(String key) {
+    public ItemPack() {
         //初始化
         for(int i=0;i<6;i++){
             recommendedItems.add(new HashSet<>());
             orderItemsList.add(new HashSet<>());
         }
-        this.key = key;
     }
 
     //添加原始订单中的产品

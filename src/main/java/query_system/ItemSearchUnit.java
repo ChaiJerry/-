@@ -4,7 +4,6 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import org.bson.*;
 import org.bson.conversions.*;
-import scala.tools.nsc.doc.html.*;
 
 import java.util.*;
 
