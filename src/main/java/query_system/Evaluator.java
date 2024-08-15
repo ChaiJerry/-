@@ -3,11 +3,9 @@ package query_system;
 import java.util.*;
 
 public class Evaluator {
-    private Map<String, ItemPack> itemPackMap;
     private double averageAccuracy = 0;
     private double averageRecallRate = 0;
     public Evaluator(Map<String, ItemPack> itemPackMap) {
-        this.itemPackMap = itemPackMap;
         int correctRateDiv = itemPackMap.size();
         int recallRateDiv = itemPackMap.size();
         for(ItemPack itemPack : itemPackMap.values()) {

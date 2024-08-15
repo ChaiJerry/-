@@ -53,7 +53,7 @@ public class QuerySystem {
      */
     public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap() {
         //读取文件，返回Map<String, List<List<String>>>，但是此时还不能使用，可能有不需要的属性或者属性顺序不对
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTestTicketMap();
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTrainingTicketsMap();
         //获取HeaderStorage，用于获取调整后规范的属性列表
         ItemAttributesStorage itemAttributesStorage = getHeaderStorage()[TICKET];
         //遍历Map<String, List<List<String>>> itemAttributesStorage的所有键值对
@@ -85,7 +85,7 @@ public class QuerySystem {
             if (isRepeated) {
                 itemPack = itemPackMap.get(itemPackKey);
             } else {
-                itemPack = new ItemPack(itemPackKey);
+                itemPack = new ItemPack();
                 itemPackMap.put(itemPackKey, itemPack);
             }
             //需要在意改变是否会对评估方式产生影响
@@ -207,7 +207,7 @@ public class QuerySystem {
                         if (isRepeated) {
                             itemPack = itemPackMap.get(itemPackKey);
                         } else {
-                            itemPack = new ItemPack(itemPackKey);
+                            itemPack = new ItemPack();
                             itemPackMap.put(itemPackKey, itemPack);
                         }
                         //根据attributeValues，查询ordersCollection中对应的订单
@@ -216,8 +216,8 @@ public class QuerySystem {
                         String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
                         itemPack.addOrderItem(correctTargetItems, i);
                         itemPack.addRecommendedItem(singleItemQuery, i);
-//                        String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
-//                        logger.info(info);
+                        String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
+                        logger.info(info);
                     }
                 }
                 logger.info(getFullNames()[i] + "有效测试订单条数共: " + total);
