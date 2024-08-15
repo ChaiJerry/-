@@ -21,13 +21,7 @@ public class QuerySystem {
 
     private static final int[] colNum = {0, 5, 4, 2, 4, 2};
 
-    private static List<List<String>> ticketAttributeValuesList = null;
-
-    private static Map<String, List<List<String>>> ticketOrderNumAttributeMap = null;
-
     private static Map<String, ItemPack> itemPackMap = new HashMap<>();
-
-    private static List<String> strs = new ArrayList<>();
 
     private static final Logger logger;
 
@@ -70,173 +64,67 @@ public class QuerySystem {
         return ticketOrderNumAttributeMap;
     }
 
-    public static void queryTest3() throws IOException {
+    public static void queryTest() {
         initializeItemAttributesStorages();
-        //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
-        ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap();
-        for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
-            String orderNum = iterator.next();
-            List<List<String>> listOfAttributeList = ticketOrderNumAttributeMap.get(orderNum);
-            //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性列表
-            List<String> attributeValues = listOfAttributeList.get(0);
-            String itemPackKey = generateItemPackKey(attributeValues);
-            boolean isRepeated = itemPackMap.containsKey(itemPackKey);
-            ItemPack itemPack;
-            if (isRepeated) {
-                itemPack = itemPackMap.get(itemPackKey);
-            } else {
-                itemPack = new ItemPack();
-                itemPackMap.put(itemPackKey, itemPack);
-            }
-            //需要在意改变是否会对评估方式产生影响
-            for (int i = 1; i < colNum.length; i++) {
-                //获取rulesCollection，用于查询规则
-                MongoCollection<Document> rulesCollection = getRulesCollection(i);
-                //获取ordersCollection，用于查询订单
-                MongoCollection<Document> ordersCollection = getOrdersCollection(i);
-                int fixedPos = -1;
-                if (i == 1) {
-                    //当推荐的是酒店时，固定在位置5的属性（飞机目的地，避免推荐到其它城市）
-                    fixedPos = 3;
-                }
-                List<String> correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
-                if (!correctTargetItem.isEmpty()) {
-                    itemPack.addOrderItem(correctTargetItem, i);
-                }
-                if (isRepeated) {
-                    continue;
-                }
-                //根据attributeValues，查询ordersCollection中对应的订单
-                Map<String, String> singleAttributeQuery =
-                        singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
-                String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
-                itemPack.addRecommendedItem(singleItemQuery, i);
-            }
-        }
-        Evaluator evaluator = new Evaluator(itemPackMap);
-        double averageAccuracy = evaluator.getAverageAccuracy();
-        double averageRecallRate = evaluator.getAverageRecallRate();
-        String accuracyInfo = "averageAccuracy: " + averageAccuracy;
-        String recallInfo = "averageRecallRate: " + averageRecallRate;
-        logger.info(accuracyInfo);
-        logger.info(recallInfo);
-    }
-
-    public static List<String> queryTest2() throws IOException {
-        CSVFileIO fileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
-        for (int i = 0; i < colNum.length; i++) {
-            fileIO.read(i);
-        }
 
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
-        ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap();
-
-        String head = "orderNum,Ticket,Hotel,Meal,Baggage,Insurance,Seat";
-        strs.add(head);
-        MongoCollection<Document> ticketOrdersCollection = getOrdersCollection(TICKET);
-        for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
-            String orderNum = iterator.next();
-            //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性列表
-            List<String> attributeValues = ticketOrderNumAttributeMap.get(orderNum).get(0);
-            StringBuilder sb = new StringBuilder();
-            sb.append(orderNum).append(",");
-            sb.append(getTargetItemFromOrderNum(orderNum, TICKET, ticketOrdersCollection).get(0)).append(",");
-            for (int i = 1; i < colNum.length; i++) {
-                //获取rulesCollection，用于查询规则
-                MongoCollection<Document> rulesCollection = getRulesCollection(i);
-                //获取ordersCollection，用于查询订单
-                MongoCollection<Document> ordersCollection = getOrdersCollection(i);
-                int fixedPos = -1;
-                if (i == 1) {
-                    fixedPos = 3;
-                }
-                List<String> correctTargetItem = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
-                //根据attributeValues，查询ordersCollection中对应的订单
-                Map<String, String> singleAttributeQuery =
-                        singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
-                String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
-                sb.append(singleItemQuery).append(":").append(correctTargetItem).append(",");
-            }
-            strs.add(sb.toString());
-        }
-        return strs;
-    }
-
-    public static void queryTest(String mode) throws IOException {
-        for (int i = 0; i < colNum.length; i++) {
-            fileIO.read(i);
-        }
-
-        if (mode.equals("eva")) {
-            //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
-            ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap();
-        } else if (mode.equals("generate")) {
-            //生成模式获取ticketAttributeValuesList，用于查询属性
-            ticketAttributeValuesList = getTicketAttributeValuesList(fileIO, TICKET);
-        }
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap();
 
         for (int i = 1; i < colNum.length; i++) {
             itemPackMap.clear();
-
             //获取rulesCollection，用于查询规则
             MongoCollection<Document> rulesCollection = getRulesCollection(i);
             //获取ordersCollection，用于查询订单
             MongoCollection<Document> ordersCollection = getOrdersCollection(i);
-            int fixedPos = -1;
-
-            if (i == 1) {
-                fixedPos = 3;
-            }
+            int fixedPos = getFixedPos(i);
             double total = 0;
-
-            if (mode.equals("eva")) {
-                for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
-                    String orderNum = iterator.next();
-                    List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
-                    if (correctTargetItems.isEmpty()) {
-                        continue;
-                    }
-
-                    //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性列表
-                    List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
-                    for (List<String> attributeValues : listOfTicketAttributeList) {
-                        total++;
-                        String itemPackKey = generateItemPackKey(attributeValues);
-                        boolean isRepeated = itemPackMap.containsKey(itemPackKey);
-                        ItemPack itemPack;
-                        if (isRepeated) {
-                            itemPack = itemPackMap.get(itemPackKey);
-                        } else {
-                            itemPack = new ItemPack();
-                            itemPackMap.put(itemPackKey, itemPack);
-                        }
-                        //根据attributeValues，查询ordersCollection中对应的订单
-                        Map<String, String> singleAttributeQuery =
-                                singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
-                        String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
-                        itemPack.addOrderItem(correctTargetItems, i);
-                        itemPack.addRecommendedItem(singleItemQuery, i);
-                        String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
-                        logger.info(info);
-                    }
+            for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
+                String orderNum = iterator.next();
+                List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
+                if (correctTargetItems.isEmpty()) {
+                    continue;
                 }
-                logger.info(getFullNames()[i] + "有效测试订单条数共: " + total);
-                Evaluator evaluator = new Evaluator(itemPackMap);
-                double averageAccuracy = evaluator.getAverageAccuracy();
-                double averageRecallRate = evaluator.getAverageRecallRate();
-                String accuracyInfo = "averageAccuracy: " + averageAccuracy;
-                String recallInfo = "averageRecallRate: " + averageRecallRate;
-                logger.info(accuracyInfo);
-                logger.info(recallInfo);
-            } else if (mode.equals("generate")) {
-                for (List<String> ticketAttributeValues : ticketAttributeValuesList) {
+                //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性列表
+                List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
+                for (List<String> attributeValues : listOfTicketAttributeList) {
+                    total++;
+                    String itemPackKey = generateItemPackKey(attributeValues);
+                    boolean isRepeated = itemPackMap.containsKey(itemPackKey);
+                    ItemPack itemPack;
+                    if (isRepeated) {
+                        itemPack = itemPackMap.get(itemPackKey);
+                    } else {
+                        itemPack = new ItemPack();
+                        itemPackMap.put(itemPackKey, itemPack);
+                    }
+                    //根据attributeValues，查询ordersCollection中对应的订单
                     Map<String, String> singleAttributeQuery =
-                            singleAttributeRuleQuery(ticketAttributeValues, fixedPos, rulesCollection, i);
+                            singleAttributeRuleQuery(attributeValues, fixedPos, rulesCollection, i);
                     String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
-                    logger.info(singleItemQuery);
+                    itemPack.addOrderItem(correctTargetItems, i);
+                    itemPack.addRecommendedItem(singleItemQuery, i);
+                    String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
+                    logger.info(info);
                 }
             }
+            String info = getFullNames()[i] + "有效测试订单条数共: " + total;
+            logger.info(info);
+            Evaluator evaluator = new Evaluator(itemPackMap);
+            double averageAccuracy = evaluator.getAverageAccuracy();
+            double averageRecallRate = evaluator.getAverageRecallRate();
+            String accuracyInfo = "averageAccuracy: " + averageAccuracy;
+            String recallInfo = "averageRecallRate: " + averageRecallRate;
+            logger.info(accuracyInfo);
+            logger.info(recallInfo);
         }
+    }
+
+    private static int getFixedPos(int i) {
+        int fixedPos = -1;
+        if (i == 1) {
+            fixedPos = 3;
+        }
+        return fixedPos;
     }
 
     public static Document singleAttributeFreqQuery(List<String> ticketAttributes
