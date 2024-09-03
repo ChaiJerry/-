@@ -33,7 +33,7 @@ public class SharedAttributes {
     //将type与index对应，用于快速查找
     protected static HashMap<String, Integer> type2index = new HashMap<>();
 
-    public static ItemAttributesStorage[] getHeaderStorage() {
+    public static ItemAttributesStorage[] getItemAttributesStorage() {
         return itemAttributesStorage;
     }
 

@@ -11,14 +11,10 @@ import static packing_system.data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 public class TestDataConverter {
-    @Before
-    public void start(){
-        initializeSpark();
-    }
 
     @Test
     public void testRow2rule() throws IOException {
-        Dataset<Row> rowDataset = getFileIO().singelTypeCsv2dataset(1);
+        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1);
         FPGrowthModel model = train(rowDataset);
         Dataset<Row> ruleDataset = model.associationRules();
         for (Row row : ruleDataset.collectAsList()) {

@@ -31,10 +31,8 @@ public class DataParser {
         List<String> attributeList = new ArrayList<>();
         //通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
-        //添加普通的类型属性
-        for (int i = 1; i < 3; i++) {
-            attributeList.add(M_SIGN + csvReader.getHeader(i) + ":" + csvReader.get(i));
-        }
+        //添加餐食代码属性
+        attributeList.add(M_SIGN + csvReader.getHeader(2) + ":" + csvReader.get(2));
         //添加订单的划档位处理后的数据类属性
         attributeList.add(M_SIGN + csvReader.getHeader(3) + ":"
                 + floatStr2Attribute(csvReader.get(3), 4));

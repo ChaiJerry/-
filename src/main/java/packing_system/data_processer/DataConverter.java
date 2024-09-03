@@ -5,6 +5,7 @@ import org.bson.*;
 
 import java.util.*;
 
+import static packing_system.data_generating_system.FPGrowth.*;
 import static packing_system.io.SharedAttributes.*;
 
 
@@ -58,12 +59,12 @@ public class DataConverter {
                 //将Object 转化为String，并暂存
                 temp = s.toString();
                 //归类
-                if (temp.charAt(0) == 'T') {
-                    //若第一个字符为T，则说明是机票相关的属性
+                if (isTicketType(temp)) {
+                    //若是机票相关的属性
                     //将属性添加到ticketList中
                     ticketList.append(temp).append(";");
                 } else {
-                    //若第一个字符不为T，则说明是其余商品相关的属性
+                    //若是其余商品相关的属性
                     //将属性添加到itemsList中
                     itemsList.append(temp).append(";");
                 }
@@ -94,7 +95,7 @@ public class DataConverter {
         for (Object s : row.getList(0)) {
             temp = s.toString();
             //如果前件之中包含有一个非机票类型的属性，则跳过
-            if (temp.charAt(0) != 'T') {
+            if (!isTicketType(temp)) {
                 //如果前件之中包含有一个非机票类型的属性，则返回空String[]
                 return new String[0];
             }
@@ -108,7 +109,7 @@ public class DataConverter {
         temp = row.getList(1).get(0).toString() + "; ";
         //判断后件是否为机票类型的属性
         //如果temp是机票类型的属性，则返回空String[]
-        if (temp.charAt(0) == 'T') {
+        if (isTicketType(temp)) {
             return new String[0];
         }
         //否则，将属性添加到columns[1]中
@@ -117,6 +118,10 @@ public class DataConverter {
         columns[2] = "Confidence::"+row.get(2).toString();
         //返回结果
         return columns;
+    }
+
+    public static boolean isTicketType(String s) {
+        return s.split(":")[0].equals("Ticket");
     }
 
     /**
@@ -207,5 +212,13 @@ public class DataConverter {
             }
         }
         return sb.toString();
+    }
+
+    public static Dataset<Row> listOfAttributeList2Dataset (List<List<String>> attributeLists){
+        List<Row> data = new ArrayList<>();
+        for (List<String> attributeList : attributeLists) {
+            data.add(RowFactory.create(attributeList));
+        }
+        return getDataFrame(data);
     }
 }

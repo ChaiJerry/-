@@ -4,21 +4,25 @@ import org.bson.*;
 
 
 public class ItemAttributesStorage {
+    public List<String> getAttributeNames() {
+        return attributeNames;
+    }
+
     //属性头列表
-    private List<String> attributes = new ArrayList<>();
+    private final List<String> attributeNames = new ArrayList<>();
 
     //添加属性头
     public void addAttribute(String header) {
         //如果属性头在属性头列表之中或是订单号，则跳过
-        if (attributes.contains(header) || header.equals("ORDER_NO")) {
+        if (attributeNames.contains(header) || header.equals("ORDER_NO")) {
             return;
         }
-        attributes.add(header);
+        attributeNames.add(header);
     }
 
     //删除属性头
     public void removeAttribute(String header) {
-        attributes.remove(header);
+        attributeNames.remove(header);
     }
 
     /**
@@ -40,7 +44,7 @@ public class ItemAttributesStorage {
             String value = temp.split(":")[2];
             headerMap.put(key, value);
         }
-        for(String Header: attributes){
+        for(String Header: attributeNames){
             //如果属性在属性头列表之中不存在，则添加一个空值
             doc.append(Header, headerMap.getOrDefault(Header,null));
         }
@@ -63,7 +67,7 @@ public class ItemAttributesStorage {
             String value = s.split(":")[2];
             headerMap.put(key, value);
         }
-        for(String Header: attributes){
+        for(String Header: attributeNames){
             //如果属性在属性头列表之中不存在，则添加一个空值
             //如果属性在关联规则属性列表之中存在，则添加其对应的属性值
             doc.append(Header, headerMap.getOrDefault(Header,null));
@@ -71,23 +75,42 @@ public class ItemAttributesStorage {
         return doc;
     }
 
-    public List<String> getAttributeLists(List<String> list) {
+    /**
+     * 获得订单属性列表的有序且去除无用属性后的属性值列表
+     * @param attributeList 订单属性列表，其中的String格式是"商品类型标识:属性名:属性值"
+     * @return 返回属性值列表
+     */
+    public List<String> getOrderedAttributeValueList(List<String> attributeList) {
         Map<String, String> headerMap = new HashMap<>();
-        List<String> attributeLists = new ArrayList<>();
+        List<String> attributeValueLists = new ArrayList<>();
         //遍历属性列表，获得属性和属性值
-        for (String s : list) {
+        for (String s : attributeList) {
             //划分属性名和属性值
             //这里的字符串格式是"商品类型标识:属性名:属性值"
             String key= s.split(":")[1];
             String value = s.split(":")[2];
             headerMap.put(key, value);
         }
-        for(String Header: attributes){
+        for(String Header: attributeNames){
             //如果属性在属性头列表之中不存在，则添加一个空值
             //如果属性在关联规则属性列表之中存在，则添加其对应的属性值
-            attributeLists.add(headerMap.getOrDefault(Header,null));
+            attributeValueLists.add(headerMap.getOrDefault(Header,null));
+        }
+        return attributeValueLists;
+    }
+
+    /**
+     * 从getOrderedAttributeValueList产生的有序属性值列表之中生成有属性名以及属性值的列表
+     * @param attributeValueList 订单属性值列表，其中的String格式是"属性值"
+     * @return 返回属性列表，其中的String格式是"属性名:属性值"
+     */
+    public List<String> generateOrderedAttributeListFromAttributeValueList(List<String> attributeValueList) {
+        List<String> attributeLists = new ArrayList<>();
+        //遍历属性值列表，为属性值列表添加属性名成为属性列表
+        for(int i = 0;i < attributeValueList.size();i++){
+            //按照顺序添加属性名和属性值
+            attributeLists.add(attributeNames.get(i) + ":" + attributeValueList.get(i));
         }
         return attributeLists;
     }
-
 }
