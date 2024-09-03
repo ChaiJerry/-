@@ -48,8 +48,7 @@ public class TestMongoUtils {
     public void testDatasets2DBFunction() throws IOException {
         int trainingNumber = getTrainingNumber(mongoDatabase
                 .getCollection("TrainingController")) + 1;
-        initializeSpark();
-        Dataset<Row> rowDataset = getFileIO().singelTypeCsv2dataset(1);
+        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1);
         FPGrowthModel model = train(rowDataset);
         Dataset<Row> frequentItemSet = model.freqItemsets();
         Dataset<Row> ruleDataset = model.associationRules();

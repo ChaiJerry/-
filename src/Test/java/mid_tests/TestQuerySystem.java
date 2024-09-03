@@ -35,7 +35,7 @@ public class TestQuerySystem {
         MongoCollection<Document> FreqCollection = getFrequentItemSetsCollection(type);
         List<String> ticketAttributes = new ArrayList<>();
         ticketAttributes.add("Ticket:T_CARRIER" + ":HU");
-        Document doc = singleAttributeFreqQuery(ticketAttributes, -1, FreqCollection);
+        Document doc = generateAttributeBundleByFrequentItemSets(ticketAttributes, -1, FreqCollection);
         Map < String, String > ticketAttributesMap = new HashMap < > ();
         String ret = singleFreqQuery(doc, getOrdersCollection(type), type, ticketAttributesMap);
         assertFalse(ret.isEmpty());

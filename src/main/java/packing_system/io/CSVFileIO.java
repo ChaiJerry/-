@@ -35,7 +35,7 @@ public class CSVFileIO {
      */
     public CSVFileIO(String resultDirPath, String pathT
             , String pathH, String pathM, String pathB
-            , String pathI , String pathS) throws IOException {
+            , String pathI, String pathS) throws IOException {
         // 初始化路径
         // 输出结果路径
         this.resultDirPath = resultDirPath;
@@ -64,7 +64,7 @@ public class CSVFileIO {
     }
 
     public void csv2DB() throws IOException {
-        for(int i = 0; i < SharedAttributes.types.length; i++) {
+        for (int i = 0; i < SharedAttributes.types.length; i++) {
             singleTypeCsv2database(i);
         }
     }
@@ -86,7 +86,7 @@ public class CSVFileIO {
     /**
      * Convert a CSV file to a Dataset<Row>.
      */
-    public Dataset<Row> singelTypeCsv2dataset(int type) throws IOException {
+    public Dataset<Row> singleTypeCsv2dataset(int type) throws IOException {
         //订单与属性之间的映射map
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
@@ -103,7 +103,8 @@ public class CSVFileIO {
                 // 如果temp不为空，则将temp添加到data中
                 // 若是为空则说明没有商品可以和该订单匹配，则跳过
                 if (attributeLists != null) {
-                    for(List<String> attributeList : attributeLists) {
+                    for (List<String> attributeList : attributeLists) {
+                        //加入共现的机票订单属性数据
                         attributeList.addAll(SharedAttributes.trainingTicketsMap.get(key).get(0));
                         data.add(RowFactory.create(attributeList));
                     }
@@ -120,14 +121,45 @@ public class CSVFileIO {
         }
     }
 
-    public List<List<String>> singleTypeCsv2lists(int type) throws IOException{
-        return dataset2stringlist(singelTypeCsv2dataset(type));
+    /**
+     * 读取csv文件转换为List<List<String>>主要用于测试api
+     * @param type 商品类型
+     * @return 属性列表的列表List<List<String>>，其中每个List<String>共同出现在某个订单中的机票和商品属性
+     */
+    public List<List<String>> singleTypeCsv2ListOfAttributeList(int type) throws IOException {
+        List<List<String>> listOfAttributeList = new ArrayList<>();
+        //订单与属性之间的映射map
+        Map<String, List<List<String>>> attributeMap;
+        // 读取商品类型，这里type不能为Ticket，因为一般不需要通过ticket推荐ticket自己
+        attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+        //筛选出能和机票订单号匹配的订单数据
+        // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到listOfAttributeList中
+        for (Iterator<String> iterator = SharedAttributes.trainingTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+            String key = iterator.next();
+            // 得到属性列表
+            List<List<String>> attributeLists = attributeMap.get(key);
+            // 如果temp不为空，则将temp添加到data中
+            // 若是为空则说明没有商品可以和该订单匹配，则跳过
+            if (attributeLists != null) {
+                for (List<String> attributeList : attributeLists) {
+                    //加入共现的机票订单属性数据
+                    attributeList.addAll(SharedAttributes.trainingTicketsMap.get(key).get(0));
+                    listOfAttributeList.add(attributeList);
+                }
+            }
+        }
+        return listOfAttributeList;
+    }
+
+    public List<List<String>> singleTypeCsv2lists(int type) throws IOException {
+        return dataset2stringlist(singleTypeCsv2dataset(type));
     }
 
     /**
      * 将频繁项集转换为CSV文件
+     *
      * @param dataSet 频繁项集
-     * @param type 商品类型
+     * @param type    商品类型
      */
     public void freItemSet2CSV(Dataset<Row> dataSet, int type) {
         // 创建 CSV Writer 对象, 参数说明（写入的文件路径，分隔符，编码格式)
@@ -163,6 +195,7 @@ public class CSVFileIO {
 
     /**
      * 将关联规则写入到CSV文件
+     *
      * @param rules 关联规则
      * @param type  商品类型
      */
@@ -177,7 +210,7 @@ public class CSVFileIO {
         for (Row r : rules.collectAsList()) {
             // 获取 Row 的内容
             String[] columns = row2rule(r);
-            if(columns.length != 0) {
+            if (columns.length != 0) {
                 //若是不为空则说明有效，写入CSV文件
                 csvWriter.writeRecord(columns);
             }
@@ -186,13 +219,13 @@ public class CSVFileIO {
         csvWriter.close();
     }
 
-
     public Map<String, List<List<String>>> read(int type) throws IOException {
         return CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
     }
 
     /**
      * 读取CSV文件
+     *
      * @param path 文件路径
      * @param type 商品类型
      * @return 返回订单号和订单对应的商品属性之间的键值对 Map<String, List<String>>
@@ -209,13 +242,15 @@ public class CSVFileIO {
         SharedAttributes.itemAttributesStorage[SharedAttributes.type2index.get(type)] = new ItemAttributesStorage();
         //得到对应的属性头类
         ItemAttributesStorage header = SharedAttributes.itemAttributesStorage[SharedAttributes.type2index.get(type)];
-        for(int i=1;i<csvReader.getHeaderCount();i++) {
+        for (int i = 1; i < csvReader.getHeaderCount(); i++) {
             //将表头存入HeaderStorage之中，方便后续存入数据库
             header.addAttribute(csvReader.getHeader(i));
         }
         switch (type) {
             case "M":
                 //处理餐食数据
+                //删除餐食名字
+                header.removeAttribute("MEAL_NAME");
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
@@ -282,7 +317,7 @@ public class CSVFileIO {
     }
 
     //得到训练集
-    public static Map<String, List<List<String>>> getTrainingMap()  {
+    public static Map<String, List<List<String>>> getTrainingMap() {
         //得到训练集的keys
         Set<String> keys;
         try {
@@ -296,7 +331,7 @@ public class CSVFileIO {
     }
 
     //得到测试集
-    public static Map<String, List<List<String>>> getTestMap(){
+    public static Map<String, List<List<String>>> getTestMap() {
         //得到测试集的keys
         Set<String> keys;
         try {
@@ -329,17 +364,16 @@ public class CSVFileIO {
         try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if(!numsSet.contains(line.split(",")[0])){
+                if (!numsSet.contains(line.split(",")[0])) {
                     continue;
                 }
                 int commaIndex = line.indexOf(',');
-                String result = line.substring(commaIndex+1) + ",";
+                String result = line.substring(commaIndex + 1) + ",";
                 keys.add(result);
             }
         }
         return keys;
     }
-
 
     //从一个给定的txt文件中得到csv文件中所有订单号（训练集或测试集）
     public static Set<String> getNumsSet(String filePath) throws IOException {
@@ -353,10 +387,8 @@ public class CSVFileIO {
         return nums;
     }
 
-
-
     //得到结果集合（是上面两个方法直接套用的方法）
-    public static Map<String, List<List<String>>> getTargetMap(Set<String> keys){
+    public static Map<String, List<List<String>>> getTargetMap(Set<String> keys) {
         //返回的结果的map
         Map<String, List<List<String>>> targetMap = new HashMap<>();
         //遍历ticketMap
@@ -382,9 +414,9 @@ public class CSVFileIO {
         return targetMap;
     }
 
-    public static String generateItemKeyFromAttributes(List<String> attributes){
-        StringBuilder stringBuilder=new StringBuilder();
-        for(int i = 0; i < attributes.size()-1;i++){
+    public static String generateItemKeyFromAttributes(List<String> attributes) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < attributes.size() - 1; i++) {
             stringBuilder.append(attributes.get(i).split(":")[2]).append(",");
         }
         return stringBuilder.toString();
