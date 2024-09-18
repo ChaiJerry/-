@@ -46,7 +46,8 @@ public class QuerySystem {
      */
     public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap() {
         //读取文件，返回Map<String, List<List<String>>>，但是此时还不能使用，可能有不需要的属性或者属性顺序不对
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTrainingTicketsMap();
+        //这里可以更改使用训练集还是测试集来测试
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTestTicketMap();
         //获取机票的itemAttributesStorage（用于处理属性名和属性对应对应关系的结构体），用于获取调整后规范的属性列表
         ItemAttributesStorage itemAttributesStorage = getItemAttributesStorage()[TICKET];
         //遍历Map<String, List<List<String>>> itemAttributesStorage的所有键值对
@@ -64,6 +65,7 @@ public class QuerySystem {
     }
 
     public static void queryTest() {
+        //初始化各个商品所具有的的属性名称
         initializeItemAttributesStorages();
 
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
@@ -79,16 +81,21 @@ public class QuerySystem {
             MongoCollection<Document> ordersCollection = getOrdersCollection(i);
             double total = 0;
             for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
+                //得到orderNum（订单号）
                 String orderNum = iterator.next();
                 List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
                 if (correctTargetItems.isEmpty()) {
                     continue;
                 }
-                //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性列表
+                //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性值列表的列表
                 List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
+                //遍历listOfTicketAttributeList（属性值列表的列表）
                 for (List<String> attributeValues : listOfTicketAttributeList) {
+                    //得到每个属性值列表
                     total++;
+                    //得到每个机票属性列表特征键
                     String itemPackKey = ItemPack.generateItemPackKey(attributeValues);
+                    //判断是否已经存在于itemPackMap中
                     boolean isRepeated = itemPackMap.containsKey(itemPackKey);
                     ItemPack itemPack;
                     if (isRepeated) {
@@ -102,11 +109,14 @@ public class QuerySystem {
                             generateAttributeBundleByAssociationRules(ticketAttributesStorage
                                             .generateOrderedAttributeListFromAttributeValueList(attributeValues)
                                     , knowledgeBaseQuery, i);
+                    //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
                     String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
+                    //加入原订单中同时出现的商品
                     itemPack.addOrderItem(correctTargetItems, i);
+                    //加入推荐系统推荐的商品
                     itemPack.addRecommendedItem(singleItemQuery, i);
-                    String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
-                    logger.info(info);
+                    //String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
+                    //logger.info(info);
                 }
             }
             String info = getFullNames()[i] + "有效测试订单条数共: " + total;
