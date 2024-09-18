@@ -6,6 +6,7 @@ import com.mongodb.client.model.*;
 import org.bson.*;
 import org.bson.conversions.*;
 import packing_system.data_processer.*;
+import packing_system.io.*;
 
 import java.util.*;
 
@@ -15,9 +16,9 @@ import static packing_system.io.SharedAttributes.*;
 
 public class AttributesSearchUnit {
     //机票的属性，用于搜索中作为前件
-    protected static final String[] ates = {"T_CARRIER", "T_GRADE", "S_SHOFARE"
-            , "MONTH", "TO" , "FROM" , "HAVE_CHILD"};
-
+//    protected static final String[] ates = {"T_CARRIER", "T_GRADE", "S_SHOFARE"
+//            , "MONTH", "TO" , "FROM" , "HAVE_CHILD"};
+    protected static final String[] ates = getItemAttributesStorage()[TICKET].getAttributeNames().toArray(new String[0]);
     private int level = 0;
     private final List<String> ticketAttributes;
     private final int fixedPos;
