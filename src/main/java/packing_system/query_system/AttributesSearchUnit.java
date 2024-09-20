@@ -18,7 +18,7 @@ public class AttributesSearchUnit {
     //机票的属性，用于搜索中作为前件
 //    protected static final String[] ates = {"T_CARRIER", "T_GRADE", "S_SHOFARE"
 //            , "MONTH", "TO" , "FROM" , "HAVE_CHILD"};
-    protected static final String[] ates = getItemAttributesStorage()[TICKET].getAttributeNames().toArray(new String[0]);
+    protected static final String[] ates = getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames().toArray(new String[0]);
     private int level = 0;
     private final List<String> ticketAttributes;
     private final int fixedPos;
@@ -87,6 +87,35 @@ public class AttributesSearchUnit {
         //运用状态压缩的技巧，将已经访问过的节点状态压缩到整数中
         int status = listToBits(ticketAttributes);
         for (int i = 0; i < ates.length; i++) {
+            List<String> temp = checkViability(status, i);
+            if (temp.isEmpty()) {
+                continue;
+            }
+            bfsQueue.add(new AttributesSearchUnit(temp, fixedPos, knowledgeBaseQuery, itemAttributeMap
+                    , attributeConfidenceMap, bfsQueue, haveVisited).setLevel(level + 1));
+        }
+    }
+
+    /**
+     * 根据关联规则搜索对应item的属性
+     */
+    public void searchByRulesForEvaluation(int trainingNumber) {
+        List<AssociationRulesQueryResults> associationRulesResults = knowledgeBaseQuery.findAssociationRules(ticketAttributes);
+        for(AssociationRulesQueryResults associationRule : associationRulesResults) {
+            String consequence = associationRule.getConsequence();
+            double confidence = associationRule.getConfidence();
+            String[] temp = consequence.split(":");
+            String attribute = temp[0];
+            String attributeValue = temp[1];
+            if (confidence >= attributeConfidenceMap.getOrDefault(attribute, 0.0)) {
+                attributeConfidenceMap.put(attribute, confidence);
+                itemAttributeMap.put(attribute, attributeValue);
+            }
+        }
+
+        //运用状态压缩的技巧，将已经访问过的节点状态压缩到整数中
+        int status = listToBits(ticketAttributes);
+        for (int i = 0; i < 1; i++) {
             List<String> temp = checkViability(status, i);
             if (temp.isEmpty()) {
                 continue;

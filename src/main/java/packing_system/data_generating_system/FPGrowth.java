@@ -93,12 +93,12 @@ public class FPGrowth {
         }
     }
 
-    public static void fpGrowthTest() throws IOException {
+    public static void fpGrowthTest(int eva) throws IOException {
         for (int i = 1; i < 6; i++) {
 
             // 准备数据
             logger.info("正在准备数据");
-            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
+            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i,eva);
 
             // 使用FPGrowth算法训练模型
             FPGrowthModel model = train(itemsDF);
@@ -109,21 +109,21 @@ public class FPGrowth {
             // 可以选择显示频繁项集(freqItemSets.show();)
             if (MODE.equals("debug")) {
                 logger.info("显示频繁项集");
-                freqItemSets.show();
+                //freqItemSets.show();
             }
 
             //保存频繁项集到csv
             if (RESULT_FORM.equals("csv")) {
                 fileIO.freItemSet2CSV(freqItemSets, i);
             } else if (RESULT_FORM.equals("db")) {
-                MongoUtils.frequentItemSets2db(freqItemSets, i);
+                MongoUtils.frequentItemSets2db(freqItemSets, i,eva);
             }
 
             // 显示生成的关联规则并保存到csv
             Dataset<Row> rules = model.associationRules();
             if (MODE.equals("debug")) {
                 logger.info("显示关联规则");
-                rules.show();
+                //rules.show();
             }
 
             if (RESULT_FORM.equals("csv")) {
@@ -131,15 +131,14 @@ public class FPGrowth {
                 fileIO.rules2CSV(rules, i);
             } else if (RESULT_FORM.equals("db")) {
                 //保存关联规则到数据库
-                MongoUtils.rules2db(rules, i);
+                MongoUtils.rules2db(rules, i,eva);
             }
         }
 
         // 停止SparkSession
         logger.info("SparkSession停止");
         //停止MongoDB
-        MongoUtils.closeMongoClient(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
-        spark.stop();
+        MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
     }
 
     /**

@@ -166,7 +166,8 @@ public class MongoUtils {
     }
 
     public static void initializeItemAttributesStorages() {
-        for (int type = 1; type < SharedAttributes.types.length; type++) {
+        //排除测试以及训练集这两个特殊的种类
+        for (int type = 1; type < SharedAttributes.types.length - 2; type++) {
             SharedAttributes.itemAttributesStorage[type] = new ItemAttributesStorage();
             MongoCollection<Document> collection = getFrequentItemSetsCollection(type);
             FindIterable<Document> records = collection.find().sort(Sorts.descending(TRAINING_NUMBER_FIELD_NAME));
@@ -205,14 +206,15 @@ public class MongoUtils {
     /**
      * 读取规则，并存入MongoDB
      */
-    public static void rules2db(Dataset<Row> rules, int type) {
+    public static void rules2db(Dataset<Row> rules, int type ,int eva) {
         for (Row r : rules.collectAsList()) {
             //处理第0列antecedent
             Document doc = new Document();
             Document antecedent = new Document();
             //得到对应的集合
             MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + SharedAttributes.FULL_NAMES[type]);
-            if (SharedAttributes.itemAttributesStorage[SharedAttributes.TICKET].getRulesDocument(r.getList(0), antecedent)) {
+            if (SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET]
+                    .getRulesDocument(r.getList(0), antecedent ,eva)) {
                 doc.append("antecedent", antecedent);
                 //处理(consequent)
                 String[] parts = r.getList(1).get(0).toString().split(":");
@@ -232,7 +234,7 @@ public class MongoUtils {
         }
     }
 
-    public static void frequentItemSets2db(Dataset<Row> itemSets, int type) {
+    public static void frequentItemSets2db(Dataset<Row> itemSets, int type ) {
         MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + SharedAttributes.FULL_NAMES[type]);
         for (Row r : itemSets.collectAsList()) {
             //写入数据库的doc
@@ -256,7 +258,7 @@ public class MongoUtils {
                 continue;
             }
             //将ticketAttributes添加到doc
-            doc.append(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME, SharedAttributes.itemAttributesStorage[SharedAttributes.TICKET].getFrequentItemSetsDocument(ticketAttributes));
+            doc.append(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME, SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET].getFrequentItemSetsDocument(ticketAttributes));
             //将goodAttributes添加到doc
             doc.append("itemAttributes", SharedAttributes.itemAttributesStorage[type].getFrequentItemSetsDocument(goodAttributes));
             //添加训练编号
@@ -268,11 +270,46 @@ public class MongoUtils {
         }
     }
 
+    public static void frequentItemSets2db(Dataset<Row> itemSets, int type ,int eva) {
+        MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + SharedAttributes.FULL_NAMES[type]);
+        for (Row r : itemSets.collectAsList()) {
+            //写入数据库的doc
+            Document doc = new Document();
+            //初始化ticketAttributes和goodAttributes用于存储频繁项集
+            List<String> ticketAttributes = new ArrayList<>();
+            List<String> goodAttributes = new ArrayList<>();
+            //得到频繁项集
+            for (Object s : r.getList(0)) {
+                String temp = s.toString();
+                //如果频繁项集是机票类型的属性，则加入ticketAttributes
+                if (isTicketType(temp)) {
+                    ticketAttributes.add(temp);
+                } else {
+                    //否则加入goodAttributes
+                    goodAttributes.add(temp);
+                }
+            }
+            //如果ticketAttributes或goodAttributes为空则无意义，跳过
+            if (ticketAttributes.isEmpty() || goodAttributes.isEmpty()) {
+                continue;
+            }
+            //将ticketAttributes添加到doc
+            doc.append(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME, SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET].getFrequentItemSetsDocument(ticketAttributes));
+            //将goodAttributes添加到doc
+            doc.append("itemAttributes", SharedAttributes.itemAttributesStorage[type].getFrequentItemSetsDocument(goodAttributes));
+            //添加训练编号
+            doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(nextTrainingNumber));
+            //添加频次
+            doc.append("freq", Integer.parseInt(r.get(1).toString()));
+            //加入数据库
+            collection.insertOne(doc);
+        }
+    }
     /*
      * 关闭MongoDB连接
      */
-    public static void closeMongoClient(int orderNumber, String comments, float minSupport) {
-        if (!isClosed) {
+    public static void settle(int orderNumber, String comments, float minSupport) {
+
             //得到当前时间作为结束时间
             String endTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
             //获取TrainingController集合
@@ -293,14 +330,10 @@ public class MongoUtils {
             doc.append("minSupport", minSupport);
             //将doc加入数据库
             collection.insertOne(doc);
-            try {
-                //关闭MongoDB连接
-                mongoClient.close();
-            } catch (Exception e) {
-                logger.info("关闭MongoDB连接失败！" + e.getClass().getName() + ": " + e.getMessage());
-            }
-            isClosed = true;
-        }
+
+            nextTrainingNumber = (Integer.parseInt(nextTrainingNumber) + 1) + "";
+
+
     }
 
     public static void rulesAndFreqInDB2csv() {

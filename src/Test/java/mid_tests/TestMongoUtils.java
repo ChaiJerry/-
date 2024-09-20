@@ -48,7 +48,7 @@ public class TestMongoUtils {
     public void testDatasets2DBFunction() throws IOException {
         int trainingNumber = getTrainingNumber(mongoDatabase
                 .getCollection("TrainingController")) + 1;
-        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1);
+        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1,0);
         FPGrowthModel model = train(rowDataset);
         Dataset<Row> frequentItemSet = model.freqItemsets();
         Dataset<Row> ruleDataset = model.associationRules();
@@ -73,7 +73,7 @@ public class TestMongoUtils {
         MongoCollection<Document> collection = mongoDatabase.getCollection("TrainingController");
         //查询数据
         int trainingNumber= getTrainingNumber(collection);
-        closeMongoClient(0,"test",1);
+        settle(0,"test",1);
         assertEquals(trainingNumber + 1, getTrainingNumber(collection));
     }
 

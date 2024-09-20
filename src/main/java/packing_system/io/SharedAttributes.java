@@ -17,18 +17,22 @@ public class SharedAttributes {
     public static final int BAGGAGE = 3;
     public static final int INSURANCE = 4;
     public static final int SEAT = 5;
-    //缩写的商品品类，与下面的商品品类全称对应
-    protected static final String[] types = {"T", "H", "M", "B", "I", "S"};
+    //训练订单的品类编号
+    public static final int TRAIN_TICKET = 6;
+    //测试订单的品类编号
+    public static final int TEST_TICKET = 7;
+    //缩写的商品品类，与下面的商品品类全称对应,最后一个是为了评估临时增加的
+    protected static final String[] types = {"T", "H", "M", "B", "I", "S","Train","Test"};
     protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
 
 
     //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
     protected static Map<String, List<List<String>>> ticketMap;
 
-    protected static Map<String, List<List<String>>> testTicketMap;
+    protected static Map<String, List<List<String>>> testTicketsMap;
 
 
-    protected static Map<String, List<List<String>>> trainingTicketsMap;
+    protected static Map<String, List<List<String>>> trainTicketsMap;
 
     //将type与index对应，用于快速查找
     protected static HashMap<String, Integer> type2index = new HashMap<>();
@@ -38,7 +42,7 @@ public class SharedAttributes {
     }
 
     //存储每个品类下的商品属性，用于快速查找，主要从CSV文件的头文件读取
-    protected static ItemAttributesStorage[] itemAttributesStorage = new ItemAttributesStorage[6];
+    protected static ItemAttributesStorage[] itemAttributesStorage = new ItemAttributesStorage[9];
 
     // 最小置信度
     public static final float MIN_CONFIDENCE;
@@ -58,6 +62,11 @@ public class SharedAttributes {
     public static final String PATH_I;
     // 选座订单csv文件路径
     public static final String PATH_S;
+    // 测试订单csv文件路径
+    public static final String PATH_TEST_T;
+    // 训练订单csv文件路径
+    public static final String PATH_TRAIN_T;
+
     // 模式(若是debug模式，则会输出一部分频繁项集和关联规则，否则不输出)
     public static final String MODE;
     // 结果输出格式（可以是csv或者是db），csv则会将结果以csv文件的形式输出，db则会将结果存入数据库中
@@ -108,6 +117,10 @@ public class SharedAttributes {
         PATH_I = properties.getProperty("insuranceFilePath");
         // 获取选座订单csv文件路径
         PATH_S = properties.getProperty("seatFilePath");
+        // 获取机票测试订单csv文件路径
+        PATH_TEST_T = properties.getProperty("testTicketFilePath");
+        // 获取机票训练订单csv文件路径
+        PATH_TRAIN_T = properties.getProperty("trainTicketFilePath");
         // 获取模式(若是debug模式，则会输出一部分频繁项集和关联规则，否则不输出)
         MODE = properties.getProperty("mode");
         // 获取结果输出格式
@@ -153,12 +166,12 @@ public class SharedAttributes {
         return targetItemFieldNames.get(type);
     }
 
-    public static Map<String, List<List<String>>> getTestTicketMap() {
-        return testTicketMap;
+    public static Map<String, List<List<String>>> getTestTicketsMap() {
+        return testTicketsMap;
     }
 
-    public static Map<String, List<List<String>>> getTrainingTicketsMap() {
-        return trainingTicketsMap;
+    public static Map<String, List<List<String>>> getTrainTicketsMap() {
+        return trainTicketsMap;
     }
 
     public static String[] getFullNames() {

@@ -93,7 +93,7 @@ public class ItemPack {
     //得到每个机票属性特征键
     public static String generateItemPackKey(List<String> attributeValues){
         StringBuilder stringBuilder=new StringBuilder();
-        for(int i = 0; i < attributeValues.size()-1;i++){
+        for(int i = 0; i < 6;i++){
             stringBuilder.append(attributeValues.get(i)).append(",");
         }
         return stringBuilder.toString();
