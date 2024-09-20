@@ -32,12 +32,12 @@ public class DataParser {
         //通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
         //添加餐食代码属性
-        attributeList.add(M_SIGN + csvReader.getHeader(2) + ":" + csvReader.get(2));
+        attributeList.add(M_SIGN + "MEAL_CODE" + ":" + csvReader.get("MEAL_CODE"));
         //添加订单的划档位处理后的数据类属性
-        attributeList.add(M_SIGN + csvReader.getHeader(3) + ":"
-                + floatStr2Attribute(csvReader.get(3), 4));
-        attributeList.add(M_SIGN + csvReader.getHeader(4) + ":"
-                + floatStr2Attribute(csvReader.get(4), 400));
+        attributeList.add(M_SIGN + "PM_PRICE" + ":"
+                + floatStr2Attribute(csvReader.get("PM_PRICE"), 4));
+        attributeList.add(M_SIGN + "PAY_AMOUNT" + ":"
+                + floatStr2Attribute(csvReader.get("PAY_AMOUNT"), 400));
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
     }
@@ -51,7 +51,6 @@ public class DataParser {
         List<List<String>> listofAttributeList;
 
         if (map.containsKey(key)) {
-            //订单号相同的情况实际上不应该出现，因为订单号是唯一的
             attributeList = map.get(key).get(0);
             if (!csvReader.get(4).equals("ADT")) {
                 attributeList.set(5, T_SIGN + "HAVE_CHILD" + ":" + "1");
@@ -94,6 +93,75 @@ public class DataParser {
         }
     }
 
+    public static void dealE(CsvReader csvReader, Map<String, List<List<String>>> map) throws IOException {
+        //机票属性列表
+        List<String> attributeList = new ArrayList<>();
+        //得到订单号
+        String key = csvReader.get("ORDER_NO");
+        List<List<String>> listofAttributeList;
+
+        if (map.containsKey(key)) {
+            attributeList = map.get(key).get(0);
+            if (!csvReader.get("T_PASSENGER").equals("ADT")) {
+                attributeList.set(5, T_SIGN + "HAVE_CHILD" + ":" + "1");
+            }
+            //处理一个机票订单之中有往返票的情况
+            if (isRoundTrip(attributeList, csvReader.get("T_VOYAGE"))) {
+                //如果之前没有添加往返票信息，则添加一次
+                if (map.get(key).size() == 1) {
+                    List<String> newAttributeList = new ArrayList<>(attributeList);
+                    newAttributeList.set(2, T_SIGN + "FROM" + ":" + csvReader.get("T_VOYAGE").split("-")[0]);
+                    newAttributeList.set(3, T_SIGN + "TO" + ":" + csvReader.get("T_VOYAGE").split("-")[1]);
+                    map.get(key).add(newAttributeList);
+                } else {
+                    //如果之前已经添加了往返票信息，则修改往返票信息
+                    // ，使得两个订单的除了起始地点之外的属性相同
+                    List<String> newAttributeList = new ArrayList<>(attributeList);
+                    newAttributeList.set(2, T_SIGN + "FROM" + ":" + csvReader.get("T_VOYAGE").split("-")[1]);
+                    newAttributeList.set(3, T_SIGN + "TO" + ":" + csvReader.get("T_VOYAGE").split("-")[0]);
+                    map.get(key).set(1, newAttributeList);
+                }
+            }
+        } else {
+            listofAttributeList = new ArrayList<>();
+            //添加时间属性（划分到月） 0
+            addDate2list(attributeList, csvReader.get(2), T_SIGN);
+            //添加航司属性 1
+            attributeList.add(T_SIGN + csvReader.getHeader(3) + ":" + csvReader.get(3));
+            //添加出发地、目的地属性 2,3
+            splitSegment(attributeList, csvReader.get(5));
+            //添加航班等级属性 4
+            attributeList.add(T_SIGN + csvReader.getHeader(6) + ":" + ticketGrade2Specific(csvReader.get(6)));
+            //添加是否有孩童票属性 5
+            attributeList.add(T_SIGN + "HAVE_CHILD" + ":" + (csvReader.get("T_PASSENGER").equals("ADT") ? "0" : "1"));
+            //添加票价属性 6
+            attributeList.add(T_SIGN + "S_SHOFARE" + ":"
+                    + floatStr2Attribute(csvReader.get("S_SHOFARE"), 300));
+            //添加T_FAREBASIS属性 7
+            attributeList.add(T_SIGN + "T_FAREBASIS" + ":" + csvReader.get("T_FAREBASIS"));
+            //添加T_FORMER属性 8
+            attributeList.add(T_SIGN + "T_FORMER" + ":" + floatStr2Attribute(Objects.equals(csvReader.get("T_FORMER"), "")
+                    ?"-1000.0":csvReader.get("T_FORMER"), 1000));
+            //添加S_FARE_RATIO属性 9
+            attributeList.add(T_SIGN + "S_FARE_RATIO" + ":"
+                    + floatStr2Attribute(csvReader.get("S_FARE_RATIO"), 15));
+            //添加AIRPORT_TAX属性 10
+            attributeList.add(T_SIGN + "AIRPORT_TAX" + ":" + csvReader.get("AIRPORT_TAX"));
+            //添加YQ_TAX属性 11
+            attributeList.add(T_SIGN + "YQ_TAX" + ":" + csvReader.get("YQ_TAX"));
+            //添加T_INSURANCENUM属性 12
+            attributeList.add(T_SIGN + "T_INSURANCENUM" + ":" + csvReader.get("T_INSURANCENUM"));
+            //添加T_INSURANCEFEE属性 13
+            attributeList.add(T_SIGN + "T_INSURANCEFEE" + ":" + csvReader.get("T_INSURANCEFEE"));
+            //添加T_COUPONFAVOR属性 14
+            attributeList.add(T_SIGN + "T_COUPONFAVOR" + ":" + csvReader.get("T_COUPONFAVOR"));
+
+            //将订单号和属性列表放入map中
+            listofAttributeList.add(attributeList);
+            map.put(key, listofAttributeList);
+        }
+    }
+
     public static boolean isRoundTrip(List<String> originAttributeList, String voyage) {
         //获取之前的出发地
         String originalFrom = originAttributeList.get(2).split(":")[2];
@@ -109,9 +177,10 @@ public class DataParser {
         //通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
         //添加划档处理后的数据类属性
-        attributeList.add(B_SIGN + csvReader.getHeader(1) + ":"
-                + floatStr2Attribute(csvReader.get(1), 200));
-        attributeList.add(B_SIGN + csvReader.getHeader(2) + ":" + csvReader.get(2));
+        attributeList.add(B_SIGN + "PAYMENTAMOUNT" + ":"
+                + floatStr2Attribute(csvReader.get("PAYMENTAMOUNT")
+                .isEmpty()?"0":csvReader.get("PAYMENTAMOUNT"), 200));
+        attributeList.add(B_SIGN + "BAGGAGE_SPECIFICATION" + ":" + csvReader.get("BAGGAGE_SPECIFICATION"));
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
     }
@@ -123,11 +192,13 @@ public class DataParser {
         ///通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
         //可以选择用addDate2list(attributeList, csvReader.get(1), H_SIGN)导入酒店入住时间属性
-        attributeList.add(H_SIGN + "HPRICE" + ":" + floatStr2Attribute(csvReader.get(3), 300));
+        attributeList.add(H_SIGN + "HPRICE" + ":" + floatStr2Attribute(csvReader.get("HPRICE"), 300));
         //加入其它酒店属性
-        for (int i = 4; i < csvReader.getColumnCount(); i++) {
-            attributeList.add(H_SIGN + csvReader.getHeader(i) + ":" + csvReader.get(i));
-        }
+        attributeList.add(H_SIGN + "PRODUCTTYPE" + ":" + csvReader.get("PRODUCTTYPE"));
+        attributeList.add(H_SIGN + "PRODUCT_NAME" + ":" + csvReader.get("PRODUCT_NAME"));
+        attributeList.add(H_SIGN + "PRODUCT_DAYS" + ":" + csvReader.get("PRODUCT_DAYS"));
+        attributeList.add(H_SIGN + "HOTEL_NAME" + ":" + csvReader.get("HOTEL_NAME"));
+
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
     }
@@ -138,10 +209,11 @@ public class DataParser {
         //通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
         //加入保险属性
-        for (int i = 1; i < csvReader.getColumnCount(); i++) {
-            String header = csvReader.getHeader(i);
-            attributeList.add(I_SIGN + header + ":" + csvReader.get(i));
-        }
+
+        attributeList.add(I_SIGN + "INSUR_AMOUNT" + ":" + csvReader.get("INSUR_AMOUNT"));
+        attributeList.add(I_SIGN + "INSUR_PRO_NAME" + ":" + csvReader.get("INSUR_PRO_NAME"));
+        attributeList.add(I_SIGN + "INSURANCE_COMPANYCODE" + ":" + csvReader.get("INSURANCE_COMPANYCODE"));
+
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
     }
@@ -151,13 +223,18 @@ public class DataParser {
         List<String> attributeList = new ArrayList<>();
         //通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
-        //加入选座属性
-        for (int i = 1; i < csvReader.getColumnCount(); i++) {
-            //直接加入数据之中的属性
-            attributeList.add(S_SIGN + csvReader.getHeader(i) + ":" + csvReader.get(i));
-        }
+        //加入选座属性,如：
+        //    "PAYINTEGRAL": "0",
+        //    "SEAT_NO": null
+        attributeList.add(S_SIGN + "PAYINTEGRAL" + ":" + csvReader.get("PAYINTEGRAL"));
+        attributeList.add(S_SIGN + "SEAT_NO" + ":" + getSeatPosition(csvReader.get("SEAT_NO")));
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
+    }
+
+    public static  String getSeatPosition(String seatNo) {
+        //获取座位号
+        return seatNo.substring(seatNo.length()-1);
     }
 
     /**
@@ -192,7 +269,11 @@ public class DataParser {
 
     private static List<List<String>> getListOfAttributeList(CsvReader csvReader, Map<String, List<List<String>>> map) throws IOException {
         //得到订单号
-        String key = csvReader.get(0);
+        String key = csvReader.get("ORDER_NO");
+        if(key.isEmpty()) {
+            key = csvReader.get(0);
+        }
+
         List<List<String>> listOfAttributeList;
         //订单号相同的情况检验
         if (map.containsKey(key)) {

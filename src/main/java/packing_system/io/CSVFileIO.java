@@ -11,13 +11,14 @@ import java.util.logging.*;
 import static packing_system.data_processer.DataConverter.*;
 import static packing_system.data_processer.DataParser.*;
 import static packing_system.data_generating_system.FPGrowth.*;
+import static packing_system.io.SharedAttributes.*;
 
 public class CSVFileIO {
 
     //csv文件结果输出的目录路径
     private final String resultDirPath;
     //csv文件读取的路径，数组长度为types.length，数组下标与types对应
-    private final String[] csvPaths = new String[SharedAttributes.types.length];
+    private final String[] csvPaths = new String[SharedAttributes.types.length + 2];
 
     // 初始化日志记录器
     private static final Logger logger = Logger.getLogger(CSVFileIO.class.getName());
@@ -56,15 +57,15 @@ public class CSVFileIO {
             SharedAttributes.type2index.put(SharedAttributes.types[i], i);
         }
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
-        SharedAttributes.ticketMap = CSVFileIO.read(csvPaths[SharedAttributes.TICKET], "T");
+        SharedAttributes.ticketMap = null;
         //训练用机票订单
-        SharedAttributes.testTicketMap = getTestMap();
+        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, "Test");
         //测试用机票订单
-        SharedAttributes.trainingTicketsMap = getTrainingMap();
+        SharedAttributes.trainTicketsMap = CSVFileIO.read(PATH_TRAIN_T, "Train");
     }
 
     public void csv2DB() throws IOException {
-        for (int i = 0; i < SharedAttributes.types.length; i++) {
+        for (int i = 1; i < 6; i++) {
             singleTypeCsv2database(i);
         }
     }
@@ -79,14 +80,14 @@ public class CSVFileIO {
         } else {
             // 当读取的csv文件是Ticket时
             // 将测试集放入数据库
-            MongoUtils.ordersMap2DB(SharedAttributes.getTestTicketMap(), type);
+            MongoUtils.ordersMap2DB(SharedAttributes.getTestTicketsMap(), type);
         }
     }
 
     /**
      * Convert a CSV file to a Dataset<Row>.
      */
-    public Dataset<Row> singleTypeCsv2dataset(int type) throws IOException {
+    public Dataset<Row> singleTypeCsv2dataset(int type,int eva) throws IOException {
         //订单与属性之间的映射map
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
@@ -96,7 +97,7 @@ public class CSVFileIO {
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
             // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到data中
-            for (Iterator<String> iterator = SharedAttributes.trainingTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+            for (Iterator<String> iterator = SharedAttributes.trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
                 String key = iterator.next();
                 // 得到属性列表
                 List<List<String>> attributeLists = attributeMap.get(key);
@@ -105,7 +106,7 @@ public class CSVFileIO {
                 if (attributeLists != null) {
                     for (List<String> attributeList : attributeLists) {
                         //加入共现的机票订单属性数据
-                        attributeList.addAll(SharedAttributes.trainingTicketsMap.get(key).get(0));
+                        attributeList.add(SharedAttributes.trainTicketsMap.get(key).get(0).get(eva));
                         data.add(RowFactory.create(attributeList));
                     }
                 }
@@ -134,7 +135,7 @@ public class CSVFileIO {
         attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
         //筛选出能和机票订单号匹配的订单数据
         // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到listOfAttributeList中
-        for (Iterator<String> iterator = SharedAttributes.trainingTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+        for (Iterator<String> iterator = SharedAttributes.trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
             String key = iterator.next();
             // 得到属性列表
             List<List<String>> attributeLists = attributeMap.get(key);
@@ -143,7 +144,7 @@ public class CSVFileIO {
             if (attributeLists != null) {
                 for (List<String> attributeList : attributeLists) {
                     //加入共现的机票订单属性数据
-                    attributeList.addAll(SharedAttributes.trainingTicketsMap.get(key).get(0));
+                    attributeList.addAll(SharedAttributes.trainTicketsMap.get(key).get(0));
                     listOfAttributeList.add(attributeList);
                 }
             }
@@ -151,9 +152,6 @@ public class CSVFileIO {
         return listOfAttributeList;
     }
 
-    public List<List<String>> singleTypeCsv2lists(int type) throws IOException {
-        return dataset2stringlist(singleTypeCsv2dataset(type));
-    }
 
     /**
      * 将频繁项集转换为CSV文件
@@ -250,7 +248,10 @@ public class CSVFileIO {
             case "M":
                 //处理餐食数据
                 //删除餐食名字
-                header.removeAttribute("MEAL_NAME");
+                header.clear();
+                header.addAttribute("MEAL_CODE");
+                header.addAttribute("PM_PRICE");
+                header.addAttribute("PAY_AMOUNT");
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
@@ -277,6 +278,10 @@ public class CSVFileIO {
                 break;
             case "B":
                 //处理行李数据
+                header.clear();
+                //添加处理后得到的属性头
+                header.addAttribute("PAYMENTAMOUNT");
+                header.addAttribute("BAGGAGE_SPECIFICATION");
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
@@ -284,9 +289,13 @@ public class CSVFileIO {
                 }
                 break;
             case "H":
-                //删除入住和退房时间属性头
-                header.removeAttribute("IN_DATE");
-                header.removeAttribute("OUT_DATE");
+                header.clear();
+                //添加属性名
+                header.addAttribute("HPRICE");
+                header.addAttribute("PRODUCTTYPE");
+                header.addAttribute("PRODUCT_NAME");
+                header.addAttribute("PRODUCT_DAYS");
+                header.addAttribute("HOTEL_NAME");
                 //处理酒店数据
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -297,6 +306,10 @@ public class CSVFileIO {
             case "I":
                 //处理保险数据
                 while (csvReader.readRecord()) {
+                    header.clear();
+                    header.addAttribute("INSUR_AMOUNT");
+                    header.addAttribute("INSUR_PRO_NAME");
+                    header.addAttribute("INSURANCE_COMPANYCODE");
                     //订单数量计数
                     orderNumber++;
                     dealI(csvReader, map);
@@ -307,7 +320,53 @@ public class CSVFileIO {
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
+                    header.clear();
+                    header.addAttribute("PAYINTEGRAL");
+                    header.addAttribute("SEAT_NO");
                     dealS(csvReader, map);
+                }
+                break;
+            case "Train":
+            case "Test":
+                //特殊处理机票数据的属性
+                //移动位置
+                header.removeAttribute("T_CARRIER");
+                header.removeAttribute("T_GRADE");
+                header.removeAttribute("S_SHOFARE");
+
+                //添加处理后得到的属性头
+                header.addAttribute("MONTH",0);
+                header.addAttribute("T_CARRIER",1);
+                header.addAttribute("FROM",2);
+                header.addAttribute("TO",3);
+                header.addAttribute("T_GRADE",4);
+                header.addAttribute("HAVE_CHILD",5);
+                header.addAttribute("S_SHOFARE",6);
+                //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
+                //删去多余的属性头
+                header.removeAttribute("T_VOYAGE");
+                header.removeAttribute("T_FLIGHT_NO");
+                header.removeAttribute("T_PASSENGER");
+                header.removeAttribute("TNO");
+                header.removeAttribute("ISS_DATE");
+                header.removeAttribute("T_FACETOTAL");
+                header.removeAttribute("T_SHOULD");
+                header.removeAttribute("T_RATE");
+                header.removeAttribute("PROMOTION_RATE");
+                header.removeAttribute("AIR_PNR");
+                header.removeAttribute("UNIQUE_ID");
+                header.removeAttribute("PROMOTION");
+                header.removeAttribute("MOBILEPHONE");
+                header.removeAttribute("PASS_DOCID");
+                header.removeAttribute("T_AIRDATE");
+
+
+
+                //用于字段作用评估
+                while (csvReader.readRecord()) {
+                    //订单数量计数
+                    orderNumber++;
+                    dealE(csvReader, map);
                 }
                 break;
             default:

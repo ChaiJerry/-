@@ -20,6 +20,14 @@ public class ItemAttributesStorage {
         attributeNames.add(header);
     }
 
+    public void addAttribute(String header,int index) {
+        //如果属性头在属性头列表之中或是订单号，则跳过
+        if (attributeNames.contains(header) || header.equals("ORDER_NO")) {
+            return;
+        }
+        attributeNames.add(index,header);
+    }
+
     //删除属性头
     public void removeAttribute(String header) {
         attributeNames.remove(header);
@@ -51,6 +59,29 @@ public class ItemAttributesStorage {
         return true;
     }
 
+    public boolean getRulesDocument(List<Object> list , Document doc ,int eva) {
+        Map<String, String> headerMap = new HashMap<>();
+        String temp;
+        for (int i = 0 ; i <list.size() ; i++) {
+            Object s= list.get(i);
+            temp = s.toString();
+            //如果前件之中包含有一个非机票类型的属性，则跳过
+            if (temp.charAt(0) != 'T') {
+                return false;
+            }
+            String key= temp.split(":")[1];
+            String value = temp.split(":")[2];
+            headerMap.put(key, value);
+        }
+        String evaValue= headerMap.getOrDefault(attributeNames.get(eva),null);
+        if(evaValue== null){
+            return false;
+        }else{
+            doc.append(attributeNames.get(eva), evaValue);
+        }
+
+        return true;
+    }
     /**
      * 获得频繁项集属性列表的Document
      * @param list 频繁项集属性列表
@@ -112,5 +143,15 @@ public class ItemAttributesStorage {
             attributeLists.add(attributeNames.get(i) + ":" + attributeValueList.get(i));
         }
         return attributeLists;
+    }
+
+    public List<String> generateOrderedAttributeListFromAttributeValueList(List<String> attributeValueList,int eva) {
+        List<String> attributeLists = new ArrayList<>();
+        attributeLists.add(attributeNames.get(eva) + ":" + attributeValueList.get(eva));
+        return attributeLists;
+    }
+
+    public void clear(){
+        attributeNames.clear();
     }
 }

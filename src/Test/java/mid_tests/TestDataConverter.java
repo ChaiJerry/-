@@ -14,7 +14,7 @@ public class TestDataConverter {
 
     @Test
     public void testRow2rule() throws IOException {
-        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1);
+        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1,0);
         FPGrowthModel model = train(rowDataset);
         Dataset<Row> ruleDataset = model.associationRules();
         for (Row row : ruleDataset.collectAsList()) {
