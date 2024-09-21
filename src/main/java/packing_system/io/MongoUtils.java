@@ -206,6 +206,37 @@ public class MongoUtils {
     /**
      * 读取规则，并存入MongoDB
      */
+    public static void rules2db(Dataset<Row> rules, int type) {
+        for (Row r : rules.collectAsList()) {
+            //处理第0列antecedent
+            Document doc = new Document();
+            Document antecedent = new Document();
+            //得到对应的集合
+            MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + SharedAttributes.FULL_NAMES[type]);
+            if (SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET]
+                    .getRulesDocument(r.getList(0), antecedent)) {
+                doc.append("antecedent", antecedent);
+                //处理(consequent)
+                String[] parts = r.getList(1).get(0).toString().split(":");
+                //如果consequent是机票类型的属性，则跳过
+                if (parts[0].equals("Ticket")) {
+                    continue;
+                }
+                //添加consequent
+                doc.append("consequence", parts[1] + ":" + parts[2]);
+                //添加置信度
+                doc.append("confidence", Float.parseFloat(r.get(2).toString()));
+                //添加训练编号
+                doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(nextTrainingNumber));
+                //加入数据库
+                collection.insertOne(doc);
+            }
+        }
+    }
+
+    /**
+     * 读取规则，并存入MongoDB
+     */
     public static void rules2db(Dataset<Row> rules, int type ,int eva) {
         for (Row r : rules.collectAsList()) {
             //处理第0列antecedent

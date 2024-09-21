@@ -123,6 +123,44 @@ public class CSVFileIO {
     }
 
     /**
+     * Convert a CSV file to a Dataset<Row>.
+     */
+    public Dataset<Row> singleTypeCsv2dataset(int type) throws IOException {
+        //订单与属性之间的映射map
+        Map<String, List<List<String>>> attributeMap;
+        if (type != SharedAttributes.TICKET) {
+            // 当读取的csv文件不是Ticket时，直接处理
+            attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+            // 创建数据集
+            List<Row> data = new ArrayList<>();
+            //筛选出能和机票订单号匹配的订单数据
+            // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到data中
+            for (Iterator<String> iterator = SharedAttributes.trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+                String key = iterator.next();
+                // 得到属性列表
+                List<List<String>> attributeLists = attributeMap.get(key);
+                // 如果temp不为空，则将temp添加到data中
+                // 若是为空则说明没有商品可以和该订单匹配，则跳过
+                if (attributeLists != null) {
+                    for (List<String> attributeList : attributeLists) {
+                        //加入共现的机票订单属性数据
+                        attributeList.addAll(SharedAttributes.trainTicketsMap.get(key).get(0));
+                        data.add(RowFactory.create(attributeList));
+                    }
+                }
+            }
+            // 创建DataFrame，并指定模式，将List<Row>数据转换为Dataset<Row>
+            logger.info("正在创建DataFrame");
+            return getDataFrame(data);
+        } else {
+            // 当读取的csv文件是Ticket时
+            List<Row> data = new ArrayList<>();
+            // 暂时不会有等于TICKET的情况，若是以后有，则可以添加在这个地方
+            return getDataFrame(data);
+        }
+    }
+
+    /**
      * 读取csv文件转换为List<List<String>>主要用于测试api
      * @param type 商品类型
      * @return 属性列表的列表List<List<String>>，其中每个List<String>共同出现在某个订单中的机票和商品属性
@@ -333,15 +371,17 @@ public class CSVFileIO {
                 header.removeAttribute("T_CARRIER");
                 header.removeAttribute("T_GRADE");
                 header.removeAttribute("S_SHOFARE");
+                header.removeAttribute("PROMOTION_RATE");
 
                 //添加处理后得到的属性头
-                header.addAttribute("MONTH",0);
+                header.addAttribute("SEASON",0);
                 header.addAttribute("T_CARRIER",1);
                 header.addAttribute("FROM",2);
                 header.addAttribute("TO",3);
                 header.addAttribute("T_GRADE",4);
                 header.addAttribute("HAVE_CHILD",5);
                 header.addAttribute("S_SHOFARE",6);
+                header.addAttribute("PROMOTION_RATE");
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
                 header.removeAttribute("T_VOYAGE");
@@ -352,15 +392,12 @@ public class CSVFileIO {
                 header.removeAttribute("T_FACETOTAL");
                 header.removeAttribute("T_SHOULD");
                 header.removeAttribute("T_RATE");
-                header.removeAttribute("PROMOTION_RATE");
                 header.removeAttribute("AIR_PNR");
                 header.removeAttribute("UNIQUE_ID");
                 header.removeAttribute("PROMOTION");
                 header.removeAttribute("MOBILEPHONE");
                 header.removeAttribute("PASS_DOCID");
                 header.removeAttribute("T_AIRDATE");
-
-
 
                 //用于字段作用评估
                 while (csvReader.readRecord()) {

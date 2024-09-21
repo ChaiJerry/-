@@ -155,6 +155,8 @@ public class DataParser {
             attributeList.add(T_SIGN + "T_INSURANCEFEE" + ":" + csvReader.get("T_INSURANCEFEE"));
             //添加T_COUPONFAVOR属性 14
             attributeList.add(T_SIGN + "T_COUPONFAVOR" + ":" + csvReader.get("T_COUPONFAVOR"));
+            //添加PROMOTION_RATE属性 15
+            attributeList.add(T_SIGN + "PROMOTION_RATE" + ":" + csvReader.get("PROMOTION_RATE"));
 
             //将订单号和属性列表放入map中
             listofAttributeList.add(attributeList);
@@ -255,7 +257,7 @@ public class DataParser {
         //拆分日期
         String[] results = date.split(" ")[0].split("/");
         //添加月
-        list.add(sign + "MONTH:" + results[1]);
+        list.add(sign + "SEASON:" + ((Integer.valueOf(results[1])-1)/3)*3 );
     }
 
     //拆分航段
