@@ -94,6 +94,7 @@ public class ItemPack {
     public static String generateItemPackKey(List<String> attributeValues){
         StringBuilder stringBuilder=new StringBuilder();
         for(int i = 0; i < attributeValues.size();i++){
+            //跳过月份和价格属性
             if(i==2||i==3){
                 continue;
             }
