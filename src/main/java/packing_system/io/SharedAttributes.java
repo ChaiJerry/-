@@ -157,7 +157,7 @@ public class SharedAttributes {
         return testTicketMap;
     }
 
-    public static Map<String, List<List<String>>> getTrainingTicketsMap() {
+    public static Map<String, List<List<String>>> getTrainTicketsMap() {
         return trainingTicketsMap;
     }
 

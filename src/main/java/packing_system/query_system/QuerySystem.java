@@ -47,7 +47,7 @@ public class QuerySystem {
     public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap() {
         //读取文件，返回Map<String, List<List<String>>>，但是此时还不能使用，可能有不需要的属性或者属性顺序不对
         //这里可以更改使用训练集还是测试集来测试
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTrainingTicketsMap();
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTestTicketMap();
         //获取机票的itemAttributesStorage（用于处理属性名和属性对应对应关系的结构体），用于获取调整后规范的属性列表
         ItemAttributesStorage itemAttributesStorage = getItemAttributesStorage()[TICKET];
         //遍历Map<String, List<List<String>>> itemAttributesStorage的所有键值对
@@ -120,14 +120,20 @@ public class QuerySystem {
                 }
             }
             String info = getFullNames()[i] + "有效测试订单条数共: " + total;
-            logger.info(info);
+            //logger.info(info);
+            System.out.println(info);
             Evaluator evaluator = new Evaluator(itemPackMap);
             double averageAccuracy = evaluator.getAverageAccuracy();
             double averageRecallRate = evaluator.getAverageRecallRate();
+            double f1 =(averageRecallRate + averageAccuracy)/2;
             String accuracyInfo = "averageAccuracy: " + averageAccuracy;
             String recallInfo = "averageRecallRate: " + averageRecallRate;
-            logger.info(accuracyInfo);
-            logger.info(recallInfo);
+            String f1Info = "f1: " + f1;
+            System.out.println(accuracyInfo);
+            System.out.println(recallInfo);
+            System.out.println(f1Info);
+            //logger.info(accuracyInfo);
+            //logger.info(recallInfo);
         }
     }
 
