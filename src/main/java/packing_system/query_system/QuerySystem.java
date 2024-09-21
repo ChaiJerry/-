@@ -67,13 +67,13 @@ public class QuerySystem {
   public static void evaluate(int eva) throws IOException {
         System.out.println();
         System.out.print(getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames().get(eva) + "测试集,");
-        evaluateDataset(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
+        evaluateTicketDataset(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
 //      System.out.println();
 //      System.out.print(getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames().get(eva) + "训练集,");
 //        evaluateDataset(eva, CSVFileIO.read(PATH_TRAIN_T, "Train"));
   }
 
-    public static void evaluateDataset(int eva ,Map<String, List<List<String>>> dataForEvaluation) {
+    public static void evaluateTicketDataset(int eva , Map<String, List<List<String>>> dataForEvaluation) {
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
         Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation);
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TRAIN_TICKET];
@@ -156,6 +156,91 @@ public class QuerySystem {
 
         System.out.print("" + rateSum);
     }
+
+    public static void evaluateBundleItemDataset(int eva , Map<String, List<List<String>>> dataForEvaluation) {
+        //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation);
+        ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TRAIN_TICKET];
+        List<Double> f1List = new ArrayList<>();
+        List<Integer> numList = new ArrayList<>();
+        for (int i = 1; i < colNum.length; i++) {
+            itemPackMap.clear();
+            //获取rulesCollection，用于查询规则
+            MongoCollection<Document> rulesCollection = getRulesCollection(i);
+            int latestTrainingNumber = getLatestTrainingNumber();
+            KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection,latestTrainingNumber);
+            //获取ordersCollection，用于查询订单
+            MongoCollection<Document> ordersCollection = getOrdersCollection(i);
+            double total = 0;
+            for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
+                //得到orderNum（订单号）
+                String orderNum = iterator.next();
+                List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
+                if (correctTargetItems.isEmpty()) {
+                    continue;
+                }
+                //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性值列表的列表
+                List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
+                //遍历listOfTicketAttributeList（属性值列表的列表）
+                for (List<String> attributeValues : listOfTicketAttributeList) {
+                    //得到每个属性值列表
+                    total++;
+                    //得到每个机票属性列表特征键
+                    String itemPackKey = ItemPack.generateItemPackKey(attributeValues);
+                    //判断是否已经存在于itemPackMap中
+                    boolean isRepeated = itemPackMap.containsKey(itemPackKey);
+                    ItemPack itemPack;
+                    if (isRepeated) {
+                        itemPack = itemPackMap.get(itemPackKey);
+                    } else {
+                        itemPack = new ItemPack();
+                        itemPackMap.put(itemPackKey, itemPack);
+                    }
+                    //根据attributeValues，查询ordersCollection中对应的订单
+                    Map<String, String> singleAttributeQuery =
+                            generateAttributeBundleByAssociationRules(ticketAttributesStorage
+                                            .generateOrderedAttributeListFromAttributeValueList(attributeValues)
+                                    , knowledgeBaseQuery, i);
+                    //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
+                    String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
+                    //加入原订单中同时出现的商品
+                    itemPack.addOrderItem(correctTargetItems, i);
+                    //加入推荐系统推荐的商品
+                    itemPack.addRecommendedItem(singleItemQuery, i);
+                    String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
+                    //System.out.println(info);
+                }
+            }
+            //String info = getFullNames()[i] + "有效测试订单条数共: " + total;
+            //System.out.println(info);
+            Evaluator evaluator = new Evaluator(itemPackMap);
+            double averageAccuracy = evaluator.getAverageAccuracy();
+            double averageRecallRate = evaluator.getAverageRecallRate();
+
+            String accuracyInfo = "" + averageAccuracy;
+            String recallInfo = "" + averageRecallRate;
+            //String f1=(averageAccuracy+averageRecallRate)/2;
+            //System.out.print(getFullNames()[i] + ",");
+            System.out.print(accuracyInfo + ",");
+            System.out.print(recallInfo + ",");
+            System.out.print((averageAccuracy+averageRecallRate)/2+",");
+            f1List.add((averageAccuracy+averageRecallRate)/2);
+            numList.add(itemPackMap.size());
+            itemPackMap.clear();
+        }
+        //计算平均f1
+        double rateSum = 0;
+
+
+        rateSum += f1List.get(0) /3;
+        rateSum += f1List.get(1) /9;
+        rateSum += f1List.get(2) /9;
+        rateSum += f1List.get(3) /3;
+        rateSum += f1List.get(4) /9;
+
+        System.out.print("" + rateSum);
+    }
+
 
     public static void queryTest() {
         //初始化各个商品所具有的的属性名称
