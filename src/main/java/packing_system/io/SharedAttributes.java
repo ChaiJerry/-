@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.logging.*;
 
 public class SharedAttributes {
+
+    public static final String NEW_ATT= "PAYMENTAMOUNT";
     public static final String TICKET_ATTRIBUTES_FIELD_NAME = "ticketAttributes";
 
     private SharedAttributes() {
@@ -22,9 +24,36 @@ public class SharedAttributes {
     //测试订单的品类编号
     public static final int TEST_TICKET = 7;
     //缩写的商品品类，与下面的商品品类全称对应,最后一个是为了评估临时增加的
+
+    //用于添加到属性中的品类标识
+    //机票标识
+    public static final String T_SIGN = "Ticket:";
+    //餐食标识
+    public static final String M_SIGN = "Meal:";
+    //行李标识
+    public static final String B_SIGN = "Baggage:";
+    //酒店标识
+    public static final String H_SIGN = "Hotel:";
+    //保险标识
+    public static final String I_SIGN = "Insurance:";
+    //选座标识
+    public static final String S_SIGN = "Seat:";
+
     protected static final String[] types = {"T", "H", "M", "B", "I", "S","Train","Test"};
     protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
+    public static final String[] HOTEL_ATTRIBUTES = {"HPRICE", "PRODUCTTYPE", "PRODUCT_NAME", "PRODUCT_DAYS",
+            "HOTEL_NAME"};
+    public static final String[] MEAL_ATTRIBUTES = {"MEAL_CODE", "PM_PRICE", "PAY_AMOUNT"};
+    public static final String[] BAGGAGE_ATTRIBUTES = {"PAYMENTAMOUNT","BAGGAGE_SPECIFICATION"};
+    public static final String[] INSURANCE_ATTRIBUTES =  {"INSUR_AMOUNT","INSUR_PRO_NAME", "INSURANCE_COMPANYCODE"};
+    public static final String[] SEAT_ATTRIBUTES = {"PAYINTEGRAL","SEAT_NO"};
 
+    protected static final int[] attributeNumForEachType = {0,HOTEL_ATTRIBUTES.length,MEAL_ATTRIBUTES.length,BAGGAGE_ATTRIBUTES.length,
+            INSURANCE_ATTRIBUTES.length,SEAT_ATTRIBUTES.length};
+
+    public static int[] getAttributeNumForEachType() {
+        return attributeNumForEachType;
+    }
 
     //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
     protected static Map<String, List<List<String>>> ticketMap;

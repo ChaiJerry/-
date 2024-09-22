@@ -145,6 +145,17 @@ public class ItemAttributesStorage {
         return attributeLists;
     }
 
+    //！！！专为属性性能测试使用
+    public List<String> generateOrderedAttributeListFromAttributeValueListForEva(List<String> attributeValueList) {
+        List<String> attributeLists = new ArrayList<>();
+        //遍历属性值列表，为属性值列表添加属性名成为属性列表
+        for(int i = 0;i < attributeValueList.size()-1;i++){
+            //按照顺序添加属性名和属性值
+            attributeLists.add(attributeNames.get(i) + ":" + attributeValueList.get(i));
+        }
+        return attributeLists;
+    }
+
     public List<String> generateOrderedAttributeListFromAttributeValueList(List<String> attributeValueList,int eva) {
         List<String> attributeLists = new ArrayList<>();
         attributeLists.add(attributeNames.get(eva) + ":" + attributeValueList.get(eva));

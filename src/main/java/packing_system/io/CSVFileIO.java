@@ -259,6 +259,7 @@ public class CSVFileIO {
         return CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
     }
 
+
     /**
      * 读取CSV文件
      *
@@ -287,9 +288,9 @@ public class CSVFileIO {
                 //处理餐食数据
                 //删除餐食名字
                 header.clear();
-                header.addAttribute("MEAL_CODE");
-                header.addAttribute("PM_PRICE");
-                header.addAttribute("PAY_AMOUNT");
+                for (String s:MEAL_ATTRIBUTES){
+                    header.addAttribute(s);
+                }
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
@@ -318,22 +319,22 @@ public class CSVFileIO {
                 //处理行李数据
                 header.clear();
                 //添加处理后得到的属性头
-                header.addAttribute("PAYMENTAMOUNT");
-                header.addAttribute("BAGGAGE_SPECIFICATION");
+                for (String s:BAGGAGE_ATTRIBUTES){
+                    header.addAttribute(s);
+                }
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
                     dealB(csvReader, map);
+                    //dealCommon(csvReader, map, B_SIGN, BAGGAGE_ATTRIBUTES[0]);
                 }
                 break;
             case "H":
                 header.clear();
                 //添加属性名
-                header.addAttribute("HPRICE");
-                header.addAttribute("PRODUCTTYPE");
-                header.addAttribute("PRODUCT_NAME");
-                header.addAttribute("PRODUCT_DAYS");
-                header.addAttribute("HOTEL_NAME");
+                for (String s:HOTEL_ATTRIBUTES){
+                    header.addAttribute(s);
+                }
                 //处理酒店数据
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -343,67 +344,73 @@ public class CSVFileIO {
                 break;
             case "I":
                 //处理保险数据
+                header.clear();
+                for (String s:INSURANCE_ATTRIBUTES){
+                    header.addAttribute(s);
+                }
                 while (csvReader.readRecord()) {
-                    header.clear();
-                    header.addAttribute("INSUR_AMOUNT");
-                    header.addAttribute("INSUR_PRO_NAME");
-                    header.addAttribute("INSURANCE_COMPANYCODE");
                     //订单数量计数
                     orderNumber++;
                     dealI(csvReader, map);
                 }
                 break;
             case "S":
+                header.clear();
+                for(String s:SEAT_ATTRIBUTES){
+                    header.addAttribute(s);
+                }
+                header.addAttribute("PAYINTEGRAL");
+                header.addAttribute("SEAT_NO");
                 //处理座位数据
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
-                    header.clear();
-                    header.addAttribute("PAYINTEGRAL");
-                    header.addAttribute("SEAT_NO");
                     dealS(csvReader, map);
                 }
                 break;
             case "Train":
-            case "Test":
                 //特殊处理机票数据的属性
-                //移动位置
-                header.removeAttribute("T_CARRIER");
-                header.removeAttribute("T_GRADE");
-                header.removeAttribute("S_SHOFARE");
-                header.removeAttribute("PROMOTION_RATE");
-
+                header.clear();
                 //添加处理后得到的属性头
-                header.addAttribute("SEASON",0);
-                header.addAttribute("T_CARRIER",1);
-                header.addAttribute("FROM",2);
-                header.addAttribute("TO",3);
-                header.addAttribute("T_GRADE",4);
-                header.addAttribute("HAVE_CHILD",5);
-                header.addAttribute("S_SHOFARE",6);
-                header.addAttribute("PROMOTION_RATE");
+                header.addAttribute("MONTH",0);
+                header.addAttribute("FROM",1);
+                header.addAttribute("TO",2);
+                header.addAttribute("T_GRADE",3);
+                header.addAttribute("HAVE_CHILD",4);
+                header.addAttribute("PROMOTION_RATE",5);
+                header.addAttribute("T_FORMER",6);
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
-                header.removeAttribute("T_VOYAGE");
-                header.removeAttribute("T_FLIGHT_NO");
-                header.removeAttribute("T_PASSENGER");
-                header.removeAttribute("TNO");
-                header.removeAttribute("ISS_DATE");
-                header.removeAttribute("T_FACETOTAL");
-                header.removeAttribute("T_SHOULD");
-                header.removeAttribute("T_RATE");
-                header.removeAttribute("AIR_PNR");
-                header.removeAttribute("UNIQUE_ID");
-                header.removeAttribute("PROMOTION");
-                header.removeAttribute("MOBILEPHONE");
-                header.removeAttribute("PASS_DOCID");
-                header.removeAttribute("T_AIRDATE");
+
 
                 //用于字段作用评估
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
                     dealE(csvReader, map);
+                }
+                break;
+            case "Test":
+                //特殊处理机票数据的属性
+                header.clear();
+                //添加处理后得到的属性头
+                header.addAttribute("MONTH",0);
+                header.addAttribute("FROM",1);
+                header.addAttribute("TO",2);
+                header.addAttribute("T_GRADE",3);
+                header.addAttribute("HAVE_CHILD",4);
+                header.addAttribute("PROMOTION_RATE",5);
+                header.addAttribute("T_FORMER",6);
+                header.addAttribute("T_CARRIER",7);
+                //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
+                //删去多余的属性头
+
+
+                //用于字段作用评估
+                while (csvReader.readRecord()) {
+                    //订单数量计数
+                    orderNumber++;
+                    dealTest(csvReader, map);
                 }
                 break;
             default:

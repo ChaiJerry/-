@@ -18,7 +18,7 @@ public class QuerySystem {
     private QuerySystem() {
     }
 
-    private static final int[] colNum = {0, 5, 4, 2, 3, 2};
+    private static final int[] colNum = getAttributeNumForEachType();
 
     private static Map<String, ItemPack> itemPackMap = new HashMap<>();
 
@@ -44,12 +44,12 @@ public class QuerySystem {
      * （主要是处理属性列表，对于属性较多的商品，去除其商品唯一标识符相关的属性，
      * 保留其余属性，提高模型泛化性，因此可以推荐从未见过的商品）
      */
-    public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap(Map<String, List<List<String>>> dataForEvaluation) {
+    public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap(Map<String, List<List<String>>> dataForEvaluation, ItemAttributesStorage attributesStorage) {
         //读取文件，返回Map<String, List<List<String>>>，但是此时还不能使用，可能有不需要的属性或者属性顺序不对
         //这里可以更改使用训练集还是测试集来测试
         Map<String, List<List<String>>> ticketOrderNumAttributeMap = dataForEvaluation;
         //获取机票的itemAttributesStorage（用于处理属性名和属性对应对应关系的结构体），用于获取调整后规范的属性列表
-        ItemAttributesStorage itemAttributesStorage = getItemAttributesStorage()[TRAIN_TICKET];
+        ItemAttributesStorage itemAttributesStorage = attributesStorage;
         //遍历Map<String, List<List<String>>> itemAttributesStorage的所有键值对
         for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
             String key = iterator.next();
@@ -75,7 +75,7 @@ public class QuerySystem {
 
     public static void evaluateTicketDataset(int eva , Map<String, List<List<String>>> dataForEvaluation) {
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation);
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation, getItemAttributesStorage()[TRAIN_TICKET]);
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TRAIN_TICKET];
         List<Double> f1List = new ArrayList<>();
         List<Integer> numList = new ArrayList<>();
@@ -124,7 +124,7 @@ public class QuerySystem {
                     //加入推荐系统推荐的商品
                     itemPack.addRecommendedItem(singleItemQuery, i);
                     String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
-                    //System.out.println(info);
+                    System.out.println(info);
                 }
             }
             //String info = getFullNames()[i] + "有效测试订单条数共: " + total;
@@ -157,25 +157,22 @@ public class QuerySystem {
         System.out.print("" + rateSum);
     }
 
-    public static void evaluateBundleItemDataset(int eva , Map<String, List<List<String>>> dataForEvaluation) {
+    public static void evaluateSingleBundleItem(int type , Map<String, List<List<String>>> dataForEvaluation) {
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation);
-        ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TRAIN_TICKET];
-        List<Double> f1List = new ArrayList<>();
-        List<Integer> numList = new ArrayList<>();
-        for (int i = 1; i < colNum.length; i++) {
+        ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TEST_TICKET];
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation, ticketAttributesStorage);
             itemPackMap.clear();
             //获取rulesCollection，用于查询规则
-            MongoCollection<Document> rulesCollection = getRulesCollection(i);
+            MongoCollection<Document> rulesCollection = getRulesCollection(type);
             int latestTrainingNumber = getLatestTrainingNumber();
             KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection,latestTrainingNumber);
             //获取ordersCollection，用于查询订单
-            MongoCollection<Document> ordersCollection = getOrdersCollection(i);
+            MongoCollection<Document> ordersCollection = getOrdersCollection(type);
             double total = 0;
             for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
                 //得到orderNum（订单号）
                 String orderNum = iterator.next();
-                List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, i, ordersCollection);
+                List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, type, ordersCollection);
                 if (correctTargetItems.isEmpty()) {
                     continue;
                 }
@@ -199,19 +196,19 @@ public class QuerySystem {
                     //根据attributeValues，查询ordersCollection中对应的订单
                     Map<String, String> singleAttributeQuery =
                             generateAttributeBundleByAssociationRules(ticketAttributesStorage
-                                            .generateOrderedAttributeListFromAttributeValueList(attributeValues)
-                                    , knowledgeBaseQuery, i);
+                                            .generateOrderedAttributeListFromAttributeValueListForEva(attributeValues)
+                                    , knowledgeBaseQuery, type);
                     //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
-                    String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
+                    String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, type);
                     //加入原订单中同时出现的商品
-                    itemPack.addOrderItem(correctTargetItems, i);
+                    itemPack.addOrderItem(correctTargetItems, type);
                     //加入推荐系统推荐的商品
-                    itemPack.addRecommendedItem(singleItemQuery, i);
+                    itemPack.addRecommendedItem(singleItemQuery, type);
                     String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
                     //System.out.println(info);
                 }
             }
-            //String info = getFullNames()[i] + "有效测试订单条数共: " + total;
+            //String info = getFullNames()[type] + "有效测试订单条数共: " + total;
             //System.out.println(info);
             Evaluator evaluator = new Evaluator(itemPackMap);
             double averageAccuracy = evaluator.getAverageAccuracy();
@@ -220,26 +217,14 @@ public class QuerySystem {
             String accuracyInfo = "" + averageAccuracy;
             String recallInfo = "" + averageRecallRate;
             //String f1=(averageAccuracy+averageRecallRate)/2;
-            //System.out.print(getFullNames()[i] + ",");
+            //System.out.print(getFullNames()[type] + ",");
             System.out.print(accuracyInfo + ",");
             System.out.print(recallInfo + ",");
             System.out.print((averageAccuracy+averageRecallRate)/2+",");
-            f1List.add((averageAccuracy+averageRecallRate)/2);
-            numList.add(itemPackMap.size());
             itemPackMap.clear();
-        }
-        //计算平均f1
-        double rateSum = 0;
-
-
-        rateSum += f1List.get(0) /3;
-        rateSum += f1List.get(1) /9;
-        rateSum += f1List.get(2) /9;
-        rateSum += f1List.get(3) /3;
-        rateSum += f1List.get(4) /9;
-
-        System.out.print("" + rateSum);
     }
+
+
 
 
     public static void queryTest() {
@@ -247,7 +232,7 @@ public class QuerySystem {
         initializeItemAttributesStorages();
 
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(getTestTicketsMap());
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(getTestTicketsMap(), getItemAttributesStorage()[TRAIN_TICKET]);
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TICKET];
         for (int i = 1; i < colNum.length; i++) {
             itemPackMap.clear();
@@ -391,7 +376,7 @@ public class QuerySystem {
             }
 
             // 根据规则进行搜索
-            current.searchByRulesForEvaluation(latestTrainingNumber);
+            current.searchByRules(latestTrainingNumber);
         }
 
         return itemAttributeMap;
@@ -437,7 +422,7 @@ public class QuerySystem {
 
     private static String singleItemQuery(Map<String, String> itemAttributeMap
             , MongoCollection<Document> ordersCollection, int type) {
-        String itemName = tryGetItemNameDirectlyFromMap(itemAttributeMap, type);
+        String itemName = "";//tryGetItemNameDirectlyFromMap(itemAttributeMap, type);
         //如果直接得到商品唯一标识符，则不进行bfs查询操作，直接返回唯一标识符即可
         if (!itemName.isEmpty()) {
             return itemName;
