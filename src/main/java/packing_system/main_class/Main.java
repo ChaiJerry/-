@@ -15,7 +15,7 @@ import static packing_system.query_system.QuerySystem.*;
 public class Main {
     public static void main(String[] args) throws IOException {
         //rulesAndFreqInDB2csv();
-        //getFileIO().csv2DB();
+
 //        String[] fullNames = getFullNames();
 //        System.out.print("AttributeName,");
 //        for(int i = 1; i < fullNames.length; i++) {
@@ -23,9 +23,10 @@ public class Main {
 //            System.out.print(fullNames[i]+" RecallRate,");
 //            System.out.print(fullNames[i]+" F1Score,");
 //        }
-        int eva = 0;
-        fpGrowthTest(eva);
-        evaluate(eva);
+        int eva = INSURANCE;
+        getFileIO().singleTypeCsv2database(eva);
+        fpGrowthForEva(eva);
+        evaluateSingleBundleItem(eva,getTestTicketsMap());
 //        for(int i = 0; i < 16; i++) {
 //            fpGrowthTest(i);
 //            evaluate(i);

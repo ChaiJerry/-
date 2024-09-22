@@ -169,20 +169,40 @@ public class DataConverter {
     }
 
     public static List<Map.Entry<String, String>> map2List(Map<String, String> map, int type) {
+        String target;
+        String targetName;
         switch (type) {
             case HOTEL:
-                map.remove("HOTEL_NAME");
-                map.remove("PRODUCT_NAME");
+                targetName = HOTEL_ATTRIBUTES[4];
+                //targetName = HOTEL_ATTRIBUTES[3];
+                target= map.get(targetName);
+                map.clear();
+                map.put(targetName, target);
+
                 break;
             case MEAL:
-                map.remove("MEAL_CODE");
+                targetName = MEAL_ATTRIBUTES[0];
+                target= map.get(targetName);
+                map.clear();
+                map.put(targetName, target);
                 break;
             case BAGGAGE:
+                targetName = BAGGAGE_ATTRIBUTES[1];
+                target= map.get(targetName);
+                map.clear();
+                map.put(targetName, target);
                 break;
             case INSURANCE:
-                map.remove("INSURANCE_COMPANYCODE");
+                targetName = INSURANCE_ATTRIBUTES[2];
+                target= map.get(targetName);
+                map.clear();
+                map.put(targetName, target);
                 break;
             case SEAT:
+                targetName = SEAT_ATTRIBUTES[1];
+                target= map.get(targetName);
+                map.clear();
+                map.put(targetName, target);
                 break;
             default:
                 break;
