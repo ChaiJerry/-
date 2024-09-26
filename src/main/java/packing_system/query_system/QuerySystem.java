@@ -205,7 +205,7 @@ public class QuerySystem {
                     //加入推荐系统推荐的商品
                     itemPack.addRecommendedItem(singleItemQuery, type);
                     String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
-                    //System.out.println(info);
+                    System.out.println(info);
                 }
             }
             //String info = getFullNames()[type] + "有效测试订单条数共: " + total;
@@ -282,8 +282,8 @@ public class QuerySystem {
                     //logger.info(info);
                 }
             }
-            String info = getFullNames()[i] + "有效测试订单条数共: " + total;
-            logger.info(info);
+            //String info = getFullNames()[i] + "有效测试订单条数共: " + total;
+            //logger.info(info);
             Evaluator evaluator = new Evaluator(itemPackMap);
             double averageAccuracy = evaluator.getAverageAccuracy();
             double averageRecallRate = evaluator.getAverageRecallRate();

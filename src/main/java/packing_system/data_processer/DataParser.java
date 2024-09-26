@@ -24,8 +24,6 @@ public class DataParser {
         //添加订单的划档位处理后的数据类属性
         attributeList.add(M_SIGN + "PM_PRICE" + ":"
                 + floatStr2Attribute(csvReader.get("PM_PRICE"), 4));
-        attributeList.add(M_SIGN + "PAY_AMOUNT" + ":"
-                + floatStr2Attribute(csvReader.get("PAY_AMOUNT"), 400));
 
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
@@ -223,13 +221,11 @@ public class DataParser {
         ///通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
         //可以选择用addDate2list(attributeList, csvReader.get(1), H_SIGN)导入酒店入住时间属性
-        attributeList.add(H_SIGN + "HPRICE" + ":" + floatStr2Attribute(csvReader.get("HPRICE"), 300));
+        attributeList.add(H_SIGN + "AIR_REAL_MONEY" + ":" + floatStr2Attribute(csvReader.get("AIR_REAL_MONEY"), 300));
         //加入其它酒店属性
         attributeList.add(H_SIGN + "PRODUCTTYPE" + ":" + csvReader.get("PRODUCTTYPE"));
         attributeList.add(H_SIGN + "PRODUCT_NAME" + ":" + csvReader.get("PRODUCT_NAME"));
-        attributeList.add(H_SIGN + "PRODUCT_DAYS" + ":" + csvReader.get("PRODUCT_DAYS"));
         attributeList.add(H_SIGN + "HOTEL_NAME" + ":" + csvReader.get("HOTEL_NAME"));
-
 
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
@@ -258,7 +254,6 @@ public class DataParser {
         //加入选座属性,如：
         //    "PAYINTEGRAL": "0",
         //    "SEAT_NO": null
-        attributeList.add(S_SIGN + "PAYINTEGRAL" + ":" + csvReader.get("PAYINTEGRAL"));
         attributeList.add(S_SIGN + "SEAT_NO" + ":" + getSeatPosition(csvReader.get("SEAT_NO")));
         //attributeList.add(S_SIGN + NEW_ATT + ":" + csvReader.get(NEW_ATT));
         //将属性列表放入listOfAttributeList中

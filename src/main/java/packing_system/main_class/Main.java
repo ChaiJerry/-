@@ -23,10 +23,14 @@ public class Main {
 //            System.out.print(fullNames[i]+" RecallRate,");
 //            System.out.print(fullNames[i]+" F1Score,");
 //        }
-        int eva = INSURANCE;
-        getFileIO().singleTypeCsv2database(eva);
-        fpGrowthForEva(eva);
-        evaluateSingleBundleItem(eva,getTestTicketsMap());
+
+        fpGrowthTest();
+        long start = System.currentTimeMillis();
+        for(int eva = 1; eva < 6; eva++) {
+            evaluateSingleBundleItem(eva, getTestTicketsMap());
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("测试总用时: " + (end - start)+ "ms");
 //        for(int i = 0; i < 16; i++) {
 //            fpGrowthTest(i);
 //            evaluate(i);

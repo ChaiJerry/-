@@ -41,12 +41,11 @@ public class SharedAttributes {
 
     protected static final String[] types = {"T", "H", "M", "B", "I", "S","Train","Test"};
     protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
-    public static final String[] HOTEL_ATTRIBUTES = {"HPRICE", "PRODUCTTYPE", "PRODUCT_NAME", "PRODUCT_DAYS",
-            "HOTEL_NAME"};
-    public static final String[] MEAL_ATTRIBUTES = {"MEAL_CODE", "PM_PRICE", "PAY_AMOUNT"};
+    public static final String[] HOTEL_ATTRIBUTES = {"AIR_REAL_MONEY", "PRODUCTTYPE", "PRODUCT_NAME", "HOTEL_NAME"};
+    public static final String[] MEAL_ATTRIBUTES = {"MEAL_CODE", "PM_PRICE"};
     public static final String[] BAGGAGE_ATTRIBUTES = {"PAYMENTAMOUNT","BAGGAGE_SPECIFICATION"};
     public static final String[] INSURANCE_ATTRIBUTES =  {"INSUR_AMOUNT","INSUR_PRO_NAME", "INSURANCE_COMPANYCODE"};
-    public static final String[] SEAT_ATTRIBUTES = {"PAYINTEGRAL","SEAT_NO"};
+    public static final String[] SEAT_ATTRIBUTES = {"SEAT_NO"};
 
     protected static final int[] attributeNumForEachType = {0,HOTEL_ATTRIBUTES.length,MEAL_ATTRIBUTES.length,BAGGAGE_ATTRIBUTES.length,
             INSURANCE_ATTRIBUTES.length,SEAT_ATTRIBUTES.length};

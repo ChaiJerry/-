@@ -142,8 +142,10 @@ public class FPGrowth {
     }
 
     public static void fpGrowthTest() throws IOException {
-        for (int i = 1; i < 6; i++) {
 
+        //得到运行时间
+        long startTime = System.currentTimeMillis();
+        for (int i = 1; i < 6; i++) {
             // 准备数据
             logger.info("正在准备数据");
             Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
@@ -182,6 +184,8 @@ public class FPGrowth {
                 MongoUtils.rules2db(rules, i);
             }
         }
+        long endTime = System.currentTimeMillis();
+        System.out.println("训练总用时：" + (endTime - startTime) + "ms");
 
         // 停止SparkSession
         logger.info("SparkSession停止");
