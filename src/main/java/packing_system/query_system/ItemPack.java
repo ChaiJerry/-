@@ -23,7 +23,9 @@ public class ItemPack {
     public void addOrderItem(List<String> item, int type){
         orderItemsList.get(type).addAll(item);
     }
-
+    public void addOrderItem(String item, int type){
+        orderItemsList.get(type).add(item);
+    }
     //添加推荐系统推荐的其它品类打包产品
     public void addRecommendedItem(String item, int type){
         recommendedItems.get(type).add(item);

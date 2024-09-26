@@ -118,7 +118,13 @@ public class SharedAttributes {
     // 创建CSVFileIO对象
     public static final CSVFileIO fileIO;
 
+    public static final List<Set<String>> ITEM_CODE_SETS = new ArrayList<>();
+
     static {
+        for(int i = 0; i < types.length; ++i) {
+            ITEM_CODE_SETS.add(new HashSet<>());
+        }
+
         CSVFileIO tmpFileIO;
         Logger logger = Logger.getLogger(SharedAttributes.class.getName());
         // 创建Properties对象

@@ -87,7 +87,7 @@ public class CSVFileIO {
     /**
      * Convert a CSV file to a Dataset<Row>.
      */
-    public Dataset<Row> singleTypeCsv2dataset(int type,int eva) throws IOException {
+    public Dataset<Row> singleTypeCsv2dataset(int type, int eva) throws IOException {
         //订单与属性之间的映射map
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
@@ -162,8 +162,9 @@ public class CSVFileIO {
 
     /**
      * 读取csv文件转换为List<List<String>>主要用于测试api
+     *
      * @param type 商品类型
-     * @return 属性列表的列表List<List<String>>，其中每个List<String>共同出现在某个订单中的机票和商品属性
+     * @return 属性列表的列表List<List < String>>，其中每个List<String>共同出现在某个订单中的机票和商品属性
      */
     public List<List<String>> singleTypeCsv2ListOfAttributeList(int type) throws IOException {
         List<List<String>> listOfAttributeList = new ArrayList<>();
@@ -189,7 +190,6 @@ public class CSVFileIO {
         }
         return listOfAttributeList;
     }
-
 
     /**
      * 将频繁项集转换为CSV文件
@@ -259,7 +259,6 @@ public class CSVFileIO {
         return CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
     }
 
-
     /**
      * 读取CSV文件
      *
@@ -288,7 +287,7 @@ public class CSVFileIO {
                 //处理餐食数据
                 //删除餐食名字
                 header.clear();
-                for (String s:MEAL_ATTRIBUTES){
+                for (String s : MEAL_ATTRIBUTES) {
                     header.addAttribute(s);
                 }
                 while (csvReader.readRecord()) {
@@ -319,7 +318,7 @@ public class CSVFileIO {
                 //处理行李数据
                 header.clear();
                 //添加处理后得到的属性头
-                for (String s:BAGGAGE_ATTRIBUTES){
+                for (String s : BAGGAGE_ATTRIBUTES) {
                     header.addAttribute(s);
                 }
                 while (csvReader.readRecord()) {
@@ -332,7 +331,7 @@ public class CSVFileIO {
             case "H":
                 header.clear();
                 //添加属性名
-                for (String s:HOTEL_ATTRIBUTES){
+                for (String s : HOTEL_ATTRIBUTES) {
                     header.addAttribute(s);
                 }
                 //处理酒店数据
@@ -345,7 +344,7 @@ public class CSVFileIO {
             case "I":
                 //处理保险数据
                 header.clear();
-                for (String s:INSURANCE_ATTRIBUTES){
+                for (String s : INSURANCE_ATTRIBUTES) {
                     header.addAttribute(s);
                 }
                 while (csvReader.readRecord()) {
@@ -356,7 +355,7 @@ public class CSVFileIO {
                 break;
             case "S":
                 header.clear();
-                for(String s:SEAT_ATTRIBUTES){
+                for (String s : SEAT_ATTRIBUTES) {
                     header.addAttribute(s);
                 }
                 //处理座位数据
@@ -370,16 +369,15 @@ public class CSVFileIO {
                 //特殊处理机票数据的属性
                 header.clear();
                 //添加处理后得到的属性头
-                header.addAttribute("MONTH",0);
-                header.addAttribute("FROM",1);
-                header.addAttribute("TO",2);
-                header.addAttribute("T_GRADE",3);
-                header.addAttribute("HAVE_CHILD",4);
-                header.addAttribute("PROMOTION_RATE",5);
-                header.addAttribute("T_FORMER",6);
+                header.addAttribute("MONTH", 0);
+                header.addAttribute("FROM", 1);
+                header.addAttribute("TO", 2);
+                header.addAttribute("T_GRADE", 3);
+                header.addAttribute("HAVE_CHILD", 4);
+                header.addAttribute("PROMOTION_RATE", 5);
+                header.addAttribute("T_FORMER", 6);
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
-
 
                 //用于字段作用评估
                 while (csvReader.readRecord()) {
@@ -392,17 +390,16 @@ public class CSVFileIO {
                 //特殊处理机票数据的属性
                 header.clear();
                 //添加处理后得到的属性头
-                header.addAttribute("MONTH",0);
-                header.addAttribute("FROM",1);
-                header.addAttribute("TO",2);
-                header.addAttribute("T_GRADE",3);
-                header.addAttribute("HAVE_CHILD",4);
-                header.addAttribute("PROMOTION_RATE",5);
-                header.addAttribute("T_FORMER",6);
-                header.addAttribute("T_CARRIER",7);
+                header.addAttribute("MONTH", 0);
+                header.addAttribute("FROM", 1);
+                header.addAttribute("TO", 2);
+                header.addAttribute("T_GRADE", 3);
+                header.addAttribute("HAVE_CHILD", 4);
+                header.addAttribute("PROMOTION_RATE", 5);
+                header.addAttribute("T_FORMER", 6);
+                header.addAttribute("T_CARRIER", 7);
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
-
 
                 //用于字段作用评估
                 while (csvReader.readRecord()) {
@@ -522,4 +519,25 @@ public class CSVFileIO {
         }
         return stringBuilder.toString();
     }
+
+    public static void initializeItemCode() {
+
+        for (int i = 1; i < 6; i++) {
+            //读取csv文件
+            try {
+                CsvReader csvReader = new CsvReader(
+                        "C:\\Users\\mille\\Desktop\\同步\\民航项目文档类\\数据集v2\\" + FULL_NAMES[i] + ".csv", ',', StandardCharsets.UTF_8);
+
+                csvReader.readHeaders();
+                Set<String> itemCodes = ITEM_CODE_SETS.get(i);
+                while (csvReader.readRecord()) {
+                    itemCodes.add(csvReader.get("ITEM_ID"));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 }

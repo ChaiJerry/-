@@ -5,9 +5,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import org.apache.spark.ml.fpm.FPGrowthModel;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
 import packing_system.io.*;
 
@@ -267,5 +265,33 @@ public class FPGrowth {
         // 返回CSVFileIO对象
         return fileIO;
     }
+    public static Dataset<Row> getDataSetFromStringListOfItemCode(List<List<String>> itemCodesList) {
+        List<Row> data = new ArrayList<>();
+        for (List<String> itemCodes : itemCodesList) {
+            data.add(RowFactory.create(itemCodes));
+        }
+        return getDataFrame(data);
+    }
+
+    public static HashMap<String,List<String>> getRules(Dataset<Row> dataset) {
+        HashMap<String, List<String>> rulesMap = new HashMap<>();
+        FPGrowthModel model = train(dataset);
+        Dataset<Row> rules = model.associationRules();
+        List<Row> rows = rules.collectAsList();
+        for (Row rule : rows) {
+            String key = rule.getList(0).get(0).toString();
+            if(rule.getList(0).size() == 1
+                    &&key.charAt(0)=='T'
+            && rule.getList(1).get(0).toString().charAt(0)!='T'){
+
+                List<String> consList = rulesMap.getOrDefault(key, new ArrayList<>());
+                consList.add(rule.getList(1).get(0).toString());
+                rulesMap.put(key, consList);
+
+            }
+        }
+        return rulesMap;
+    }
+
 
 }
