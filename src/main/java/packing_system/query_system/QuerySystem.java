@@ -47,7 +47,7 @@ public class QuerySystem {
     public static Map<String, List<List<String>>> getTicketOrderNumAttributesMap() {
         //读取文件，返回Map<String, List<List<String>>>，但是此时还不能使用，可能有不需要的属性或者属性顺序不对
         //这里可以更改使用训练集还是测试集来测试
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTestTicketMap();
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTrainTicketsMap();
         //获取机票的itemAttributesStorage（用于处理属性名和属性对应对应关系的结构体），用于获取调整后规范的属性列表
         ItemAttributesStorage itemAttributesStorage = getItemAttributesStorage()[TICKET];
         //遍历Map<String, List<List<String>>> itemAttributesStorage的所有键值对

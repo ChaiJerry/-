@@ -55,7 +55,7 @@ public class ItemSearchUnit {
         int status = listToBits(itemAttributes);
         for (int i = 0; i < itemAttributes.size(); i++) {
             int nextStatus = setBitPos2zero(status, i);
-            if (itemAttributes.get(i) != null || haveVisited.contains(nextStatus)) {
+            if (itemAttributes.get(i) == null || haveVisited.contains(nextStatus)) {
                 continue;
             }
             haveVisited.add(nextStatus);
