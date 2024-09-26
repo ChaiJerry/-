@@ -143,9 +143,10 @@ public class FPGrowth {
 
     public static void fpGrowthTest() throws IOException {
 
-        //得到运行时间
-        long startTime = System.currentTimeMillis();
+
         for (int i = 1; i < 6; i++) {
+            //得到运行时间
+            long startTime = System.currentTimeMillis();
             // 准备数据
             logger.info("正在准备数据");
             Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
@@ -153,39 +154,40 @@ public class FPGrowth {
             // 使用FPGrowth算法训练模型
             FPGrowthModel model = train(itemsDF);
 
-            // 得到频繁项集
-            Dataset<Row> freqItemSets = model.freqItemsets();
-
-            // 可以选择显示频繁项集(freqItemSets.show();)
-            if (MODE.equals("debug")) {
-                logger.info("显示频繁项集");
-                //freqItemSets.show();
-            }
-
-            //保存频繁项集到csv
-            if (RESULT_FORM.equals("csv")) {
-                fileIO.freItemSet2CSV(freqItemSets, i);
-            } else if (RESULT_FORM.equals("db")) {
-                MongoUtils.frequentItemSets2db(freqItemSets, i);
-            }
+//            // 得到频繁项集
+//            Dataset<Row> freqItemSets = model.freqItemsets();
+//
+//            // 可以选择显示频繁项集(freqItemSets.show();)
+//            if (MODE.equals("debug")) {
+//                logger.info("显示频繁项集");
+//                //freqItemSets.show();
+//            }
+//
+//            //保存频繁项集到csv
+//            if (RESULT_FORM.equals("csv")) {
+//                fileIO.freItemSet2CSV(freqItemSets, i);
+//            } else if (RESULT_FORM.equals("db")) {
+//                MongoUtils.frequentItemSets2db(freqItemSets, i);
+//            }
 
             // 显示生成的关联规则并保存到csv
             Dataset<Row> rules = model.associationRules();
             if (MODE.equals("debug")) {
                 logger.info("显示关联规则");
-                //rules.show();
+                rules.show();
             }
 
-            if (RESULT_FORM.equals("csv")) {
-                //保存关联规则到csv
-                fileIO.rules2CSV(rules, i);
-            } else if (RESULT_FORM.equals("db")) {
-                //保存关联规则到数据库
-                MongoUtils.rules2db(rules, i);
-            }
+//            if (RESULT_FORM.equals("csv")) {
+//                //保存关联规则到csv
+//                fileIO.rules2CSV(rules, i);
+//            } else if (RESULT_FORM.equals("db")) {
+//                //保存关联规则到数据库
+//                MongoUtils.rules2db(rules, i);
+//            }
+            long endTime = System.currentTimeMillis();
+            System.out.println(getFullNames()[i]+"训练用时：" + (endTime - startTime) + "ms");
         }
-        long endTime = System.currentTimeMillis();
-        System.out.println("训练总用时：" + (endTime - startTime) + "ms");
+
 
         // 停止SparkSession
         logger.info("SparkSession停止");
