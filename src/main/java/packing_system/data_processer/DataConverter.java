@@ -169,44 +169,44 @@ public class DataConverter {
     }
 
     public static List<Map.Entry<String, String>> map2List(Map<String, String> map, int type) {
-        String target;
-        String targetName;
-        switch (type) {
-            case HOTEL:
-                targetName = HOTEL_ATTRIBUTES[4];
-                //targetName = HOTEL_ATTRIBUTES[3];
-                target= map.get(targetName);
-                map.clear();
-                map.put(targetName, target);
-
-                break;
-            case MEAL:
-                targetName = MEAL_ATTRIBUTES[0];
-                target= map.get(targetName);
-                map.clear();
-                map.put(targetName, target);
-                break;
-            case BAGGAGE:
-                targetName = BAGGAGE_ATTRIBUTES[1];
-                target= map.get(targetName);
-                map.clear();
-                map.put(targetName, target);
-                break;
-            case INSURANCE:
-                targetName = INSURANCE_ATTRIBUTES[2];
-                target= map.get(targetName);
-                map.clear();
-                map.put(targetName, target);
-                break;
-            case SEAT:
-                targetName = SEAT_ATTRIBUTES[1];
-                target= map.get(targetName);
-                map.clear();
-                map.put(targetName, target);
-                break;
-            default:
-                break;
-        }
+//        String target;
+//        String targetName;
+//        switch (type) {
+//            case HOTEL:
+//                targetName = HOTEL_ATTRIBUTES[4];
+//                //targetName = HOTEL_ATTRIBUTES[3];
+//                target= map.get(targetName);
+//                map.clear();
+//                map.put(targetName, target);
+//
+//                break;
+//            case MEAL:
+//                targetName = MEAL_ATTRIBUTES[0];
+//                target= map.get(targetName);
+//                map.clear();
+//                map.put(targetName, target);
+//                break;
+//            case BAGGAGE:
+//                targetName = BAGGAGE_ATTRIBUTES[1];
+//                target= map.get(targetName);
+//                map.clear();
+//                map.put(targetName, target);
+//                break;
+//            case INSURANCE:
+//                targetName = INSURANCE_ATTRIBUTES[2];
+//                target= map.get(targetName);
+//                map.clear();
+//                map.put(targetName, target);
+//                break;
+//            case SEAT:
+//                targetName = SEAT_ATTRIBUTES[1];
+//                target= map.get(targetName);
+//                map.clear();
+//                map.put(targetName, target);
+//                break;
+//            default:
+//                break;
+//        }
         return new ArrayList<>(map.entrySet());
     }
 

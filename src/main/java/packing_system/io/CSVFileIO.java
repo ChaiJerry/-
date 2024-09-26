@@ -359,8 +359,6 @@ public class CSVFileIO {
                 for(String s:SEAT_ATTRIBUTES){
                     header.addAttribute(s);
                 }
-                header.addAttribute("PAYINTEGRAL");
-                header.addAttribute("SEAT_NO");
                 //处理座位数据
                 while (csvReader.readRecord()) {
                     //订单数量计数
