@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import org.bson.*;
+import org.bson.conversions.*;
 
 import static com.mongodb.client.model.Projections.*;
 import static packing_system.data_processer.DataConverter.*;
@@ -237,7 +238,7 @@ public class MongoUtils {
     /**
      * 读取规则，并存入MongoDB
      */
-    public static void rules2db(Dataset<Row> rules, int type ,int eva) {
+    public static void rules2db(Dataset<Row> rules, int type, int eva) {
         for (Row r : rules.collectAsList()) {
             //处理第0列antecedent
             Document doc = new Document();
@@ -245,7 +246,7 @@ public class MongoUtils {
             //得到对应的集合
             MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + SharedAttributes.FULL_NAMES[type]);
             if (SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET]
-                    .getRulesDocument(r.getList(0), antecedent ,eva)) {
+                    .getRulesDocument(r.getList(0), antecedent, eva)) {
                 doc.append("antecedent", antecedent);
                 //处理(consequent)
                 String[] parts = r.getList(1).get(0).toString().split(":");
@@ -265,7 +266,7 @@ public class MongoUtils {
         }
     }
 
-    public static void frequentItemSets2db(Dataset<Row> itemSets, int type ) {
+    public static void frequentItemSets2db(Dataset<Row> itemSets, int type) {
         MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + SharedAttributes.FULL_NAMES[type]);
         for (Row r : itemSets.collectAsList()) {
             //写入数据库的doc
@@ -301,7 +302,7 @@ public class MongoUtils {
         }
     }
 
-    public static void frequentItemSets2db(Dataset<Row> itemSets, int type ,int eva) {
+    public static void frequentItemSets2db(Dataset<Row> itemSets, int type, int eva) {
         MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + SharedAttributes.FULL_NAMES[type]);
         for (Row r : itemSets.collectAsList()) {
             //写入数据库的doc
@@ -336,34 +337,34 @@ public class MongoUtils {
             collection.insertOne(doc);
         }
     }
+
     /*
      * 关闭MongoDB连接
      */
     public static void settle(int orderNumber, String comments, float minSupport) {
 
-            //得到当前时间作为结束时间
-            String endTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            //获取TrainingController集合
-            MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("TrainingController");
-            //写入训练信息
-            Document doc = new Document();
-            //训练编号以整数形式存储
-            doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(nextTrainingNumber));
-            //训练开始时间
-            doc.append("startTime", startTime);
-            //训练结束时间
-            doc.append("endTime", endTime);
-            //训练的订单数量
-            doc.append("orderNumber", orderNumber);
-            //备注
-            doc.append("comments", comments);
-            //最小支持度
-            doc.append("minSupport", minSupport);
-            //将doc加入数据库
-            collection.insertOne(doc);
+        //得到当前时间作为结束时间
+        String endTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        //获取TrainingController集合
+        MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("TrainingController");
+        //写入训练信息
+        Document doc = new Document();
+        //训练编号以整数形式存储
+        doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(nextTrainingNumber));
+        //训练开始时间
+        doc.append("startTime", startTime);
+        //训练结束时间
+        doc.append("endTime", endTime);
+        //训练的订单数量
+        doc.append("orderNumber", orderNumber);
+        //备注
+        doc.append("comments", comments);
+        //最小支持度
+        doc.append("minSupport", minSupport);
+        //将doc加入数据库
+        collection.insertOne(doc);
 
-            nextTrainingNumber = (Integer.parseInt(nextTrainingNumber) + 1) + "";
-
+        nextTrainingNumber = (Integer.parseInt(nextTrainingNumber) + 1) + "";
 
     }
 
@@ -378,7 +379,7 @@ public class MongoUtils {
     private static void frequentItemSetsInDB2csv(int i, int latestTrainingNumber) {
         MongoCollection<Document> frequentItemSetsCollection = getFrequentItemSetsCollection(i);
         FindIterable<Document> documents = frequentItemSetsCollection.find(Filters.eq(TRAINING_NUMBER_FIELD_NAME, nextTrainingNumber));
-        for(Document doc : documents) {
+        for (Document doc : documents) {
             Document ticketAttributes = (Document) doc.get("ticketAttributes");
             Document itemAttributes = (Document) doc.get("itemAttributes");
             String trainingNumber = doc.getString(TRAINING_NUMBER_FIELD_NAME);
@@ -389,5 +390,44 @@ public class MongoUtils {
     private static void rulesInDB2csv(int i, int latestTrainingNumber) {
 
     }
+
+//    public static void test() {
+//        //MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+//        MongoDatabase database = mongoClient.getDatabase("yourDatabase");
+//        MongoCollection<Document> collection = database.getCollection("users");
+//
+//        // 构造聚合管道
+//        Bson[] pipeline = new Bson[]{
+//                // 第一个阶段：添加满足条件的计数
+//                new Document("$addFields", new Document("matchCount",
+//                        new Document("$add", Arrays.asList(
+//                                new Document("$cond", Arrays.asList(
+//                                        new Document("$gt", Arrays.asList("$age", 30)), 1, 0
+//                                )),
+//                                new Document("$cond", Arrays.asList(
+//                                        new Document("$eq", Arrays.asList("$city", "New York")), 1, 0
+//                                )),
+//                                new Document("$cond", Arrays.asList(
+//                                        new Document("$in", Arrays.asList("$hobbies", "reading")), 1, 0
+//                                ))
+//                        ))
+//                )),
+//                // 第二个阶段：按matchCount降序排序
+//                new Document("$sort", new Document("matchCount", -1)),
+//                // 第三个阶段：只取第一个结果
+//                new Document("$limit", 1)
+//        };
+//        Bson and = Filters.and(pipeline);
+//
+//        // 执行聚合查询
+//        AggregateIterable<Document> result = collection.aggregate(and);
+//
+//        // 处理结果
+//        for (Document doc : result) {
+//            System.out.println(doc.toJson());
+//        }
+//
+//        mongoClient.close();
+//    }
 
 }

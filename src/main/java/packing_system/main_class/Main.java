@@ -25,12 +25,17 @@ public class Main {
 //        }
 
         fpGrowthTest();
-        long start = System.currentTimeMillis();
-        for(int eva = 1; eva < 6; eva++) {
-            evaluateSingleBundleItem(eva, getTestTicketsMap());
-        }
-        long end = System.currentTimeMillis();
-        System.out.println("测试总用时: " + (end - start)+ "ms");
+//        for(int eva = 1; eva < 6; eva++) {
+//            getFileIO().read(eva);
+//        }
+//
+//        for(int eva = 1; eva < 6; eva++) {
+//            long start = System.currentTimeMillis();
+//            evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
+//            long end = System.currentTimeMillis();
+//            System.out.println((end - start)+ "ms");
+//        }
+
 //        for(int i = 0; i < 16; i++) {
 //            fpGrowthTest(i);
 //            evaluate(i);
