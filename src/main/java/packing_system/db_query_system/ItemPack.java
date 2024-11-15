@@ -1,11 +1,11 @@
-package packing_system.query_system;
+package packing_system.db_query_system;
 
 import java.util.*;
 
 public class ItemPack {
 
     //根据原始订单中机票信息推荐系统推荐的其它品类打包产品
-    private final List<Set<String>> recommendedItems = new ArrayList<>(6);
+    private final List<Set<String>> recommendedItemsList = new ArrayList<>(6);
 
     //原始订单之中和机票同时出现的其它品类的产品
     //i=0时是机票信息，可以不填用来占据空位
@@ -14,7 +14,7 @@ public class ItemPack {
     public ItemPack() {
         //初始化
         for(int i=0;i<6;i++){
-            recommendedItems.add(new HashSet<>());
+            recommendedItemsList.add(new HashSet<>());
             orderItemsList.add(new HashSet<>());
         }
     }
@@ -26,7 +26,7 @@ public class ItemPack {
 
     //添加推荐系统推荐的其它品类打包产品
     public void addRecommendedItem(String item, int type){
-        recommendedItems.get(type).add(item);
+        recommendedItemsList.get(type).add(item);
     }
 
     //计算打包系统正确率的函数
@@ -69,7 +69,7 @@ public class ItemPack {
 
     //计算
     public double calculateAccuracy(int type){
-        return calculate(type, recommendedItems);
+        return calculate(type, recommendedItemsList);
     }
 
     public double calculateRecallRate(int type){
@@ -78,7 +78,7 @@ public class ItemPack {
 
     private double calculate(int type, List<Set<String>> itemsList) {
         double common=0;
-        for(String item:recommendedItems.get(type)){
+        for(String item: recommendedItemsList.get(type)){
             if(orderItemsList.get(type).contains(item)){
                 common++;
             }
@@ -100,6 +100,19 @@ public class ItemPack {
             stringBuilder.append(attributeValues.get(i)).append(",");
         }
         return stringBuilder.toString();
+    }
+
+    public void show(int type){
+        System.out.print("type:"+type);
+        System.out.print(",orderItems:");
+        for(String item:orderItemsList.get(type)){
+            System.out.print(item+" ");
+        }
+        System.out.print(",recommendedItems:");
+        for(String item:recommendedItemsList.get(type)){
+            System.out.print(item+" ");
+        }
+        System.out.println();
     }
 
 }

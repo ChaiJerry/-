@@ -18,11 +18,11 @@ public class TestAPI {
         List<List<String>> listOfAttributeList = fileIO.singleTypeCsv2ListOfAttributeList(HOTEL);
         List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
         List<List<String>> itemTicketRules = new ArrayList<>();
-        associationRulesMining(listOfAttributeList, false, false, itemTicketFreqItemSets, itemTicketRules, 0.95F,0);
+        associationRulesMining(listOfAttributeList, false, false, itemTicketFreqItemSets, itemTicketRules, 0.07,0);
         assertTrue(itemTicketFreqItemSets.isEmpty());
         assertTrue(itemTicketRules.isEmpty());
 
-        associationRulesMining(listOfAttributeList, true, true, itemTicketFreqItemSets, itemTicketRules, 0.95F,0);
+        associationRulesMining(listOfAttributeList, true, true, itemTicketFreqItemSets, itemTicketRules, 0.07,0);
         assertFalse(itemTicketFreqItemSets.isEmpty());
         assertFalse(itemTicketRules.isEmpty());
         assertEquals(2679, itemTicketRules.size());

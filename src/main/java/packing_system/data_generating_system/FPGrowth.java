@@ -28,7 +28,6 @@ public class FPGrowth {
     private FPGrowth() {
     }
 
-
     /**
      * 训练FPGrowth模型
      *
@@ -47,12 +46,12 @@ public class FPGrowth {
     /**
      * 训练FPGrowth模型
      *
-     * @param itemsDF 输入机票和商品属性订单共现数据
-     * @param minSupport 最小支持度
+     * @param itemsDF       输入机票和商品属性订单共现数据
+     * @param minSupport    最小支持度
      * @param minConfidence 最小置信度
      * @return 返回训练好的FPGrowth模型
      */
-    public static FPGrowthModel train(Dataset<Row> itemsDF,double minSupport,double minConfidence) {
+    public static FPGrowthModel train(Dataset<Row> itemsDF, double minSupport, double minConfidence) {
         logger.info("正在使用FPGrowth算法训练模型");
         return new org.apache.spark.ml.fpm.FPGrowth()
                 .setItemsCol("items")//设置items列名
@@ -65,19 +64,21 @@ public class FPGrowth {
      * 由输入的机票和商品属性订单共现数据训练，可选择是否输出频繁项集和关联规则
      *
      * @param itemTicketAttributes 输入机票和商品属性订单共现数据
-     * @param outPutFrequentItems 是否输出频繁项集
-     * @param outPutRules         是否输出关联规则
-     * @param frqItemSetsList     频繁项集List
-     * @param rulesList           关联规则List
-     * @param minSupport          最小支持度
-     * @param minConfidence       最小置信度
+     * @param outPutFrequentItems  是否输出频繁项集
+     * @param outPutRules          是否输出关联规则
+     * @param frqItemSetsList      频繁项集List
+     * @param rulesList            关联规则List
+     * @param minSupport           最小支持度
+     * @param minConfidence        最小置信度
      */
-    public static void singleTypeMining(List<List<String>> itemTicketAttributes, boolean outPutFrequentItems, boolean outPutRules
-            , List<List<String>> frqItemSetsList, List<List<String>> rulesList,double minSupport,float minConfidence) {
+    public static void singleTypeMining(List<List<String>> itemTicketAttributes
+            , boolean outPutFrequentItems, boolean outPutRules
+            , List<List<String>> frqItemSetsList, List<List<String>> rulesList
+            , double minSupport, double minConfidence) {
         // 创建数据集
         Dataset<Row> sourceData = listOfAttributeList2Dataset(itemTicketAttributes);
         //从sourceData中训练模型
-        FPGrowthModel model = train(sourceData,minSupport,minConfidence);
+        FPGrowthModel model = train(sourceData, minSupport, minConfidence);
         // 从两个boolean参数中判断是否挖掘频繁项集和关联规则并输出
         if (outPutFrequentItems) {
             // 得到频繁项集
@@ -86,19 +87,20 @@ public class FPGrowth {
             dataset2FRList(freqItemSets, frqItemSetsList);
         }
         if (outPutRules) {
-            // 得到关联规则
+            //  得到关联规则
             Dataset<Row> rules = model.associationRules();
-            //将关联规则转换为List<List<String>>
+            //  将关联规则转换为List<List<String>>
             dataset2RulesList(rules, rulesList);
         }
     }
 
+    //用来评估第eva个机票属性表现的方法
     public static void fpGrowthTest(int eva) throws IOException {
         for (int i = 1; i < 6; i++) {
 
             // 准备数据
             logger.info("正在准备数据");
-            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i,eva);
+            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i, eva);
 
             // 使用FPGrowth算法训练模型
             FPGrowthModel model = train(itemsDF);
@@ -116,7 +118,7 @@ public class FPGrowth {
             if (RESULT_FORM.equals("csv")) {
                 fileIO.freItemSet2CSV(freqItemSets, i);
             } else if (RESULT_FORM.equals("db")) {
-                MongoUtils.frequentItemSets2db(freqItemSets, i,eva);
+                MongoUtils.frequentItemSets2db(freqItemSets, i, eva);
             }
 
             // 显示生成的关联规则并保存到csv
@@ -131,7 +133,7 @@ public class FPGrowth {
                 fileIO.rules2CSV(rules, i);
             } else if (RESULT_FORM.equals("db")) {
                 //保存关联规则到数据库
-                MongoUtils.rules2db(rules, i,eva);
+                MongoUtils.rules2db(rules, i, eva);
             }
         }
 
@@ -143,60 +145,9 @@ public class FPGrowth {
 
     public static void fpGrowthTest() throws IOException {
 
-
         for (int i = 1; i < 6; i++) {
             //得到运行时间
             long startTime = System.currentTimeMillis();
-            // 准备数据
-            logger.info("正在准备数据");
-            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
-
-            // 使用FPGrowth算法训练模型
-            FPGrowthModel model = train(itemsDF);
-
-//            // 得到频繁项集
-//            Dataset<Row> freqItemSets = model.freqItemsets();
-//
-//            // 可以选择显示频繁项集(freqItemSets.show();)
-//            if (MODE.equals("debug")) {
-//                logger.info("显示频繁项集");
-//                //freqItemSets.show();
-//            }
-//
-//            //保存频繁项集到csv
-//            if (RESULT_FORM.equals("csv")) {
-//                fileIO.freItemSet2CSV(freqItemSets, i);
-//            } else if (RESULT_FORM.equals("db")) {
-//                MongoUtils.frequentItemSets2db(freqItemSets, i);
-//            }
-
-            // 显示生成的关联规则并保存到csv
-            Dataset<Row> rules = model.associationRules();
-            if (MODE.equals("debug")) {
-                logger.info("显示关联规则");
-                rules.show();
-            }
-
-//            if (RESULT_FORM.equals("csv")) {
-//                //保存关联规则到csv
-//                fileIO.rules2CSV(rules, i);
-//            } else if (RESULT_FORM.equals("db")) {
-//                //保存关联规则到数据库
-//                MongoUtils.rules2db(rules, i);
-//            }
-            long endTime = System.currentTimeMillis();
-            System.out.println(getFullNames()[i]+"训练用时：" + (endTime - startTime) + "ms");
-        }
-
-
-        // 停止SparkSession
-        logger.info("SparkSession停止");
-        //停止MongoDB
-        MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
-    }
-
-    public static void fpGrowthForEva(int i) throws IOException {
-
             // 准备数据
             logger.info("正在准备数据");
             Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
@@ -217,14 +168,14 @@ public class FPGrowth {
             if (RESULT_FORM.equals("csv")) {
                 fileIO.freItemSet2CSV(freqItemSets, i);
             } else if (RESULT_FORM.equals("db")) {
-                //MongoUtils.frequentItemSets2db(freqItemSets, i);
+                MongoUtils.frequentItemSets2db(freqItemSets, i);
             }
 
             // 显示生成的关联规则并保存到csv
             Dataset<Row> rules = model.associationRules();
             if (MODE.equals("debug")) {
                 logger.info("显示关联规则");
-                rules.show();
+                //rules.show();
             }
 
             if (RESULT_FORM.equals("csv")) {
@@ -234,13 +185,41 @@ public class FPGrowth {
                 //保存关联规则到数据库
                 MongoUtils.rules2db(rules, i);
             }
-
+            long endTime = System.currentTimeMillis();
+            System.out.println(getFullNames()[i] + "," + MIN_CONFIDENCE + "," + (endTime - startTime) + "ms");
+        }
 
         // 停止SparkSession
         logger.info("SparkSession停止");
         //停止MongoDB
         MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
     }
+
+    /**
+     * 用于测试单一品类商品训练时间，会重复训练5次
+     *
+     * @param i 品类编号
+     */
+    public static long fpGrowthForEva(int i,double minSupport,double minConfidence) throws IOException {
+        long averageTime = 0;
+        //for (int j = 0; j < 5; j++) {
+            // 准备数据
+            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
+            //得到运行时间
+            long startTime = System.currentTimeMillis();
+            // 使用FPGrowth算法训练模型
+            FPGrowthModel model = train(itemsDF, minSupport, minConfidence);
+            Dataset<Row> rules = model.associationRules();
+            //保存关联规则到数据库
+            MongoUtils.rules2db(rules, i);//
+            long endTime = System.currentTimeMillis();
+            averageTime += endTime - startTime;
+        //}
+        //mongoUtils写入记录
+        MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, minSupport);
+        return averageTime / 5;
+    }
+
     /**
      * 定义数据模式
      *

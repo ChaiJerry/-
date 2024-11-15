@@ -1,4 +1,4 @@
-package packing_system.query_system;
+package packing_system.db_query_system;
 
 import java.util.*;
 
