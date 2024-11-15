@@ -11,7 +11,7 @@ import java.util.*;
 import static packing_system.io.SharedAttributes.*;
 import static packing_system.io.MongoUtils.*;
 import static org.junit.Assert.*;
-import static packing_system.query_system.QuerySystem.*;
+import static packing_system.db_query_system.QuerySystem.*;
 
 public class TestQuerySystem {
     @Test

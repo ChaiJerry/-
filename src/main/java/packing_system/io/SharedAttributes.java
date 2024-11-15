@@ -1,5 +1,7 @@
 package packing_system.io;
 
+
+
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
@@ -46,6 +48,16 @@ public class SharedAttributes {
     public static final String[] BAGGAGE_ATTRIBUTES = {"PAYMENTAMOUNT","BAGGAGE_SPECIFICATION"};
     public static final String[] INSURANCE_ATTRIBUTES =  {"INSUR_AMOUNT","INSUR_PRO_NAME", "INSURANCE_COMPANYCODE"};
     public static final String[] SEAT_ATTRIBUTES = {"SEAT_NO"};
+    private final static List<String[]> itemAttributeNames = new ArrayList<>();
+    static {
+        itemAttributeNames.add(null);
+        itemAttributeNames.add(HOTEL_ATTRIBUTES);
+        itemAttributeNames.add(MEAL_ATTRIBUTES);
+        itemAttributeNames.add(BAGGAGE_ATTRIBUTES);
+        itemAttributeNames.add(INSURANCE_ATTRIBUTES);
+        itemAttributeNames.add(SEAT_ATTRIBUTES);
+    }
+
 
     protected static final int[] attributeNumForEachType = {0,HOTEL_ATTRIBUTES.length,MEAL_ATTRIBUTES.length,BAGGAGE_ATTRIBUTES.length,
             INSURANCE_ATTRIBUTES.length,SEAT_ATTRIBUTES.length};
@@ -73,9 +85,9 @@ public class SharedAttributes {
     protected static ItemAttributesStorage[] itemAttributesStorage = new ItemAttributesStorage[9];
 
     // 最小置信度
-    public static final float MIN_CONFIDENCE;
+    public static final double MIN_CONFIDENCE;
     // 最小支持度
-    public static final float MIN_SUPPORT;
+    public static final double MIN_SUPPORT;
     //csv文件结果输出目录路径，若是不以csv文件的格式输出，则该属性可以为null
     public static final String RESULT_DIR_PATH;
     // 机票订单csv文件路径
@@ -154,9 +166,9 @@ public class SharedAttributes {
         // 获取结果输出格式
         RESULT_FORM = properties.getProperty("resultForm");
         // 获取最小置信度
-        MIN_CONFIDENCE = properties.getProperty("minConfidence") != null ? Float.parseFloat(properties.getProperty("minConfidence")) : 0;
+        MIN_CONFIDENCE = properties.getProperty("minConfidence") != null ? Double.parseDouble(properties.getProperty("minConfidence")) : 0;
         // 获取最小支持度
-        MIN_SUPPORT = properties.getProperty("minSupport") != null ? Float.parseFloat(properties.getProperty("minSupport")) : 0;
+        MIN_SUPPORT = properties.getProperty("minSupport") != null ? Double.parseDouble(properties.getProperty("minSupport")) : 0;
         // 获取训练备注
         COMMENT = properties.getProperty("comment");
 

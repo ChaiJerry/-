@@ -1,7 +1,7 @@
 package mid_tests;
 
 import org.junit.*;
-import packing_system.query_system.*;
+import packing_system.db_query_system.*;
 
 
 import java.util.*;

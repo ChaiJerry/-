@@ -20,7 +20,7 @@ public class API {
             List<List<String>> itemTicketAttributes
             ,boolean outputFrequentItems,boolean outputAssociationRules
             ,List<List<String>> frequentItemSets
-            ,List<List<String>> associationRules,double minSupport,float minConfidence) {
+            ,List<List<String>> associationRules,double minSupport,double minConfidence) {
         //使用时需要使用空的List<List<String>>，传入引用，方便输出结果
         //直接调用FPGrowth的singleTypeMining方法，传入参数，方便使用FPGrowth内部的private方法和属性
         singleTypeMining(itemTicketAttributes,outputFrequentItems,outputAssociationRules

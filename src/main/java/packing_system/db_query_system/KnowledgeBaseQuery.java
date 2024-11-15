@@ -1,4 +1,4 @@
-package packing_system.query_system;
+package packing_system.db_query_system;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
@@ -9,7 +9,6 @@ import java.util.*;
 
 import static com.mongodb.client.model.Projections.*;
 import static packing_system.io.SharedAttributes.*;
-import static packing_system.query_system.AttributesSearchUnit.*;
 
 public class KnowledgeBaseQuery {
     public static final List<String> TICKET_ATTRIBUTE_NAMES = getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames();

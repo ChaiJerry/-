@@ -1,4 +1,4 @@
-package packing_system.query_system;
+package packing_system.db_query_system;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
@@ -6,11 +6,9 @@ import com.mongodb.client.model.*;
 import org.bson.*;
 import org.bson.conversions.*;
 import packing_system.data_processer.*;
-import packing_system.io.*;
 
 import java.util.*;
 
-import static com.mongodb.client.model.Projections.*;
 import static packing_system.data_processer.DataConverter.*;
 import static packing_system.io.SharedAttributes.*;
 

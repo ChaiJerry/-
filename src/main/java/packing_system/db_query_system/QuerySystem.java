@@ -1,4 +1,4 @@
-package packing_system.query_system;
+package packing_system.db_query_system;
 
 import com.mongodb.client.*;
 
@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import static packing_system.data_generating_system.FPGrowth.*;
 import static packing_system.data_processer.DataConverter.*;
 import static packing_system.io.SharedAttributes.*;
 import static packing_system.io.MongoUtils.*;
@@ -20,6 +21,7 @@ public class QuerySystem {
 
     private static final int[] colNum = getAttributeNumForEachType();
 
+    //itemPackMap用于存储所有商品的唯一标识码和其对应的ItemPack结构体
     private static Map<String, ItemPack> itemPackMap = new HashMap<>();
 
     private static final Logger logger;
@@ -64,16 +66,16 @@ public class QuerySystem {
         return ticketOrderNumAttributeMap;
     }
 
-  public static void evaluate(int eva) throws IOException {
+    public static void evaluate(int eva) throws IOException {
         System.out.println();
         System.out.print(getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames().get(eva) + "测试集,");
         evaluateTicketDataset(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
 //      System.out.println();
 //      System.out.print(getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames().get(eva) + "训练集,");
 //        evaluateDataset(eva, CSVFileIO.read(PATH_TRAIN_T, "Train"));
-  }
+    }
 
-    public static void evaluateTicketDataset(int eva , Map<String, List<List<String>>> dataForEvaluation) {
+    public static void evaluateTicketDataset(int eva, Map<String, List<List<String>>> dataForEvaluation) {
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
         Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation, getItemAttributesStorage()[TRAIN_TICKET]);
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TRAIN_TICKET];
@@ -84,7 +86,7 @@ public class QuerySystem {
             //获取rulesCollection，用于查询规则
             MongoCollection<Document> rulesCollection = getRulesCollection(i);
             int latestTrainingNumber = getLatestTrainingNumber();
-            KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection,latestTrainingNumber);
+            KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection, latestTrainingNumber);
             //获取ordersCollection，用于查询订单
             MongoCollection<Document> ordersCollection = getOrdersCollection(i);
             double total = 0;
@@ -115,7 +117,7 @@ public class QuerySystem {
                     //根据attributeValues，查询ordersCollection中对应的订单
                     Map<String, String> singleAttributeQuery =
                             generateAttributeBundleByAssociationRules(ticketAttributesStorage
-                                            .generateOrderedAttributeListFromAttributeValueList(attributeValues,eva)
+                                            .generateOrderedAttributeListFromAttributeValueList(attributeValues, eva)
                                     , knowledgeBaseQuery, i);
                     //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
                     String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, i);
@@ -139,93 +141,100 @@ public class QuerySystem {
             //System.out.print(getFullNames()[i] + ",");
             System.out.print(accuracyInfo + ",");
             System.out.print(recallInfo + ",");
-            System.out.print((averageAccuracy+averageRecallRate)/2+",");
-            f1List.add((averageAccuracy+averageRecallRate)/2);
+            System.out.print((averageAccuracy + averageRecallRate) / 2 + ",");
+            f1List.add((averageAccuracy + averageRecallRate) / 2);
             numList.add(itemPackMap.size());
             itemPackMap.clear();
         }
         //计算平均f1
         double rateSum = 0;
 
-
-        rateSum += f1List.get(0) /3;
-        rateSum += f1List.get(1) /9;
-        rateSum += f1List.get(2) /9;
-        rateSum += f1List.get(3) /3;
-        rateSum += f1List.get(4) /9;
+        rateSum += f1List.get(0) / 3;
+        rateSum += f1List.get(1) / 9;
+        rateSum += f1List.get(2) / 9;
+        rateSum += f1List.get(3) / 3;
+        rateSum += f1List.get(4) / 9;
 
         System.out.print("" + rateSum);
     }
 
-    public static void evaluateSingleBundleItem(int type , Map<String, List<List<String>>> dataForEvaluation) {
+    public static double evaluateSingleBundleItem(int type, Map<String, List<List<String>>> dataForEvaluation) {
         //评估模式获取ticketOrderNumAttributeMap，用于查询订单号以及属性
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TEST_TICKET];
         Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(dataForEvaluation, ticketAttributesStorage);
-            itemPackMap.clear();
-            //获取rulesCollection，用于查询规则
-            MongoCollection<Document> rulesCollection = getRulesCollection(type);
-            int latestTrainingNumber = getLatestTrainingNumber();
-            KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection,latestTrainingNumber);
-            //获取ordersCollection，用于查询订单
-            MongoCollection<Document> ordersCollection = getOrdersCollection(type);
-            double total = 0;
-            for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
-                //得到orderNum（订单号）
-                String orderNum = iterator.next();
-                List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, type, ordersCollection);
-                if (correctTargetItems.isEmpty()) {
-                    continue;
-                }
-                //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性值列表的列表
-                List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
-                //遍历listOfTicketAttributeList（属性值列表的列表）
-                for (List<String> attributeValues : listOfTicketAttributeList) {
-                    //得到每个属性值列表
-                    total++;
-                    //得到每个机票属性列表特征键
-                    String itemPackKey = ItemPack.generateItemPackKey(attributeValues);
-                    //判断是否已经存在于itemPackMap中
-                    boolean isRepeated = itemPackMap.containsKey(itemPackKey);
-                    ItemPack itemPack;
-                    if (isRepeated) {
-                        itemPack = itemPackMap.get(itemPackKey);
-                    } else {
-                        itemPack = new ItemPack();
-                        itemPackMap.put(itemPackKey, itemPack);
-                    }
-                    //根据attributeValues，查询ordersCollection中对应的订单
-                    Map<String, String> singleAttributeQuery =
-                            generateAttributeBundleByAssociationRules(ticketAttributesStorage
-                                            .generateOrderedAttributeListFromAttributeValueListForEva(attributeValues)
-                                    , knowledgeBaseQuery, type);
-                    //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
-                    String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, type);
-                    //加入原订单中同时出现的商品
-                    itemPack.addOrderItem(correctTargetItems, type);
-                    //加入推荐系统推荐的商品
-                    itemPack.addRecommendedItem(singleItemQuery, type);
-                    String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
-                    //System.out.println(info);
-                }
+        itemPackMap.clear();
+        //获取rulesCollection，用于查询规则
+        MongoCollection<Document> rulesCollection = getRulesCollection(type);
+        int latestTrainingNumber = getLatestTrainingNumber();
+        KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection, latestTrainingNumber);
+        //获取ordersCollection，用于查询订单
+        MongoCollection<Document> ordersCollection = getOrdersCollection(type);
+        double total = 0;
+        long totalTime = 0;
+        for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
+            //得到orderNum（订单号）
+            String orderNum = iterator.next();
+            List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, type, ordersCollection);
+            if (correctTargetItems.isEmpty()) {
+                continue;
             }
-            //String info = getFullNames()[type] + "有效测试订单条数共: " + total;
-            //System.out.println(info);
-            Evaluator evaluator = new Evaluator(itemPackMap);
-            double averageAccuracy = evaluator.getAverageAccuracy();
-            double averageRecallRate = evaluator.getAverageRecallRate();
+            //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性值列表的列表
+            List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
+            //遍历listOfTicketAttributeList（属性值列表的列表）
+            for (List<String> attributeValues : listOfTicketAttributeList) {
+                //得到每个属性值列表
+                total++;
+                //得到每个机票属性列表特征键
+                String itemPackKey = ItemPack.generateItemPackKey(attributeValues);
+                //判断是否已经存在于itemPackMap中
+                boolean isRepeated = itemPackMap.containsKey(itemPackKey);
+                ItemPack itemPack;
+                if (isRepeated) {
+                    itemPack = itemPackMap.get(itemPackKey);
+                } else {
+                    itemPack = new ItemPack();
+                    itemPackMap.put(itemPackKey, itemPack);
+                }
+                //根据attributeValues，查询ordersCollection中对应的订单
+                long startTime = System.currentTimeMillis();
+                Map<String, String> singleAttributeQuery =
+                        generateAttributeBundleByAssociationRules(ticketAttributesStorage
+                                        .generateOrderedAttributeListFromAttributeValueListForEva(attributeValues)
+                                , knowledgeBaseQuery, type);
+                long endTime = System.currentTimeMillis();
+                totalTime += endTime - startTime;
+                //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
+                String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, type);
+                //加入原订单中同时出现的商品
+                itemPack.addOrderItem(correctTargetItems, type);
+                //加入推荐系统推荐的商品
+                itemPack.addRecommendedItem(singleItemQuery, type);
+                String info = orderNum + ":" + singleItemQuery + " : " + correctTargetItems;
+                //System.out.println(info);
+            }
+        }
+        //String info = getFullNames()[type] + "有效测试订单条数共: " + total;
+        //System.out.println(info);
+//        for(ItemPack itemPack:itemPackMap.values()){
+//            itemPack.show(type);
+//        }
 
-            String accuracyInfo = "" + averageAccuracy;
-            String recallInfo = "" + averageRecallRate;
-            //String f1=(averageAccuracy+averageRecallRate)/2;
-            //System.out.print(getFullNames()[type] + ",");
-            System.out.print(accuracyInfo + ",");
-            System.out.print(recallInfo + ",");
-            System.out.print((averageAccuracy+averageRecallRate)/2+",");
-            itemPackMap.clear();
+        Evaluator evaluator = new Evaluator(itemPackMap);
+        double averageAccuracy = evaluator.getAverageAccuracy();
+        double averageRecallRate = evaluator.getAverageRecallRate();
+
+        String accuracyInfo = "" + averageAccuracy;
+        String recallInfo = "" + averageRecallRate;
+        //String f1=(averageAccuracy+averageRecallRate)/2;
+        //System.out.print(getFullNames()[type] + ",");
+        //System.out.print(accuracyInfo + ",");
+        //System.out.print(recallInfo + ",");
+        //String formattedNumber = String.format("%.2f,", (averageAccuracy + averageRecallRate) / 2);
+        //System.out.print(formattedNumber);
+        //System.out.print(totalTime+"ms");
+        itemPackMap.clear();
+        return (averageAccuracy + averageRecallRate) / 2;
     }
-
-
-
 
     public static void queryTest() {
         //初始化各个商品所具有的的属性名称
@@ -239,7 +248,7 @@ public class QuerySystem {
             //获取rulesCollection，用于查询规则
             MongoCollection<Document> rulesCollection = getRulesCollection(i);
             int latestTrainingNumber = getLatestTrainingNumber();
-            KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection,latestTrainingNumber);
+            KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery(rulesCollection, latestTrainingNumber);
             //获取ordersCollection，用于查询订单
             MongoCollection<Document> ordersCollection = getOrdersCollection(i);
             double total = 0;
@@ -331,6 +340,7 @@ public class QuerySystem {
     /**
      * 该方法用于通过给定的机票属性得到打包商品的属性
      * 通过给定的机票属性匹配关联规则前件，然后取出匹配的关联规则的后件作为打包商品属性，若是没有找到则减少需要匹配的机票属性，直到找到满足条件的属性或者所有规则都搜索完毕
+     *
      * @param ticketAttributes 查询的机票属性列表，List<String>中的String格式为"属性名:属性值"
      * @return Map<String, String> 键为打包商品属性名，值为打包商品属性值
      */
@@ -420,7 +430,7 @@ public class QuerySystem {
         return itemName.toString();
     }
 
-    private static String singleItemQuery(Map<String, String> itemAttributeMap
+    public static String singleItemQuery(Map<String, String> itemAttributeMap
             , MongoCollection<Document> ordersCollection, int type) {
         String itemName = "";//tryGetItemNameDirectlyFromMap(itemAttributeMap, type);
         //如果直接得到商品唯一标识符，则不进行bfs查询操作，直接返回唯一标识符即可
@@ -445,6 +455,168 @@ public class QuerySystem {
             }
         }
         return "";
+    }
+
+
+    /**
+     * 测试置信度和f1关系的函数
+     */
+    public static void evaluateConfidenceF1(double minSupport) throws IOException {
+        double[] weights = {0, (double) 1 / 3, (double) 1 / 9
+                , (double) 1 / 9, (double) 1 / 3, (double) 1 / 9};
+        for (double MIN_CONFIDENCE = 0.0; MIN_CONFIDENCE <= 1.01; MIN_CONFIDENCE += 0.1) {
+            double average = 0;
+            //MIN_CONFIDENCE保留一位小数
+            String formattedNumber = String.format("%.1f,", MIN_CONFIDENCE);
+            System.out.print(formattedNumber);
+            for (int eva = 1; eva < 6; eva++) {
+                fpGrowthForEva(eva, minSupport, MIN_CONFIDENCE);
+                double f1 = evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
+                //保留两位小数
+                String formattedNumber2 = String.format("%.2f", f1);
+                System.out.print(formattedNumber2 + ",");
+                average += f1 * weights[eva];
+            }
+            //保留两位小数
+            String formattedNumber3 = String.format("%.2f", average);
+            System.out.println(formattedNumber3);
+            MongoUtils.deleteOrdersCollectionContent();
+        }
+    }
+
+    /**
+     * 测试置信度和打包时间关系的函数
+     */
+    public static void evaluateConfidencePackageTime(double minSupport) throws IOException {
+        double[] weights = {0, (double) 1 / 3, (double) 1 / 9
+                , (double) 1 / 9, (double) 1 / 3, (double) 1 / 9};
+        MongoUtils.deleteOrdersCollectionContent();
+        for (double MIN_CONFIDENCE = 0.0; MIN_CONFIDENCE <= 1.01; MIN_CONFIDENCE += 0.1) {
+            double average = 0;
+            //MIN_CONFIDENCE保留一位小数
+            String formattedNumber = String.format("%.1f,", MIN_CONFIDENCE);
+            System.out.print(formattedNumber);
+            for (int eva = 1; eva < 6; eva++) {
+                fpGrowthForEva(eva, minSupport, MIN_CONFIDENCE);
+                long start = System.currentTimeMillis();
+                for (int i = 0; i < 5; i++) {
+                    evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
+                }
+                long end = System.currentTimeMillis();
+                long time = (end - start) / 5;
+                System.out.print(time + ",");
+                average += time * weights[eva];
+            }
+            System.out.println((int) average);
+            MongoUtils.deleteOrdersCollectionContent();
+        }
+    }
+
+    /**
+     * 测试置信度和训练时间关系的函数
+     */
+    public static void evaluateConfidenceTrainTime(double minSupport) throws IOException {
+        long[] orderNums = {0, 484, 307, 566, 2439, 1295};
+        long sum = 0;
+        for (long eva : orderNums) {
+            sum += eva;
+        }
+        fpGrowthForEva(1, 0.08, 0);
+        for (double minConfidence = 0.0; minConfidence <= 1.01; minConfidence += 0.1) {
+            long average = 0;
+            //MIN_CONFIDENCE保留一位小数
+            String formattedNumber = String.format("%.1f,", minConfidence);
+            System.out.print(formattedNumber);
+            for (int eva = 1; eva < 6; eva++) {
+                long time = 0;
+                //for (int i = 0; i < 5; i++) {
+                time += fpGrowthForEva(eva, minSupport, minConfidence);
+                //}
+                System.out.print(time + ",");
+                average += time * orderNums[eva];
+            }
+            System.out.println(average / sum);
+            MongoUtils.deleteOrdersCollectionContent();
+        }
+    }
+
+    /**
+     * 测试置信度和f1关系的函数
+     */
+    public static void evaluateSupportF1(double minConfidence) throws IOException {
+        MongoUtils.deleteOrdersCollectionContent();
+        double[] weights = {0, (double) 1 / 3, (double) 1 / 9
+                , (double) 1 / 9, (double) 1 / 3, (double) 1 / 9};
+        for (double minSupport = 0.02; minSupport <= 1; minSupport += (minSupport>=0.1?0.1:(0.02))){
+            double average = 0;
+            String formattedNumber = String.format("%.2f,", minSupport);
+            System.out.print(formattedNumber);
+            for (int eva = 1; eva < 6; eva++) {
+                fpGrowthForEva(eva, minSupport, minConfidence);
+                double f1 = evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
+                //保留两位小数
+                String formattedNumber2 = String.format("%.2f", f1);
+                System.out.print(formattedNumber2 + ",");
+                average += f1 * weights[eva];
+            }
+            //保留两位小数
+            String formattedNumber3 = String.format("%.2f", average);
+            System.out.println(formattedNumber3);
+            MongoUtils.deleteOrdersCollectionContent();
+        }
+    }
+
+    /**
+     * 测试最小支持度和训练时间关系的函数
+     */
+    public static void evaluateSupportTrainTime(double minConfidence) throws IOException {
+        long[] orderNums = {0, 484, 307, 566, 2439, 1295};
+        long sum = 0;
+        for (long eva : orderNums) {
+            sum += eva;
+        }
+        fpGrowthForEva(1, 0.1, 0);
+        for (double minSupport = 0.0; minSupport <= 1; minSupport += 0.1) {
+            long average = 0;
+            //MIN_CONFIDENCE保留一位小数
+            String formattedNumber = String.format("%.2f,", minSupport);
+            System.out.print(formattedNumber);
+            for (int eva = 1; eva < 6; eva++) {
+                long time = 0;
+                time += fpGrowthForEva(eva, minSupport, minConfidence);
+                System.out.print(time + ",");
+                average += time * orderNums[eva];
+            }
+            System.out.println(average / sum);
+        }
+    }
+
+    /**
+     * 测试置信度和打包时间关系的函数
+     */
+    public static void evaluateSupportPackageTime(double minConfidence) throws IOException {
+        MongoUtils.deleteOrdersCollectionContent();
+        double[] weights = {0, (double) 1 / 3, (double) 1 / 9
+                , (double) 1 / 9, (double) 1 / 3, (double) 1 / 9};
+        for (double minSupport = 0.02; minSupport <= 1; minSupport += (minSupport>=0.1?0.1:(0.02))){
+            double average = 0;
+            //MIN_CONFIDENCE保留一位小数
+            String formattedNumber = String.format("%.2f,", minSupport);
+            System.out.print(formattedNumber);
+            for (int eva = 1; eva < 6; eva++) {
+                fpGrowthForEva(eva, minSupport, minConfidence);
+                long start = System.currentTimeMillis();
+                for (int i = 0; i < 5; i++) {
+                    evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, "Test"));
+                }
+                long end = System.currentTimeMillis();
+                long time = (end - start) / 5;
+                System.out.print(time + ",");
+                average += time * weights[eva];
+            }
+            System.out.println((int) average);
+            MongoUtils.deleteOrdersCollectionContent();
+        }
     }
 
 }

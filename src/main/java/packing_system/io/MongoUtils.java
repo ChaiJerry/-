@@ -129,6 +129,18 @@ public class MongoUtils {
         }
     }
 
+    /**
+     * 删除规则集合内容
+     */
+    public static void deleteOrdersCollectionContent() {
+        String[] fullNames = SharedAttributes.FULL_NAMES;
+        for (int i = 1; i < fullNames.length; i++) {
+            String name = fullNames[i];
+            //删除集合内容
+            mongoKnowledgeDatabase.getCollection("r_"+name).deleteMany(new Document());
+        }
+    }
+
     public static void ordersMap2DB(Map<String, List<List<String>>> ordersMap, int type) {
         ItemAttributesStorage itemAttributesStorage = SharedAttributes.getItemAttributesStorage()[type];
         //获取集合名称
@@ -341,7 +353,7 @@ public class MongoUtils {
     /*
      * 关闭MongoDB连接
      */
-    public static void settle(int orderNumber, String comments, float minSupport) {
+    public static void settle(int orderNumber, String comments, double minSupport) {
 
         //得到当前时间作为结束时间
         String endTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
