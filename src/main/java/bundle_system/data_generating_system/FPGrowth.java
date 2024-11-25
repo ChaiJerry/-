@@ -1,4 +1,4 @@
-package packing_system.data_generating_system;
+package bundle_system.data_generating_system;
 
 import java.io.*;
 import java.util.*;
@@ -9,10 +9,10 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
-import packing_system.io.*;
+import bundle_system.io.*;
 
-import static packing_system.data_processer.DataConverter.*;
-import static packing_system.io.SharedAttributes.*;
+import static bundle_system.data_processer.DataConverter.*;
+import static bundle_system.io.SharedAttributes.*;
 
 public class FPGrowth {
     private static final SparkSession spark = SparkSession // 创建SparkSession对象

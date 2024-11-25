@@ -1,12 +1,12 @@
-package packing_system.data_processer;
+package bundle_system.data_processer;
 
 import com.csvreader.*;
 
 import java.io.*;
 import java.util.*;
 
-import static packing_system.data_processer.DataConverter.*;
-import static packing_system.io.SharedAttributes.*;
+import static bundle_system.data_processer.DataConverter.*;
+import static bundle_system.io.SharedAttributes.*;
 
 public class DataParser {
     private DataParser() {

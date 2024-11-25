@@ -6,8 +6,8 @@ import org.junit.*;
 
 import java.io.*;
 
-import static packing_system.data_processer.DataConverter.*;
-import static packing_system.data_generating_system.FPGrowth.*;
+import static bundle_system.data_processer.DataConverter.*;
+import static bundle_system.data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 public class TestDataConverter {

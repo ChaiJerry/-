@@ -1,4 +1,4 @@
-package packing_system.data_processer;
+package bundle_system.data_processer;
 
 public class xmlPaser {
     public static void parseInputXml(String[] args) {

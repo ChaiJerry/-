@@ -1,8 +1,8 @@
-package packing_system.api;
+package bundle_system.api;
 
 import java.util.*;
 
-import static packing_system.data_generating_system.FPGrowth.*;
+import static bundle_system.data_generating_system.FPGrowth.*;
 
 public class API {
     private API() {}

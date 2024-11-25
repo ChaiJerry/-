@@ -1,19 +1,19 @@
-package packing_system.db_query_system;
+package bundle_system.db_query_system;
 
 import com.mongodb.client.*;
 
 import org.bson.*;
-import packing_system.data_processer.*;
-import packing_system.io.*;
+import bundle_system.data_processer.*;
+import bundle_system.io.*;
 
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
-import static packing_system.data_generating_system.FPGrowth.*;
-import static packing_system.data_processer.DataConverter.*;
-import static packing_system.io.SharedAttributes.*;
-import static packing_system.io.MongoUtils.*;
+import static bundle_system.data_generating_system.FPGrowth.*;
+import static bundle_system.data_processer.DataConverter.*;
+import static bundle_system.io.SharedAttributes.*;
+import static bundle_system.io.MongoUtils.*;
 
 public class QuerySystem {
     private QuerySystem() {

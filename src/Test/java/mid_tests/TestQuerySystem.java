@@ -3,15 +3,15 @@ package mid_tests;
 import com.mongodb.client.*;
 import org.bson.*;
 import org.junit.*;
-import packing_system.io.*;
+import bundle_system.io.*;
 
 import java.io.*;
 import java.util.*;
 
-import static packing_system.io.SharedAttributes.*;
-import static packing_system.io.MongoUtils.*;
+import static bundle_system.io.SharedAttributes.*;
+import static bundle_system.io.MongoUtils.*;
 import static org.junit.Assert.*;
-import static packing_system.db_query_system.QuerySystem.*;
+import static bundle_system.db_query_system.QuerySystem.*;
 
 public class TestQuerySystem {
     @Test

@@ -1,14 +1,14 @@
 package mid_tests;
 
-import packing_system.io.*;
+import bundle_system.io.*;
 
 import java.io.*;
 import java.util.*;
 
-import static packing_system.api.API.*;
-import static packing_system.data_generating_system.FPGrowth.*;
+import static bundle_system.api.API.*;
+import static bundle_system.data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
-import static packing_system.io.SharedAttributes.*;
+import static bundle_system.io.SharedAttributes.*;
 
 public class TestAPI {
 

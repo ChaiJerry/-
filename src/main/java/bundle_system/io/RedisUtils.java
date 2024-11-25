@@ -1,7 +1,5 @@
-package packing_system.io;
+package bundle_system.io;
 import redis.clients.jedis.Jedis;
-
-import java.util.*;
 
 public class RedisUtils {
     public static void test() {

@@ -1,4 +1,4 @@
-package packing_system.db_query_system;
+package bundle_system.db_query_system;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
@@ -8,8 +8,8 @@ import org.bson.conversions.*;
 import java.util.*;
 
 import static com.mongodb.client.model.Projections.*;
-import static packing_system.data_processer.DataConverter.*;
-import static packing_system.io.SharedAttributes.*;
+import static bundle_system.data_processer.DataConverter.*;
+import static bundle_system.io.SharedAttributes.*;
 
 public class ItemSearchUnit {
     private final List<Map.Entry<String, String>> itemAttributes;
