@@ -1,4 +1,4 @@
-package packing_system.db_query_system;
+package bundle_system.db_query_system;
 
 public class AssociationRulesQueryResults {
     private String consequence;

@@ -10,13 +10,13 @@ import org.apache.spark.sql.*;
 import org.bson.*;
 import org.junit.*;
 
-import static packing_system.data_generating_system.FPGrowth.*;
+import static bundle_system.data_generating_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 import java.io.*;
 import java.util.*;
 
-import static packing_system.io.MongoUtils.*;
+import static bundle_system.io.MongoUtils.*;
 
 public class TestMongoUtils {
     private MongoClient mongoClient = null;
