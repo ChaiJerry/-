@@ -15,8 +15,7 @@ public class TestXMLReader {
     public void test(){
         try {
             XMLReader xmlReader = new XMLReader();
-            Document document = xmlReader.read();
-
+            xmlReader.read();
         } catch (IOException | ParserConfigurationException | SAXException e) {
             System.out.println(e.getMessage());
             assertFalse(false);

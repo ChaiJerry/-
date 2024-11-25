@@ -137,6 +137,7 @@ public class SharedAttributes {
     public static final String ATTRIBUTES_FIELD_NAME = "attributes";
     public static final String ITEM_ATTRIBUTES_FIELD_NAME = "itemAttributes";
     public static final String TRAINING_NUMBER_FIELD_NAME = "trainingNumber";
+    public static final double LITTLE_DOUBLE =10e-7;//一个非常小的数，用于抵消掉浮点数无法精确表示导致的误差
 
     // 创建CSVFileIO对象
     public static final CSVFileIO fileIO;
