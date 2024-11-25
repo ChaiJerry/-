@@ -158,8 +158,6 @@ public class DataParser {
                 + floatStr2Attribute(csvReader.get("PAYMENTAMOUNT")
                 .isEmpty()?"0":csvReader.get("PAYMENTAMOUNT"), 200));
         attributeList.add(B_SIGN + "BAGGAGE_SPECIFICATION" + ":" + csvReader.get("BAGGAGE_SPECIFICATION"));
-        //attributeList.add(B_SIGN + NEW_ATT + ":" + csvReader.get(NEW_ATT));
-        //attributeList.add(B_SIGN + NEW_ATT+ ":" + floatStr2Attribute(csvReader.get(NEW_ATT), 3000));
 
         //将属性列表放入listOfAttributeList中
         listOfAttributeList.add(attributeList);
@@ -241,7 +239,7 @@ public class DataParser {
      */
     public static Integer floatStr2Attribute(String str, int div) {
         //将字符串转化为浮点数
-        float value = Float.parseFloat(str);
+        double value = Float.parseFloat(str) + LITTLE_DOUBLE;
         return ((int) value / div);
     }
 

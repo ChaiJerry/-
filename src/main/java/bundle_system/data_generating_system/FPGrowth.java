@@ -82,7 +82,7 @@ public class FPGrowth {
         long start = System.currentTimeMillis();
         FPGrowthModel model = train(sourceData, minSupport, minConfidence);
         long end = System.currentTimeMillis();
-        System.out.println("模型训练时间(ms)：" + (end - start));
+        //System.out.println("模型训练时间(ms)：" + (end - start));
         // 从两个boolean参数中判断是否挖掘频繁项集和关联规则并输出
         if (outPutFrequentItems) {
             // 得到频繁项集

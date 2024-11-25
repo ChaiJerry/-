@@ -6,7 +6,19 @@
         <attribute name="TO" type="string"/>
         <attribute name="T_GRADE" type="string"/>
         <attribute name="HAVE_CHILD" type="string"/>
-        <attribute name="PROMOTION_RATE" type="num" grade="10" comment="这里是折扣率的百分数，值最高为100，在传入的combolSource中由100-discount*100得到"/>
+        <attribute name="PROMOTION_RATE" type="num" grade="10"
+                   comment="这里是折扣率的百分数，值最高为100，在传入的combolSource中由100-discount*100得到"/>
         <attribute name="T_FORMER" type="num" grade="1000" comment="折扣前的价格"/>
     </item>
+    <item name="Insurance">
+        <attribute name="INSUR_AMOUNT" type="halfNum" comment="其实这里应该解析成浮点数后划档处理，是之后改进方向"/>
+        <attribute name="INSUR_PRO_NAME" type="string"/>
+        <attribute name="INSURANCE_COMPANYCODE" type="string"/>
+    </item>
+    <item name="Baggage">
+        <attribute name="PAYMENTAMOUNT" type="num" grade="200"/>
+        <attribute name="BAGGAGE_SPECIFICATION" type="halfNum"/>
+    </item>
+
+
 </Configuration>

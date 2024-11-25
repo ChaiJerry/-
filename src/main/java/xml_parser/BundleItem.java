@@ -1,14 +1,22 @@
 package xml_parser;
 
+import org.w3c.dom.*;
+
 import java.util.*;
 
 public class BundleItem {
 
     private final String FlightSegmentRPH;
+    private Element element;
     private final Map<String,String> attributes = new HashMap<>();
 
     public BundleItem(String rph) {
         this.FlightSegmentRPH = rph;
+    }
+
+    public BundleItem(String rph,Element element) {
+        this.FlightSegmentRPH = rph;
+        this.element = element;
     }
     public String getFlightSegmentRPH() {
         return FlightSegmentRPH;

@@ -15,9 +15,10 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class Main {
     public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException {
-        //QuickQuery.test(HOTEL);
+//        QuickQuery quickQuery = new QuickQuery();
+//        quickQuery.test(HOTEL);
         XMLReader xmlReader = new XMLReader();
-        List<BundleItem> bundleItems = xmlReader.parseComboSource(xmlReader.read());
+        List<BundleItem> bundleItems = xmlReader.getInsurances(xmlReader.read());
         for (BundleItem bundleItem : bundleItems) {
             System.out.println("bundleItem: " + bundleItem);
         }

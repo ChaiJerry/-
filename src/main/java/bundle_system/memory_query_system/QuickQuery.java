@@ -16,24 +16,36 @@ import static bundle_system.io.SharedAttributes.*;
 public class QuickQuery {
     private static Map<String, ItemPack> itemPackMap = new HashMap<>();
 
-    public static void test(int type) throws IOException {
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public RulesStorage initRulesStorageByType(int type) throws IOException {
         //训练阶段
+        String info = "正在初始化"+SharedAttributes.getFullNames()[type]+"知识库";
+        printProgressBar(0, info);
         RulesStorage rulesStorage = new RulesStorage(type);
         List<List<String>> listOfAttributeList = fileIO.singleTypeCsv2ListOfAttributeList(type);
         List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
         List<List<String>> itemTicketRules = new ArrayList<>();
+        printProgressBar(33, info);
         //测算训练用时
         long startTime1 = System.nanoTime();
         associationRulesMining(listOfAttributeList, false, true, itemTicketFreqItemSets, itemTicketRules, 0.08, 0);
-        System.out.println("Training time: " + (System.nanoTime() - startTime1) / 1000000+ "ms");
+        printProgressBar(67, info);
+        //System.out.println("Training time: " + (System.nanoTime() - startTime1) / 1000000+ "ms");
         for (List<String> itemTicketRule : itemTicketRules) {
             String[] split = itemTicketRule.get(0).split("; ");
             String consequent = itemTicketRule.get(1).split("; ")[0];
             double confidence = Double.parseDouble(itemTicketRule.get(2).split("::")[1]);
             rulesStorage.addRule(split, new AssociationRuleResult(consequent, confidence));
         }
+        printProgressBar(100, info);
+        System.out.println();
+        return rulesStorage;
+    }
 
+
+    public void test(int type) throws IOException {
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //训练阶段
+        RulesStorage rulesStorage = initRulesStorageByType(type);
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         //测试阶段
         //获取ordersCollection，用于查询订单
@@ -103,5 +115,42 @@ public class QuickQuery {
         //输出时间
         System.out.println((totalTime)/1000000 + "ms");
         rulesStorage.shutdown();
+    }
+
+
+
+    /**
+     * 输出一个动态的进度条。
+     *
+     * @param percent      当前的进度百分比（0 到 100）
+     * @param progressBarName 进度条的名字
+     */
+    public static void printProgressBar(int percent, String progressBarName) {
+        if (percent < 0 || percent > 100) {
+            throw new IllegalArgumentException("Percent must be between 0 and 100");
+        }
+
+        // 进度条的总长度
+        int barLength = 50;
+
+        // 计算已完成的部分
+        int completed = (int) (percent * barLength / 100);
+
+        // 构建进度条
+        StringBuilder progressBar = new StringBuilder(progressBarName + " [");
+        for (int i = 0; i < barLength; i++) {
+            if (i < completed) {
+                progressBar.append("\u001B[32m=\u001B[0m"); // 绿色的 "="
+            } else if (i == completed) {
+                progressBar.append(">");
+            } else {
+                progressBar.append(" ");
+            }
+        }
+        progressBar.append("] ").append(String.format("%3d%%", percent));
+
+        // 输出进度条
+        System.out.print("\r" + progressBar.toString());
+        System.out.flush(); // 确保立即输出
     }
 }
