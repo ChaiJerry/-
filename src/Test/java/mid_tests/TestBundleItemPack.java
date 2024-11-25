@@ -8,7 +8,7 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 
-public class TestItemPack {
+public class TestBundleItemPack {
     @Test
     public void testCalculation() {
         ItemPack itemPack = new ItemPack();

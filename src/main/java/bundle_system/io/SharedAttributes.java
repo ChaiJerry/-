@@ -2,6 +2,8 @@ package bundle_system.io;
 
 
 
+import bundle_system.memory_query_system.*;
+
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
@@ -57,6 +59,15 @@ public class SharedAttributes {
         itemAttributeNames.add(INSURANCE_ATTRIBUTES);
         itemAttributeNames.add(SEAT_ATTRIBUTES);
     }
+
+    public static HashMap<String, ItemAttributeValueAndConfidenceAndPriority> getAttributesMap(int type) {
+        HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap = new HashMap<>();
+        for(String attributeName : itemAttributeNames.get(type)) {
+           attributesMap.put(attributeName, new ItemAttributeValueAndConfidenceAndPriority());
+        }
+        return attributesMap;
+    }
+
 
 
     protected static final int[] attributeNumForEachType = {0,HOTEL_ATTRIBUTES.length,MEAL_ATTRIBUTES.length,BAGGAGE_ATTRIBUTES.length,
