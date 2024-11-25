@@ -29,58 +29,9 @@ public class DataParser {
         listOfAttributeList.add(attributeList);
     }
 
-    //处理机票订单
+
+
     public static void dealT(CsvReader csvReader, Map<String, List<List<String>>> map) throws IOException {
-        //机票属性列表
-        List<String> attributeList = new ArrayList<>();
-        //得到订单号
-        String key = csvReader.get("ORDER_NO");
-        List<List<String>> listofAttributeList;
-
-        if (map.containsKey(key)) {
-            attributeList = map.get(key).get(0);
-            if (!csvReader.get(4).equals("ADT")) {
-                attributeList.set(5, T_SIGN + "HAVE_CHILD" + ":" + "1");
-            }
-            //处理一个机票订单之中有往返票的情况
-            if (isRoundTrip(attributeList, csvReader.get(2))) {
-                //如果之前没有添加往返票信息，则添加一次
-                if (map.get(key).size() == 1) {
-                    List<String> newAttributeList = new ArrayList<>(attributeList);
-                    newAttributeList.set(2, T_SIGN + "FROM" + ":" + csvReader.get(2).split("-")[0]);
-                    newAttributeList.set(3, T_SIGN + "TO" + ":" + csvReader.get(2).split("-")[1]);
-                    map.get(key).add(newAttributeList);
-                } else {
-                    //如果之前已经添加了往返票信息，则修改往返票信息
-                    // ，使得两个订单的除了起始地点之外的属性相同
-                    List<String> newAttributeList = new ArrayList<>(attributeList);
-                    newAttributeList.set(2, T_SIGN + "FROM" + ":" + csvReader.get(2).split("-")[1]);
-                    newAttributeList.set(3, T_SIGN + "TO" + ":" + csvReader.get(2).split("-")[0]);
-                    map.get(key).set(1, newAttributeList);
-                }
-            }
-        } else {
-            listofAttributeList = new ArrayList<>();
-            //添加时间属性（划分到月） 0
-            addDate2list(attributeList, csvReader.get(0), T_SIGN);
-            //添加航司属性 1
-            attributeList.add(T_SIGN + csvReader.getHeader(1) + ":" + csvReader.get(1));
-            //添加出发地、目的地属性 2,3
-            splitSegment(attributeList, csvReader.get(2));
-            //添加航班号属性 4
-            attributeList.add(T_SIGN + csvReader.getHeader(3) + ":" + ticketGrade2Specific(csvReader.get(3)));
-            //添加是否有孩童票属性 5
-            attributeList.add(T_SIGN + "HAVE_CHILD" + ":" + (csvReader.get(4).equals("ADT") ? "0" : "1"));
-            //添加票价属性 6
-            attributeList.add(T_SIGN + csvReader.getHeader(5) + ":"
-                    + floatStr2Attribute(csvReader.get(5), 300));
-            //将订单号和属性列表放入map中
-            listofAttributeList.add(attributeList);
-            map.put(key, listofAttributeList);
-        }
-    }
-
-    public static void dealE(CsvReader csvReader, Map<String, List<List<String>>> map) throws IOException {
         //机票属性列表
         List<String> attributeList = new ArrayList<>();
         //得到订单号
@@ -123,7 +74,7 @@ public class DataParser {
             //添加是否有孩童票属性 4
             attributeList.add(T_SIGN + "HAVE_CHILD" + ":" + (csvReader.get("T_PASSENGER").equals("ADT") ? "0" : "1"));
             //添加PROMOTION_RATE属性 5
-            attributeList.add(T_SIGN + "PROMOTION_RATE" + ":" + csvReader.get("PROMOTION_RATE"));
+            attributeList.add(T_SIGN + "PROMOTION_RATE" + ":" + floatStr2Attribute(csvReader.get("PROMOTION_RATE"), 10));
             //添加T_FORMER属性 6
             attributeList.add(T_SIGN + "T_FORMER" + ":" + floatStr2Attribute(Objects.equals(csvReader.get("T_FORMER"), "")
                     ?"-1000.0":csvReader.get("T_FORMER"), 1000));
@@ -288,10 +239,10 @@ public class DataParser {
      * @param div 划档的间隔
      * @return 划档后的整数
      */
-    private static Integer floatStr2Attribute(String str, int div) {
+    public static Integer floatStr2Attribute(String str, int div) {
         //将字符串转化为浮点数
         float value = Float.parseFloat(str);
-        return (int) value / div;
+        return ((int) value / div);
     }
 
     //将日期拆分成月

@@ -78,7 +78,11 @@ public class FPGrowth {
         // 创建数据集
         Dataset<Row> sourceData = listOfAttributeList2Dataset(itemTicketAttributes);
         //从sourceData中训练模型
+        // 测量训练时间
+        long start = System.currentTimeMillis();
         FPGrowthModel model = train(sourceData, minSupport, minConfidence);
+        long end = System.currentTimeMillis();
+        System.out.println("模型训练时间(ms)：" + (end - start));
         // 从两个boolean参数中判断是否挖掘频繁项集和关联规则并输出
         if (outPutFrequentItems) {
             // 得到频繁项集

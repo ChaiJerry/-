@@ -1,24 +1,26 @@
 package bundle_system.main_class;
 
+import bundle_system.memory_query_system.*;
+import org.xml.sax.*;
+import xml_parser.*;
+import xml_parser.XMLReader;
+
+import javax.xml.parsers.*;
+import javax.xml.xpath.*;
 import java.io.*;
 import java.sql.*;
+import java.util.*;
+
+import static bundle_system.io.SharedAttributes.*;
 
 public class Main {
-    public static void main(String[] args) throws IOException, SQLException {
-
-//        List<List<String>> listOfAttributeList = fileIO.singleTypeCsv2ListOfAttributeList(HOTEL);
-//        List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
-//        List<List<String>> itemTicketRules = new ArrayList<>();
-//        associationRulesMining(listOfAttributeList, false, true, itemTicketFreqItemSets, itemTicketRules, 0.07,0);
-//        for (List<String> itemTicketRule : itemTicketRules) {
-//            System.out.println(itemTicketRule);
-//            String[] split = itemTicketRule.get(0).split("; ");
-//            System.out.println(split);
-//        }
-
-        //evaluateSupportF1(0);
-        //evaluateConfidenceF1(0.08);
-
+    public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException {
+        //QuickQuery.test(HOTEL);
+        XMLReader xmlReader = new XMLReader();
+        List<BundleItem> bundleItems = xmlReader.parseComboSource(xmlReader.read());
+        for (BundleItem bundleItem : bundleItems) {
+            System.out.println("bundleItem: " + bundleItem);
+        }
     }
 
 

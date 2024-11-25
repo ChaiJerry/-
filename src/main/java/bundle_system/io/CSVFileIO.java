@@ -297,24 +297,6 @@ public class CSVFileIO {
                     dealM(csvReader, map);
                 }
                 break;
-            case "T":
-                //特殊处理机票数据的属性
-                //添加处理后得到的属性头
-                header.addAttribute("MONTH");
-                header.addAttribute("TO");
-                header.addAttribute("FROM");
-                header.addAttribute("HAVE_CHILD");
-                //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
-                //删去多余的属性头
-                header.removeAttribute("T_VOYAGE");
-                header.removeAttribute("T_PASSENGER");
-                //遍历csv每一行中的内容
-                while (csvReader.readRecord()) {
-                    //订单数量计数
-                    orderNumber++;
-                    dealT(csvReader, map);
-                }
-                break;
             case "B":
                 //处理行李数据
                 header.clear();
@@ -366,6 +348,7 @@ public class CSVFileIO {
                     dealS(csvReader, map);
                 }
                 break;
+            case "T":
             case "Train":
                 //特殊处理机票数据的属性
                 header.clear();
@@ -385,7 +368,7 @@ public class CSVFileIO {
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
-                    dealE(csvReader, map);
+                    dealT(csvReader, map);
                 }
                 break;
             case "Test":

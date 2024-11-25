@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <item name="Ticket">
+        <attribute name="MONTH" type="string"/>
+        <attribute name="FROM" type="string"/>
+        <attribute name="TO" type="string"/>
+        <attribute name="T_GRADE" type="string"/>
+        <attribute name="HAVE_CHILD" type="string"/>
+        <attribute name="PROMOTION_RATE" type="num" grade="10" comment="这里是折扣率的百分数，值最高为100，在传入的combolSource中由100-discount*100得到"/>
+        <attribute name="T_FORMER" type="num" grade="1000" comment="折扣前的价格"/>
+    </item>
+</Configuration>
