@@ -15,6 +15,11 @@ public class BundleItem implements Comparable<BundleItem> {
     // priority优先级，默认为0，是double的原因是方便以后根据置信度拓展排序优先度计算
     private double priority = 0;
 
+    public Element getElement() {
+        return element;
+    }
+
+
     public void setPriority(Map<String, String> recommendAttributes) {
         for (String key : recommendAttributes.keySet()) {
             if (attributes.containsKey(key)) {
