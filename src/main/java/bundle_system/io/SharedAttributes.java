@@ -45,6 +45,7 @@ public class SharedAttributes {
 
     protected static final String[] types = {"T", "H", "M", "B", "I", "S","Train","Test"};
     protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
+    public static final String[] TICKET_ATTRIBUTES = {"MONTH", "FROM", "TO" , "T_GRADE","HAVE_CHILD","PROMOTION_RATE","T_FORMER"};
     public static final String[] HOTEL_ATTRIBUTES = {"AIR_REAL_MONEY", "PRODUCTTYPE", "PRODUCT_NAME", "HOTEL_NAME"};
     public static final String[] MEAL_ATTRIBUTES = {"MEAL_CODE", "PM_PRICE"};
     public static final String[] BAGGAGE_ATTRIBUTES = {"PAYMENTAMOUNT","BAGGAGE_SPECIFICATION"};
@@ -52,13 +53,21 @@ public class SharedAttributes {
     public static final String[] SEAT_ATTRIBUTES = {"SEAT_NO"};
     private final static List<String[]> itemAttributeNames = new ArrayList<>();
     static {
-        itemAttributeNames.add(null);
+        itemAttributeNames.add(TICKET_ATTRIBUTES);
         itemAttributeNames.add(HOTEL_ATTRIBUTES);
         itemAttributeNames.add(MEAL_ATTRIBUTES);
         itemAttributeNames.add(BAGGAGE_ATTRIBUTES);
         itemAttributeNames.add(INSURANCE_ATTRIBUTES);
         itemAttributeNames.add(SEAT_ATTRIBUTES);
     }
+    public static Map<String,String> getTicketAttributesTemplate() {
+        Map<String, String> attributes = new HashMap<>();
+        for (String ticketAttribute : TICKET_ATTRIBUTES) {
+            attributes.put(ticketAttribute, null);
+        }
+        return attributes;
+    }
+
 
     public static HashMap<String, ItemAttributeValueAndConfidenceAndPriority> getAttributesMap(int type) {
         HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap = new HashMap<>();
