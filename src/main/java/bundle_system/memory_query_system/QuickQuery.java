@@ -59,10 +59,6 @@ public class QuickQuery {
         int round = 0;
         for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
             //得到orderNum（订单号）
-//            System.out.println(round+++" ");
-//            if(round==823){
-//                System.out.println("stop");
-//            }
             String orderNum = iterator.next();
             List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, type, ordersCollection);
             if (correctTargetItems.isEmpty()) {
