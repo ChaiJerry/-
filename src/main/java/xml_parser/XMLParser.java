@@ -1,7 +1,6 @@
 package xml_parser;
 
 import bundle_system.data_processer.*;
-import jdk.dynalink.*;
 import org.w3c.dom.*;
 
 import javax.xml.xpath.*;
@@ -13,7 +12,7 @@ import static bundle_system.io.SharedAttributes.*;
 public class XMLParser {
     // 创建XPath工厂对象，用于创建XPath对象，为之后的多线程解析做预先准备
     private final XPathFactory xPathfactory = XPathFactory.newInstance();
-    private XPath xpath = xPathfactory.newXPath();;
+    private final XPath xpath = xPathfactory.newXPath();
 
     public List<Operation> getParseMethods() {
         return parseMethods;
@@ -27,8 +26,6 @@ public class XMLParser {
         parseMethods.add(this::parseMeal);
         parseMethods.add(this::parseBaggage);
         parseMethods.add(this::parseInsurances);
-
-
     }
 
     /**

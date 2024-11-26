@@ -21,7 +21,7 @@ public class RulesStorage {
     private final RandomLRUPool lruPool = new RandomLRUPool(40);
 
     int type;
-
+    private static final List<RulesStorage> allRulesStorages = new ArrayList<>();
     /**
      * 构造函数
      *
@@ -29,6 +29,7 @@ public class RulesStorage {
      */
     public RulesStorage(int type) {
         this.type = type;
+        allRulesStorages.add(this);
     }
 
     /**
@@ -92,6 +93,12 @@ public class RulesStorage {
 
     public void shutdown() {
         executorService.shutdownNow();
+    }
+
+    public static void shutdownAll() {
+        for (RulesStorage rulesStorage : allRulesStorages) {
+            rulesStorage.shutdown();
+        }
     }
 
 
