@@ -5,39 +5,62 @@ import org.w3c.dom.*;
 
 import java.util.*;
 
-public class BundleItem implements Comparable<BundleItem>{
+import static java.lang.Math.*;
+
+public class BundleItem implements Comparable<BundleItem> {
 
     private final String FlightSegmentRPH;
     private Element element;
-    private final Map<String,String> attributes = new HashMap<>();
+    private final Map<String, String> attributes = new HashMap<>();
     // priority优先级，默认为0，是double的原因是方便以后根据置信度拓展排序优先度计算
     private double priority = 0;
 
-    public void setPriority(Map<String,String> recommendAttributes) {
-        for(String key:recommendAttributes.keySet()) {
-            if(attributes.containsKey(key)) {
-                if(attributes.get(key).equalsIgnoreCase(recommendAttributes.get(key))) {
+    public void setPriority(Map<String, String> recommendAttributes) {
+        for (String key : recommendAttributes.keySet()) {
+            if (attributes.containsKey(key)) {
+                //实际的属性值
+                String value = attributes.get(key);
+                //推荐属性值
+                String recommendValue = recommendAttributes.get(key);
+                if (value.equalsIgnoreCase(recommendValue)) {
                     priority++;
+                } else if (isNum(value)) {
+                    //判断不相等的情况，判断是否为浮点数或整数
+                    //优先级加上二者之差的绝对值的负指数
+                    priority += exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
                 }
             }
         }
+    }
+
+    /**
+     * 特殊的判断段是否为数字的方法
+     * 这个地方为了效率仅判断最后一位是否为数字，如果最后一位是数字则认为这个字符串是数字（这是由数据集特性决定的）
+     *
+     * @param s 字符串
+     * @return 是否为数字
+     */
+    private boolean isNum(String s) {
+        return Character.isDigit(s.charAt(s.length() - 1));
     }
 
     public BundleItem(String rph) {
         this.FlightSegmentRPH = rph;
     }
 
-    public BundleItem(String rph,Node node){
+    public BundleItem(String rph, Node node) {
         this.FlightSegmentRPH = rph;
         this.element = (Element) node;
     }
+
     public String getFlightSegmentRPH() {
         return FlightSegmentRPH;
     }
 
     /**
      * 为商品加入属性名和属性值键值对
-     * @param name 属性名
+     *
+     * @param name  属性名
      * @param value 属性值
      */
     public void addAttributeNameValuePair(String name, String value) {
