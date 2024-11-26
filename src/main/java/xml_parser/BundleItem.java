@@ -27,9 +27,9 @@ public class BundleItem implements Comparable<BundleItem>{
         this.FlightSegmentRPH = rph;
     }
 
-    public BundleItem(String rph,Element element) {
+    public BundleItem(String rph,Node node){
         this.FlightSegmentRPH = rph;
-        this.element = element;
+        this.element = (Element) node;
     }
     public String getFlightSegmentRPH() {
         return FlightSegmentRPH;
@@ -51,10 +51,14 @@ public class BundleItem implements Comparable<BundleItem>{
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("FlightSegmentRPH: ").append(this.getFlightSegmentRPH()).append("\n");
+        sb.append("{\nFlightSegmentRPH: ").append(this.getFlightSegmentRPH()).append("\n");
+        // 打印优先级
+        sb.append("Priority: ").append(this.priority).append("\n");
+        // 遍历attributes的所有键值对
         for (Map.Entry<String, String> entry : attributes.entrySet()) {
             sb.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
+        sb.append("}\n");
         return sb.toString();
     }
 
