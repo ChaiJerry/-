@@ -18,7 +18,7 @@ public class Main {
     public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException {
 //        QuickQuery quickQuery = new QuickQuery();
 //        quickQuery.test(SEAT);
-        BackendBundleSystem.test();
+        BackendBundleSystem.test(1);
 
 //        XMLReader xmlReader = new XMLReader();
 //        XMLParser xmlParser = new XMLParser();
