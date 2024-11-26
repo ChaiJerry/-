@@ -14,18 +14,18 @@ public class XMLParser {
     private final XPathFactory xPathfactory = XPathFactory.newInstance();
     private final XPath xpath = xPathfactory.newXPath();
 
-    public List<Operation> getParseMethods() {
-        return parseMethods;
+    public List<ParseMethod> getParseMethods() {
+        return parseMethodMethods;
     }
 
-    private final List<Operation> parseMethods = new ArrayList<>();
+    private final List<ParseMethod> parseMethodMethods = new ArrayList<>();
 
     public XMLParser() {
-        parseMethods.add(null);
-        parseMethods.add(null);
-        parseMethods.add(this::parseMeal);
-        parseMethods.add(this::parseBaggage);
-        parseMethods.add(this::parseInsurances);
+        parseMethodMethods.add(null);
+        parseMethodMethods.add(null);
+        parseMethodMethods.add(this::parseMeal);
+        parseMethodMethods.add(this::parseBaggage);
+        parseMethodMethods.add(this::parseInsurances);
     }
 
     /**

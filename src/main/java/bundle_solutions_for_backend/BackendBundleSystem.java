@@ -15,6 +15,15 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class BackendBundleSystem {
 
+     static List<SortBundleItemMethod> sortBundleItemMethods = new ArrayList<>();
+     static {
+         sortBundleItemMethods.add(null);
+         sortBundleItemMethods.add(null);
+         sortBundleItemMethods.add(BackendBundleSystem::testBundleMealOrBaggage);
+         sortBundleItemMethods.add(BackendBundleSystem::testBundleMealOrBaggage);
+         sortBundleItemMethods.add(BackendBundleSystem::testBundleInsurance);
+     }
+
     public static void test() throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
         XMLReader xmlReader = new XMLReader();
         XMLParser xmlParser = new XMLParser();
@@ -25,10 +34,10 @@ public class BackendBundleSystem {
         long start = System.nanoTime();
         Map<String, BundleItem> stringBundleItemMap = xmlParser.parseComboSource(root);
         System.out.println("time(ms):" + ((double)(System.nanoTime() - start) )/ 1000000);
-        List<Operation> parseMethods = xmlParser.getParseMethods();
-        for(int i = MEAL;i<parseMethods.size()-1;i++){
+        List<ParseMethod> parseMethods = xmlParser.getParseMethods();
+        for(int i = MEAL; i< parseMethods.size(); i++){
             Map<String, List<BundleItem>> bundleItems = parseMethods.get(i).execute(root);
-            List<BundleItem> sortedBundleList = testBundleMealOrBaggage(stringBundleItemMap, bundleItems, rulesStorages.get(i));
+            List<BundleItem> sortedBundleList = sortBundleItemMethods.get(i).execute(stringBundleItemMap, bundleItems, rulesStorages.get(i));
             System.out.println("time(ms):" + ((double)(System.nanoTime() - start) )/ 1000000);
             for (BundleItem bundleItem : sortedBundleList) {
                 System.out.println(bundleItem);
@@ -56,19 +65,36 @@ public class BackendBundleSystem {
             //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
             List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
             //排序
-            sort(map,bundleItemList);
+            setPriorityAndSort(map,bundleItemList);
             //将排序好的附加产品添加到结果中
             sortedBundleItemList.addAll(bundleItemList);
         }
         return sortedBundleItemList;
     }
 
+
+    public static List<BundleItem> testBundleInsurance(Map<String, BundleItem> ticketInfo
+            , Map<String, List<BundleItem>> bundleItems, RulesStorage rulesStorage )  {
+        //遍历ticketInfo，得到其中的机票属性
+        for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
+            //根据机票属性查询附加产品规则，得到附加产品属性
+            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
+            List<BundleItem> bundleItemList = bundleItems.get(null);
+            //排序
+            setPriorityAndSort(map,bundleItemList);
+            return bundleItemList;
+        }
+        return null;
+    }
+
+
     /**
      * 给附加产品排序的方法
      * @param map 推荐的附加产品属性键值对
      * @param bundleItemList 附加产品键列表
      */
-    public static void sort(Map<String, String> map,List<BundleItem> bundleItemList){
+    public static void setPriorityAndSort(Map<String, String> map, List<BundleItem> bundleItemList){
         for(BundleItem bundleItem:bundleItemList){
             bundleItem.setPriority(map);
         }
