@@ -21,6 +21,7 @@ public class BackendBundleSystem {
         Map<String, BundleItem> stringBundleItemMap = xmlParser.parseComboSource(xmlReader.read());
         for (Map.Entry<String, BundleItem> entry : stringBundleItemMap.entrySet()) {
             rulesStorage.queryItemAttributes(entry.getValue());
+
         }
 
 

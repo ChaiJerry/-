@@ -136,6 +136,12 @@ public class RulesStorage {
         executorService.shutdownNow();
     }
 
+
+    /**
+     * 根据机票属性查询规则后件的方法
+     *
+     * @param ticketInfo 机票的属性包
+     */
     public void queryItemAttributes(BundleItem ticketInfo) {
         Map<String, String> attributes = ticketInfo.getAttributes();
 
