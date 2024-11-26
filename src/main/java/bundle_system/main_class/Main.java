@@ -7,6 +7,7 @@ import xml_parser.*;
 import xml_parser.XMLReader;
 
 import javax.xml.parsers.*;
+import javax.xml.transform.*;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.sql.*;
@@ -15,7 +16,7 @@ import java.util.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class Main {
-    public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException {
+    public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
 //        QuickQuery quickQuery = new QuickQuery();
 //        quickQuery.test(SEAT);
         BackendBundleSystem.test(1);

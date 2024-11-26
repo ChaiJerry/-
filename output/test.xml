@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<OJ_ComboSearchRS xmlns="http://www.opentravel.org/OTA/2003/05">
+    <ComboWith>
+        <Insurance>
+            <PlanForQuoteRS BookPartSegments="false" InsuranceID="57" MaximumAmountToBook="1" Name="行李险新"
+                            PlanID="HHZA" PricingBySegments="true" ProductID="8a8637b845fe741b014641ac3aba000d"
+                            PropertionInsurance="" ProtocolID="206140034" RPH="1" RefundAloneByAgent="true"
+                            ReshopRule="Reshop" ReshopRuleUrl="http://www.hnair.com/qt/assuranceinformation/"
+                            SalesAgencyCode="hkk068b" SegmentBased="false" SelectedByDefault="false" SupplierCode="AUIS"
+                            Type="1" TypeID="1001581" TypeOfPassenger="-">
+                <PlanCost Amount="20.0" CurrencyCode="CNY" DedicatePayment="true" OriginalAmount="20"
+                          OriginalCurrencyCode="CNY">
+                    <IncrementalPrices>
+                        <IncrementalPrice Amount="0" Frequency="1"/>
+                    </IncrementalPrices>
+                    <BasePremium Amount="20" CurrencyCode="CNY" OriginalAmount="20" OriginalCurrencyCode="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <PriceAdjustments>
+                        <PriceAdjustment Amount="0" Code="ROUNDING" CodeContext="PACK-rounding" CurrencyCode="CNY"
+                                         Date="2024-11-13T13:46" Description="round-to 1" Manual="false" Modular="true"
+                                         ProductType="INSURANCE" Stage="Rounding"/>
+                    </PriceAdjustments>
+                </PlanCost>
+                <QuoteDetail>
+                    <ProviderCompany Code="HHZA" CodeContext="08688003" CompanyShortName="众安在线财产保险股份有限公司"
+                                     Division="8000001"/>
+                    <QuoteDetailURL>http://www.hnair.com/qt/assuranceinformation/</QuoteDetailURL>
+                    <BookingDetailURL>http://www.hnair.com/qt/assuranceinformation/</BookingDetailURL>
+                </QuoteDetail>
+                <InsCoverageDetail EffectiveDate="2024-11-14T16:00:00" ExpireDate="2024-11-17T11:45:00">
+                    <CoverageRequirements>
+                        <CoverageRequirement CoverageType="">
+                            <PolicyLimit Amount="5000"/>
+                        </CoverageRequirement>
+                    </CoverageRequirements>
+                    <FlightSegmentRefs>
+                        <FlightSegmentRef FlightSegmentRPH="1" OriginDestinationRPH="1"/>
+                        <FlightSegmentRef FlightSegmentRPH="2" OriginDestinationRPH="2"/>
+                    </FlightSegmentRefs>
+                </InsCoverageDetail>
+                <Description Language="zh" Name="行李险新">
+                    乘客飞机意外身故、伤残290万元人民币；附加乘客飞机意外烧伤10万元人民币
+                </Description>
+            </PlanForQuoteRS>
+            <PlanForQuoteRS BookPartSegments="false" InsuranceID="58" MaxAge="80" MaximumAmountToBook="1" MinAge="2"
+                            Name="退票险最新" PlanID="HHHT" PricingBySegments="true"
+                            ProductID="8a8637b8405d80890140961b94a60007" ProtocolID="206080077" RPH="2"
+                            RefundAloneByAgent="true" ReshopRule="Reshop"
+                            ReshopRuleUrl="http://www.hnair.com/qt/assuranceinformation/" SalesAgencyCode="hkk068b"
+                            SegmentBased="false" SelectedByDefault="false" SupplierCode="AUIS" Type="1" TypeID="1001704"
+                            TypeOfPassenger="-">
+                <PlanCost Amount="20.0" CurrencyCode="CNY" DedicatePayment="true" OriginalAmount="20"
+                          OriginalCurrencyCode="CNY">
+                    <IncrementalPrices>
+                        <IncrementalPrice Amount="0" Frequency="1"/>
+                    </IncrementalPrices>
+                    <BasePremium Amount="20" CurrencyCode="CNY" OriginalAmount="20" OriginalCurrencyCode="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+                    <PriceAdjustments>
+                        <PriceAdjustment Amount="0" Code="ROUNDING" CodeContext="PACK-rounding" CurrencyCode="CNY"
+                                         Date="2024-11-13T13:46" Description="round-to 1" Manual="false" Modular="true"
+                                         ProductType="INSURANCE" Stage="Rounding"/>
+                    </PriceAdjustments>
+                </PlanCost>
+                <QuoteDetail>
+                    <ProviderCompany Code="HHHT" CodeContext="08688003" CompanyShortName="华泰财产保险有限公司"
+                                     Division="6000002"/>
+                    <QuoteDetailURL>http://www.hnair.com/qt/assuranceinformation/</QuoteDetailURL>
+                    <BookingDetailURL>http://www.hnair.com/qt/assuranceinformation/</BookingDetailURL>
+                </QuoteDetail>
+                <InsCoverageDetail EffectiveDate="2024-11-14T16:00:00" ExpireDate="2024-11-17T11:45:00">
+                    <CoverageRequirements>
+                        <CoverageRequirement CoverageType="1">
+                            <PolicyLimit Amount="500"/>
+                        </CoverageRequirement>
+                    </CoverageRequirements>
+                    <FlightSegmentRefs>
+                        <FlightSegmentRef FlightSegmentRPH="1" OriginDestinationRPH="1"/>
+                        <FlightSegmentRef FlightSegmentRPH="2" OriginDestinationRPH="2"/>
+                    </FlightSegmentRefs>
+                </InsCoverageDetail>
+                <Description Language="zh" Name="退票险最新">
+                    乘客飞机意外身故、伤残290万元人民币；附加乘客飞机意外烧伤10万元人民币
+                </Description>
+            </PlanForQuoteRS>
+        </Insurance>
+        <Ancillary>
+            <Baggage>
+                <OriginDestination>
+                    <Service>
+                        <Baggage SegmentRef="1">
+                            <MaxWeight Unit="KG">30</MaxWeight>
+                            <Prices>
+                                <Price>
+                                    <Total Amount="1698" CurrencyCode="CNY"/>
+                                </Price>
+                            </Prices>
+                        </Baggage>
+                    </Service>
+                    <Service>
+                        <Baggage SegmentRef="2">
+                            <MaxWeight Unit="KG">35</MaxWeight>
+                            <Prices>
+                                <Price>
+                                    <Total Amount="1981" CurrencyCode="CNY"/>
+                                </Price>
+                            </Prices>
+                        </Baggage>
+                    </Service>
+                </OriginDestination>
+            </Baggage>
+        </Ancillary>
+        <Ancillary>
+            <BoundProducts>
+                <AncillaryProducts>
+                    <Ancillary Available="99" BookingChannel="TSDF" Carrier="HU" Category="segment" Code="NB9J9HE9"
+                               Date="2024-11-06T08:00:00" Destination="HAK" FlightNumber="7382" Origin="PEK"
+                               Refundable="false" SegmentRef="1" SubType="" SupplierProductCode="BPG" Type="MEAL">
+                        <Prices>
+                            <Price LoyaltyLevel="C" PassengerTypeCode="" RBD="BPG">
+                                <Base Amount="52" CurrencyCode="CNY"/>
+                                <Total Adjusted="52" Amount="52" CurrencyCode="CNY"/>
+                            </Price>
+                        </Prices>
+                        <Loyalty>
+                            <Combinations>
+                                <Combination>
+                                    <Redemption>
+                                        <Redeem LoyaltyLevel="">
+                                            <Rule PassengerTypeCode="" Quantity="1040"/>
+                                        </Redeem>
+                                    </Redemption>
+                                </Combination>
+                            </Combinations>
+                        </Loyalty>
+                        <TravelerInfo>
+                            <AirTraveler OJ_SuperPNR_RPH="" PassengerTypeCode=""/>
+                        </TravelerInfo>
+                        <Content Language="zh">
+                            <ProductName>付费</ProductName>
+                            <ShortContent>鸡排饭A</ShortContent>
+                            <LongContent>鸡排饭A</LongContent>
+                            <Image ContentData="local" ID="267">
+                                <ImageURL>NB9J9HE9/1721634034091_11.jpeg</ImageURL>
+                                <ImageThumbnailURL>NB9J9HE9/tn_1721634034091_11.jpeg</ImageThumbnailURL>
+                            </Image>
+                        </Content>
+                    </Ancillary>
+                    <Ancillary Available="98" BookingChannel="TSDF" Carrier="HU" Category="segment" Code="NB9J9HE9"
+                               Date="2024-11-17T09:00:00" Destination="PEK" FlightNumber="155F" Origin="HAK"
+                               Refundable="true" SegmentRef="2" SubType="" SupplierProductCode="CSH" Type="MEAL">
+                        <Prices>
+                            <Price LoyaltyLevel="C" PassengerTypeCode="" RBD="CSH">
+                                <Base Amount="22" CurrencyCode="CNY"/>
+                                <Total Adjusted="22" Amount="22" CurrencyCode="CNY"/>
+                            </Price>
+                        </Prices>
+                        <Loyalty>
+                            <Combinations>
+                                <Combination>
+                                    <Redemption>
+                                        <Redeem LoyaltyLevel="">
+                                            <Rule PassengerTypeCode="" Quantity="1040"/>
+                                        </Redeem>
+                                    </Redemption>
+                                </Combination>
+                            </Combinations>
+                        </Loyalty>
+                        <TravelerInfo>
+                            <AirTraveler OJ_SuperPNR_RPH="" PassengerTypeCode=""/>
+                        </TravelerInfo>
+                        <Content Language="zh">
+                            <ProductName>付费</ProductName>
+                            <ShortContent>鸡排饭A</ShortContent>
+                            <LongContent>鸡排饭A</LongContent>
+                            <Image ContentData="local" ID="267">
+                                <ImageURL>NB9J9HE9/1721634034091_11.jpeg</ImageURL>
+                                <ImageThumbnailURL>NB9J9HE9/tn_1721634034091_11.jpeg</ImageThumbnailURL>
+                            </Image>
+                        </Content>
+                    </Ancillary>
+                </AncillaryProducts>
+            </BoundProducts>
+        </Ancillary>
+    </ComboWith>
+</OJ_ComboSearchRS>

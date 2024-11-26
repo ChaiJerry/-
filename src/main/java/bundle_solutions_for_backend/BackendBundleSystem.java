@@ -7,6 +7,9 @@ import xml_parser.*;
 import xml_parser.XMLReader;
 
 import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.*;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.util.*;
@@ -24,8 +27,8 @@ public class BackendBundleSystem {
     static {
         sortBundleItemMethods.add(null);
         sortBundleItemMethods.add(null);
-        sortBundleItemMethods.add(BackendBundleSystem::testBundleMealOrBaggage);
-        sortBundleItemMethods.add(BackendBundleSystem::testBundleMealOrBaggage);
+        sortBundleItemMethods.add(BackendBundleSystem::testBundleMeal);
+        sortBundleItemMethods.add(BackendBundleSystem::testBundleBaggage);
         sortBundleItemMethods.add(BackendBundleSystem::testBundleInsurance);
         try {
             dBuilder = dbFactory.newDocumentBuilder();
@@ -34,7 +37,7 @@ public class BackendBundleSystem {
         }
     }
 
-    public static void test(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+    public static void test(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
         XMLReader xmlReader = new XMLReader();
         XMLParser xmlParser = new XMLParser();
         List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
@@ -51,9 +54,22 @@ public class BackendBundleSystem {
             bundleAllItem(parseMethods, root, segTicketMap, rulesStorages,comboWith,doc);
         }
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
-
+        saveDocument(doc);
         RulesStorage.shutdownAll();
 
+    }
+
+    public static void saveDocument(Document doc) throws TransformerException {
+        // 指定文件路径
+        String filePath = "D:\\programms\\java_projects\\version_control\\output\\test.xml";  // 替换为你想要保存的路径
+
+        // 将Document转换并保存到文件
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(new File(filePath));
+        transformer.transform(source, result);
+        System.out.println("XML文件已成功保存到: " + filePath);
     }
 
     public static Element getReturnDocTemplate(Document doc,String xmlns) {
@@ -72,11 +88,28 @@ public class BackendBundleSystem {
             Map<String, List<BundleItem>> bundleItems = parseMethods.get(i).execute(root);
             sortBundleItemMethods.get(i).execute(segTicketMap
                     , bundleItems, rulesStorages.get(i), comboWith ,doc);
-
-//            for (BundleItem bundleItem : sortedBundleList) {
-//                System.out.println(bundleItem);
-//            }
         }
+        // 处理餐食
+        Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
+        // 得到选座/餐食返回的ancillary0
+        Element ancillary1 = sortBundleItemMethods.get(MEAL).execute(segTicketMap
+                , bundleItems, rulesStorages.get(MEAL), null, doc);
+
+        // 处理行李
+        bundleItems = parseMethods.get(BAGGAGE).execute(root);
+        // 得到行李返回的ancillary1
+        Element ancillary0 =sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
+                , rulesStorages.get(BAGGAGE), null ,doc);
+
+        // 处理保险
+        bundleItems = parseMethods.get(INSURANCE).execute(root);
+        // 得到保险返回的insurance
+        Element insurance = sortBundleItemMethods.get(INSURANCE).execute(segTicketMap, bundleItems
+                , rulesStorages.get(INSURANCE), null ,doc);
+
+        comboWith.appendChild(insurance);
+        comboWith.appendChild(ancillary0);
+        comboWith.appendChild(ancillary1);
     }
 
     /**
@@ -85,12 +118,17 @@ public class BackendBundleSystem {
      * @param ticketInfo   机票航段 商品键值对
      * @param bundleItems  附加产品所属航段 附加产品键值对
      * @param rulesStorage 附加产品规则存储
-     * @param comboWith    ComboWith节点
-     * @param doc         输出的Document
+     * @param fatherElement     父节点
+     * @param doc         最终返回到Document，这里用来创造节点
      */
-    public static void testBundleMealOrBaggage(Map<String, BundleItem> ticketInfo
+    public static Element testBundleMeal(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage,Element comboWith,Document doc) {
+            , RulesStorage rulesStorage,Element fatherElement ,Document doc) {
+        Element ancillary = doc.createElement("Ancillary");
+        Element boundProducts = doc.createElement("BoundProducts");
+        Element ancillaryProducts = doc.createElement("AncillaryProducts");
+        ancillary.appendChild(boundProducts);
+        boundProducts.appendChild(ancillaryProducts);
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
             //根据机票属性查询附加产品规则，得到附加产品属性
@@ -100,7 +138,46 @@ public class BackendBundleSystem {
             //排序
             setPriorityAndSort(map, bundleItemList);
             //将排序好的附加产品添加到节点中
+            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+                BundleItem bundleItem = bundleItemList.get(i);
+                ancillaryProducts.appendChild(migrateNode(bundleItem.getElement(),doc));
+            }
         }
+        return ancillary;
+    }
+
+    /**
+     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
+     *
+     * @param ticketInfo   机票航段 商品键值对
+     * @param bundleItems  附加产品所属航段 附加产品键值对
+     * @param rulesStorage 附加产品规则存储
+     * @param fatherElement    fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
+     * @param doc         输出的Document
+     */
+    public static Element testBundleBaggage(Map<String, BundleItem> ticketInfo
+            , Map<String, List<BundleItem>> bundleItems
+            , RulesStorage rulesStorage,Element fatherElement,Document doc) {
+        Element ancillary = doc.createElement("Ancillary");
+        Element baggage = doc.createElement("Baggage");
+        ancillary.appendChild(baggage);
+        Element originDestination = doc.createElement("OriginDestination");
+        baggage.appendChild(originDestination);
+        //遍历ticketInfo，得到其中的机票属性
+        for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
+            //根据机票属性查询附加产品规则，得到附加产品属性
+            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
+            List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
+            //排序
+            setPriorityAndSort(map, bundleItemList);
+            //将排序好的附加产品添加到节点中
+            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+                BundleItem bundleItem = bundleItemList.get(i);
+                originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
+            }
+        }
+        return ancillary;
     }
 
     /**
@@ -109,13 +186,12 @@ public class BackendBundleSystem {
      * @param ticketInfo   机票航段 商品键值对
      * @param bundleItems  保险所属航段 保险键值对
      * @param rulesStorage 保险规则存储
-     * @return 返回打包后排序好的结果
+     * @return 返回打包后排序好的结果对应Insurance节点
      */
-    public static void testBundleInsurance(Map<String, BundleItem> ticketInfo
+    public static Element testBundleInsurance(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage,Element comboWith,Document doc) {
+            , RulesStorage rulesStorage,Element fatherElement,Document doc) {
         Element insurance = doc.createElement("Insurance");
-        comboWith.appendChild(insurance);
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
             //根据机票属性查询附加产品规则，得到附加产品属性
@@ -124,11 +200,13 @@ public class BackendBundleSystem {
             List<BundleItem> bundleItemList = bundleItems.get(null);
             //排序
             setPriorityAndSort(map, bundleItemList);
-            for(BundleItem bundleItem : bundleItemList) {
-                insurance.appendChild(bundleItem.getElement());
+            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+                BundleItem bundleItem = bundleItemList.get(i);
+                insurance.appendChild(migrateNode(bundleItem.getElement(),doc));
             }
             break;
         }
+        return insurance;
     }
 
     /**
@@ -144,4 +222,59 @@ public class BackendBundleSystem {
         Collections.sort(bundleItemList);
     }
 
+    /**
+     * 将一个节点从一个文档迁移到另一个文档。
+     *
+     * @param node 要迁移的节点
+     * @param targetDoc 目标文档
+     * @return 迁移后的节点
+     */
+    private static Node migrateNode(Node node, Document targetDoc) {
+        // 根据节点类型创建新的节点
+        Node newNode;
+        switch (node.getNodeType()) {
+            case Node.ELEMENT_NODE:
+                // 在目标文档中创建一个新的Element
+                Element element = (Element) node;
+                newNode = targetDoc.createElement(element.getTagName());
+
+                // 复制属性
+                NamedNodeMap attributes = element.getAttributes();
+                for (int i = 0; i < attributes.getLength(); i++) {
+                    Attr attribute = (Attr) attributes.item(i);
+                    ((Element) newNode).setAttribute(attribute.getName(), attribute.getValue());
+                }
+                break;
+            case Node.TEXT_NODE:
+                // 创建一个新的文本节点
+                Text text = (Text) node;
+                newNode = targetDoc.createTextNode(text.getData());
+                break;
+            case Node.COMMENT_NODE:
+                // 创建一个新的注释节点
+                Comment comment = (Comment) node;
+                newNode = targetDoc.createComment(comment.getData());
+                break;
+            case Node.CDATA_SECTION_NODE:
+                // 创建一个新的CDATA节点
+                CDATASection cdata = (CDATASection) node;
+                newNode = targetDoc.createCDATASection(cdata.getData());
+                break;
+            default:
+                // 对于其他类型的节点，直接返回null或抛出异常
+                throw new IllegalArgumentException("Unsupported node type: " + node.getNodeType());
+        }
+
+        // 复制子节点
+        NodeList childNodes = node.getChildNodes();
+        for (int j = 0; j < childNodes.getLength(); j++) {
+            Node child = childNodes.item(j);
+            Node migratedChild = migrateNode(child, targetDoc);
+            if (migratedChild != null) {
+                newNode.appendChild(migratedChild);
+            }
+        }
+
+        return newNode;
+    }
 }
