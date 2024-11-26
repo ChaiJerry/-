@@ -11,21 +11,24 @@ public class QueryTask implements Callable<Void> {
     private final HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap;
     private final Map<Integer, AssociationRuleResult> rulesMap;
     private final Set<Integer> havaVisited;
+    private final List<Set<Integer>> nullSets;
 
-    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleResult> rulesMap, Set<Integer> threadSafeSet) {
+    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleResult> rulesMap,List<Set<Integer>> nullSets, Set<Integer> threadSafeSet) {
         this.queryId = queryId;
         this.sets = sets;
         this.attributesMap = attributesMap;
         this.rulesMap = rulesMap;
         this.havaVisited = threadSafeSet;
+        this.nullSets = nullSets;
     }
 
-    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleResult> rulesMap) {
+    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleResult> rulesMap,List<Set<Integer>> nullSets) {
         this.queryId = queryId;
         this.sets = sets;
         this.attributesMap = attributesMap;
         this.rulesMap = rulesMap;
         this.havaVisited = null;
+        this.nullSets = nullSets;
     }
 
     @Override
@@ -41,6 +44,8 @@ public class QueryTask implements Callable<Void> {
         for (int i = 0; i < sets.size(); i++) {
             if (sets.get(i).contains(queryId)) {
                 queryValue++;
+            }else if(!nullSets.get(i).contains(queryId)){
+                return null;//TODO 检查合理性
             }
         }
         AssociationRuleResult associationRuleResult = rulesMap.get(queryId);
