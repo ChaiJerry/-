@@ -24,28 +24,34 @@ public class BackendBundleSystem {
          sortBundleItemMethods.add(BackendBundleSystem::testBundleInsurance);
      }
 
-    public static void test() throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+    public static void test(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
         XMLReader xmlReader = new XMLReader();
         XMLParser xmlParser = new XMLParser();
-        //RulesStorage rulesStorage = QuickQuery.initRulesStorageByType(MEAL);
         List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
         Element root = xmlReader.read();
         //由ns计算时间ms
         long start = System.nanoTime();
-        Map<String, BundleItem> stringBundleItemMap = xmlParser.parseComboSource(root);
-        System.out.println("time(ms):" + ((double)(System.nanoTime() - start) )/ 1000000);
         List<ParseMethod> parseMethods = xmlParser.getParseMethods();
-        for(int i = MEAL; i< parseMethods.size(); i++){
-            Map<String, List<BundleItem>> bundleItems = parseMethods.get(i).execute(root);
-            List<BundleItem> sortedBundleList = sortBundleItemMethods.get(i).execute(stringBundleItemMap, bundleItems, rulesStorages.get(i));
-            System.out.println("time(ms):" + ((double)(System.nanoTime() - start) )/ 1000000);
-            for (BundleItem bundleItem : sortedBundleList) {
-                System.out.println(bundleItem);
-            }
+        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
+        bundleAllItem(parseMethods, root, segTicketMap, rulesStorages);
+        for(int i = 0; i < times; i++) {
+            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages);
         }
+        System.out.println("time(ms):" + ((double)(System.nanoTime() - start) )/ 1000000/times);
 
         RulesStorage.shutdownAll();
 
+    }
+
+    private static void bundleAllItem(List<ParseMethod> parseMethods, Element root, Map<String, BundleItem> segTicketMap, List<RulesStorage> rulesStorages) throws XPathExpressionException {
+        for(int i = MEAL; i< parseMethods.size(); i++){
+            Map<String, List<BundleItem>> bundleItems = parseMethods.get(i).execute(root);
+            List<BundleItem> sortedBundleList = sortBundleItemMethods.get(i)
+                    .execute(segTicketMap, bundleItems, rulesStorages.get(i));
+//            for (BundleItem bundleItem : sortedBundleList) {
+//                System.out.println(bundleItem);
+//            }
+        }
     }
 
     /**
