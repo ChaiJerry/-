@@ -34,7 +34,7 @@ public class QuickQuery {
             String[] split = itemTicketRule.get(0).split("; ");
             String consequent = itemTicketRule.get(1).split("; ")[0];
             double confidence = Double.parseDouble(itemTicketRule.get(2).split("::")[1]);
-            rulesStorage.addRule(split, new AssociationRuleResult(consequent, confidence));
+            rulesStorage.addRule(split, new AssociationRuleConsResult(consequent, confidence));
         }
         printProgressBar(100, info);
         System.out.println();

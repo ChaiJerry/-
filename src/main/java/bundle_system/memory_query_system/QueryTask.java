@@ -9,11 +9,11 @@ public class QueryTask implements Callable<Void> {
     private final int queryId;
     private final List<Set<Integer>> sets;
     private final HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap;
-    private final Map<Integer, AssociationRuleResult> rulesMap;
+    private final Map<Integer, AssociationRuleConsResult> rulesMap;
     private final Set<Integer> havaVisited;
     private final List<Set<Integer>> nullSets;
 
-    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleResult> rulesMap,List<Set<Integer>> nullSets, Set<Integer> threadSafeSet) {
+    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleConsResult> rulesMap, List<Set<Integer>> nullSets, Set<Integer> threadSafeSet) {
         this.queryId = queryId;
         this.sets = sets;
         this.attributesMap = attributesMap;
@@ -22,7 +22,7 @@ public class QueryTask implements Callable<Void> {
         this.nullSets = nullSets;
     }
 
-    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleResult> rulesMap,List<Set<Integer>> nullSets) {
+    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleConsResult> rulesMap, List<Set<Integer>> nullSets) {
         this.queryId = queryId;
         this.sets = sets;
         this.attributesMap = attributesMap;
@@ -48,10 +48,10 @@ public class QueryTask implements Callable<Void> {
                 return null;//TODO 检查合理性
             }
         }
-        AssociationRuleResult associationRuleResult = rulesMap.get(queryId);
-        double confidence = associationRuleResult.getConfidence();
-        String AttributeName = associationRuleResult.getAttributeName();
-        String AttributeValue = associationRuleResult.getAttributeValue();
+        AssociationRuleConsResult associationRuleConsResult = rulesMap.get(queryId);
+        double confidence = associationRuleConsResult.getConfidence();
+        String AttributeName = associationRuleConsResult.getAttributeName();
+        String AttributeValue = associationRuleConsResult.getAttributeValue();
         attributesMap.get(AttributeName).tryAssign(AttributeValue, queryValue, confidence);
         return null;// 返回 null 表示任务完成
     }
