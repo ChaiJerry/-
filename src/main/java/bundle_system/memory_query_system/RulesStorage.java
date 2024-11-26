@@ -2,7 +2,6 @@ package bundle_system.memory_query_system;
 
 import bundle_system.io.*;
 import bundle_system.memory_query_system.lru_pool.*;
-import xml_parser.*;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -11,7 +10,7 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class RulesStorage {
     //规则编号-规则map
-    private Map<Integer, AssociationRuleResult> rulesMap = new HashMap<>();
+    private Map<Integer, AssociationRuleConsResult> rulesMap = new HashMap<>();
     //通过机票属性名查找【属性值-规则编号集合】map的map
     //外层map的key为属性名,value为该属性名对应的【属性值-规则编号集合】map
     //内层map的key为属性值，value为该属性值对应的规则编号集合
@@ -38,7 +37,7 @@ public class RulesStorage {
      * @param ates 前件属性列表，格式为[Ticket:属性名:属性值]
      * @param rule 关联规则的后件以及confidence值
      */
-    public void addRule(String[] ates, AssociationRuleResult rule) {
+    public void addRule(String[] ates, AssociationRuleConsResult rule) {
         rulesMap.put(ruleCount, rule);
         Map<String, String> ticketAttributesTemplate = getTicketAttributesTemplate();
         for (String at : ates) {

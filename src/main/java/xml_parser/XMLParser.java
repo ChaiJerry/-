@@ -13,6 +13,7 @@ import static bundle_system.io.SharedAttributes.*;
 public class XMLParser {
     // 创建XPath工厂对象，用于创建XPath对象，为之后的多线程解析做预先准备
     private final XPathFactory xPathfactory = XPathFactory.newInstance();
+    private XPath xpath = xPathfactory.newXPath();;
 
     public List<Operation> getParseMethods() {
         return parseMethods;
@@ -41,7 +42,6 @@ public class XMLParser {
         // 可以用List<BundleItem>而不是直接用BundleItem是和后面的方法统一格式，这样可以方便后续的多线程优化
         Map<String, BundleItem> comboSourceMap = new HashMap<>();
         long startTime = System.currentTimeMillis();
-        XPath xpath = xPathfactory.newXPath();
 
         String ODXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItinerary/OriginDestinationOptions/OriginDestinationOption";
         NodeList OriginDestinationOption = (NodeList) xpath.evaluate(ODXpath, root, XPathConstants.NODESET);
@@ -54,15 +54,15 @@ public class XMLParser {
             // 将bundleItem添加到map中
             comboSourceMap.put(rph, bundleItem);
             // 得到出发时间
-            Element flightSegment = (Element) originDestinationOption.getElementsByTagName("FlightSegment").item(0);
+            Element flightSegment = getElementByRelativePath(originDestinationOption, "FlightSegment");
             String month = flightSegment.getAttribute("ArrivalDateTime").split("-")[1];
             bundleItem.addAttributeNameValuePair("MONTH", month);
             // 得到出发地和目的地
-            Element departureAirport = (Element) flightSegment.getElementsByTagName("DepartureAirport").item(0);
+            Element departureAirport = getElementByRelativePath(flightSegment, "DepartureAirport");
             String departureLocationCode = departureAirport.getAttribute("LocationCode");
             // 添加到bundleItem中（为了和训练中的属性名称一致，这里用FROM和TO）
             bundleItem.addAttributeNameValuePair("FROM", departureLocationCode);
-            Element arrivalAirport = (Element) flightSegment.getElementsByTagName("ArrivalAirport").item(0);
+            Element arrivalAirport = getElementByRelativePath(flightSegment, "ArrivalAirport");
             String arrivalLocationCode = arrivalAirport.getAttribute("LocationCode");
             bundleItem.addAttributeNameValuePair("TO", arrivalLocationCode);
         }
@@ -94,19 +94,19 @@ public class XMLParser {
                     }
 
                     // 得到舱位等级
-                    Element fareReference = (Element) fareInfo.getElementsByTagName("FareReference").item(0);
+                    Element fareReference = getElementByRelativePath(fareInfo, "FareReference");
                     String grade = ticketGrade2Specific(fareReference.getAttribute("CabinCode"));
                     bundleItem.addAttributeNameValuePair("T_GRADE", grade);
 
                     // 得到折扣
-                    Element info = (Element) fareInfo.getElementsByTagName("FareInfo").item(0);
+                    Element info = getElementByRelativePath(fareInfo, "FareInfo");
                     String discount = info.getAttribute("DisCount");
                     String promotionRateGrade = (((int) (100 - Double.parseDouble(discount) * 100 + LITTLE_DOUBLE)) / 10) + "";
 
                     bundleItem.addAttributeNameValuePair("PROMOTION_RATE", promotionRateGrade);
 
                     // 得到折扣前价格
-                    Element fare = (Element) info.getElementsByTagName("Fare").item(0);
+                    Element fare = getElementByRelativePath(info, "Fare");
                     String baseCabinClassAmount = fare.getAttribute("BaseCabinClassAmount");
                     Integer priceGrade = DataParser.floatStr2Attribute(baseCabinClassAmount, 1000);
                     bundleItem.addAttributeNameValuePair("T_FORMER", priceGrade + "");
@@ -126,7 +126,6 @@ public class XMLParser {
      */
     public Map<String,List<BundleItem>> parseInsurances(Element root) throws XPathExpressionException {
         List<BundleItem> bundleItems = new ArrayList<>();
-        XPath xpath = xPathfactory.newXPath();
         String planForQuoteRSXpath = "/OJ_ComboSearchRS/ComboWith/Insurance/PlanForQuoteRS";
         NodeList planForQuoteRSXs = (NodeList) xpath.evaluate(planForQuoteRSXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < planForQuoteRSXs.getLength(); i++) {
@@ -138,7 +137,7 @@ public class XMLParser {
             bundleItem.addAttributeNameValuePair("INSUR_PRO_NAME", name);
 
             // 得到保险的金额
-            Element PlanCost = (Element) planForQuoteRSX.getElementsByTagName("PlanCost").item(0);
+            Element PlanCost = getElementByRelativePath(planForQuoteRSX, "PlanCost");
             String amount = Integer.parseInt(PlanCost.getAttribute("Amount").split("\\.")[0]) + ".00";
             bundleItem.addAttributeNameValuePair("INSUR_AMOUNT", amount);
 
@@ -160,7 +159,6 @@ public class XMLParser {
      */
     public Map<String,List<BundleItem>> parseBaggage(Element root) throws XPathExpressionException {
         Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
-        XPath xpath = xPathfactory.newXPath();
         String baggageServiceXpath = "/OJ_ComboSearchRS/ComboWith/Ancillary[1]/Baggage/OriginDestination/Service";
         NodeList services = (NodeList) xpath.evaluate(baggageServiceXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < services.getLength(); i++) {
@@ -201,7 +199,6 @@ public class XMLParser {
      */
     public Map<String,List<BundleItem>> parseMeal(Element root) throws XPathExpressionException {
         Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
-        XPath xpath = xPathfactory.newXPath();
         String ancillaryXpath = "/OJ_ComboSearchRS/ComboWith/Ancillary[2]/BoundProducts/AncillaryProducts/Ancillary";
         NodeList ancillaries = (NodeList) xpath.evaluate(ancillaryXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < ancillaries.getLength(); i++) {
@@ -229,7 +226,6 @@ public class XMLParser {
 
     public List<BundleItem> parseSeat(Element root) throws XPathExpressionException {
         List<BundleItem> bundleItems = new ArrayList<>();
-        XPath xpath = xPathfactory.newXPath();
         String seatMapResponseXpath = "/OJ_ComboSearchRS/ComboWith/OJ_AirSeatMapRS/Product/SeatMapResponse";
         NodeList seatMapResponses = (NodeList) xpath.evaluate(seatMapResponseXpath, root, XPathConstants.NODESET);
         // 得到座位信息，另外作为需要重构xml的数据格式
@@ -250,5 +246,29 @@ public class XMLParser {
         }
 
         return bundleItems;
+    }
+
+    /**
+     * 通过相对路径从给定的 Element 节点中获取子节点。
+     *
+     * @param element  输入的父节点 Element。
+     * @param relativePath 相对路径字符串。
+     * @return 返回匹配的 Element 节点。
+     * @throws XPathExpressionException 如果 XPath 表达式无效。
+     */
+    public  Element getElementByRelativePath(Element element, String relativePath) throws XPathExpressionException {
+        return (Element) xpath.evaluate(relativePath, element, XPathConstants.NODE);
+    }
+
+    /**
+     * 通过相对路径从给定的 Element 节点中获取子节点列表。
+     *
+     * @param element  输入的父节点 Element。
+     * @param relativePath 相对路径字符串。
+     * @return 返回匹配的 NodeList。
+     * @throws XPathExpressionException 如果 XPath 表达式无效。
+     */
+    public NodeList getElementsByRelativePath(Element element, String relativePath) throws XPathExpressionException {
+        return (NodeList) xpath.evaluate(relativePath, element, XPathConstants.NODESET);
     }
 }

@@ -69,7 +69,7 @@ public class SQLUtils {
             return sb.toString();
         }
 
-        public static AssociationRuleResult searchRules(List<String> ates, int trainNumber) throws SQLException {
+        public static AssociationRuleConsResult searchRules(List<String> ates, int trainNumber) throws SQLException {
             Statement stmt = con.createStatement();
             String sql = "WITH FilteredRules AS (  " +
                     "    SELECT " +

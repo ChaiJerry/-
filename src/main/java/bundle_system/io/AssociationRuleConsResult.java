@@ -1,6 +1,6 @@
 package bundle_system.io;
 
-public class AssociationRuleResult {
+public class AssociationRuleConsResult {
     public String getConsequence() {
         return consequence;
     }
@@ -26,7 +26,7 @@ public class AssociationRuleResult {
      * @param consequence 后件，输入格式为属性名：属性值
      * @param confidence 置信度
      */
-    public AssociationRuleResult(String consequence, double confidence) {
+    public AssociationRuleConsResult(String consequence, double confidence) {
         this.consequence = consequence;
         this.confidence = confidence;
         String[] split = consequence.split(":");
