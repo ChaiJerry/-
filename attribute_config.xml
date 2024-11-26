@@ -17,7 +17,11 @@
     </item>
     <item name="Baggage">
         <attribute name="PAYMENTAMOUNT" type="num" grade="200"/>
-        <attribute name="BAGGAGE_SPECIFICATION" type="halfNum"/>
+        <attribute name="BAGGAGE_SPECIFICATION" type="halfNum" comment="这里可以尝试对重量数值尝试划分档位"/>
+    </item>
+    <item name="Meal">
+        <attribute name="MEAL_CODE" type="string"/>
+        <attribute name="PM_PRICE" type="num" grade="4"/>
     </item>
 
 

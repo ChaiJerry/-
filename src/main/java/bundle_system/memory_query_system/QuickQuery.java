@@ -16,7 +16,7 @@ import static bundle_system.io.SharedAttributes.*;
 public class QuickQuery {
     private static Map<String, ItemPack> itemPackMap = new HashMap<>();
 
-    public RulesStorage initRulesStorageByType(int type) throws IOException {
+    public static RulesStorage initRulesStorageByType(int type) throws IOException {
         //训练阶段
         String info = "正在初始化"+SharedAttributes.getFullNames()[type]+"知识库";
         printProgressBar(0, info);
