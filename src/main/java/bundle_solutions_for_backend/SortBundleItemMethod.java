@@ -8,7 +8,7 @@ import java.util.*;
 
 @FunctionalInterface
 public interface SortBundleItemMethod {
-    void execute(Map<String, BundleItem> ticketInfo
+    Element execute(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element comboWith,Document doc);
+            , RulesStorage rulesStorage, Element fatherElement,Document doc);
 }
