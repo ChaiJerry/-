@@ -81,6 +81,8 @@ public class RulesStorage {
     public Map<String, String> queryItemAttributes(List<String> ateAttributes) {
         //用于储存查到的对应规则编号集合的列表
         List<Set<Integer>> ruleIdSets = new ArrayList<>();
+        //用于储存属性值为null的对应规则编号集合的列表
+        List<Set<Integer>> nullRuleIdSets = new ArrayList<>();
         //用于储存查到的所有规则编号的集合
         Set<Integer> AllRuleIds = new HashSet<>();
         Set<Integer> threadSafeSet = Collections.synchronizedSet(new HashSet<>());
@@ -89,6 +91,7 @@ public class RulesStorage {
             String[] att = ateAttribute.split(":");
             //得到属性名以及属性值对应的规则集合，如果属性名不存在，则返回空集合
             Set<Integer> integers = atttributeMap.get(att[0]).getOrDefault(att[1], new HashSet<>());
+            nullRuleIdSets.add(atttributeMap.get(att[0]).getOrDefault(null, new HashSet<>()));
             ruleIdSets.add(integers);
             AllRuleIds.addAll(integers);
         }
@@ -97,7 +100,7 @@ public class RulesStorage {
         // 提交查询任务到线程池
         List<Future<?>> futures = new ArrayList<>();
         for (int ruleId : AllRuleIds) {
-            futures.add(executorService.submit(new QueryTask(ruleId, ruleIdSets, attributeNameVCPMap, rulesMap)));
+            futures.add(executorService.submit(new QueryTask(ruleId, ruleIdSets, attributeNameVCPMap, rulesMap,nullRuleIdSets)));
         }
 //        for(Set<Integer> ruleIds : ruleIdSets){
 //            for(int ruleId:ruleIds) {
