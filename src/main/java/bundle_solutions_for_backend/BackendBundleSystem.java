@@ -20,8 +20,10 @@ public class BackendBundleSystem {
         RulesStorage rulesStorage = QuickQuery.initRulesStorageByType(MEAL);
         Map<String, BundleItem> stringBundleItemMap = xmlParser.parseComboSource(xmlReader.read());
         for (Map.Entry<String, BundleItem> entry : stringBundleItemMap.entrySet()) {
-            rulesStorage.queryItemAttributes(entry.getValue());
-
+            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            for (Map.Entry<String, String> entry1 : map.entrySet()) {
+                System.out.println("key:" + entry1.getKey() + ",value:" + entry1.getValue());
+            }
         }
 
 
