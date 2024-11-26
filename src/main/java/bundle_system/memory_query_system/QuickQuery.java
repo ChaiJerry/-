@@ -14,7 +14,21 @@ import static bundle_system.io.MongoUtils.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class QuickQuery {
-    private static Map<String, ItemPack> itemPackMap = new HashMap<>();
+    private static final Map<String, ItemPack> itemPackMap = new HashMap<>();
+
+
+    public static List<RulesStorage> initAllRulesStorage() throws IOException {
+        List<RulesStorage> rulesStorages = new ArrayList<>();
+        //跳过机票标号
+        rulesStorages.add(null);
+        //跳过酒店品类（没有使用）
+        rulesStorages.add(null);
+        for(int type = 2; type < SharedAttributes.getFullNames().length; type++) {
+            RulesStorage rulesStorage = initRulesStorageByType(type);
+            rulesStorages.add(rulesStorage);
+        }
+        return rulesStorages;
+    }
 
     public static RulesStorage initRulesStorageByType(int type) throws IOException {
         //训练阶段
@@ -133,7 +147,7 @@ public class QuickQuery {
         int completed = (int) (percent * barLength / 100);
 
         // 构建进度条
-        StringBuilder progressBar = new StringBuilder(progressBarName + " [");
+        StringBuilder progressBar = new StringBuilder(progressBarName + "\t [");
         for (int i = 0; i < barLength; i++) {
             if (i < completed) {
                 progressBar.append("\u001B[32m=\u001B[0m"); // 绿色的 "="
@@ -149,4 +163,7 @@ public class QuickQuery {
         System.out.print("\r" + progressBar.toString());
         System.out.flush(); // 确保立即输出
     }
+
+
+
 }
