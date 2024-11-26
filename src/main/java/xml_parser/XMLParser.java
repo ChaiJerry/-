@@ -1,6 +1,7 @@
 package xml_parser;
 
 import bundle_system.data_processer.*;
+import jdk.dynalink.*;
 import org.w3c.dom.*;
 
 import javax.xml.xpath.*;
@@ -13,6 +14,22 @@ public class XMLParser {
     // 创建XPath工厂对象，用于创建XPath对象，为之后的多线程解析做预先准备
     private final XPathFactory xPathfactory = XPathFactory.newInstance();
 
+    public List<Operation> getParseMethods() {
+        return parseMethods;
+    }
+
+    private final List<Operation> parseMethods = new ArrayList<>();
+
+    public XMLParser() {
+        parseMethods.add(null);
+        parseMethods.add(null);
+        parseMethods.add(this::parseMeal);
+        parseMethods.add(this::parseBaggage);
+        parseMethods.add(this::parseInsurances);
+
+
+    }
+
     /**
      * 解析XML文件，得到comboSource
      *
@@ -23,7 +40,9 @@ public class XMLParser {
         // 创建一个HashMap来存储解析后的结果,key为航段，value为存储航班属性的item
         // 可以用List<BundleItem>而不是直接用BundleItem是和后面的方法统一格式，这样可以方便后续的多线程优化
         Map<String, BundleItem> comboSourceMap = new HashMap<>();
+        long startTime = System.currentTimeMillis();
         XPath xpath = xPathfactory.newXPath();
+
         String ODXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItinerary/OriginDestinationOptions/OriginDestinationOption";
         NodeList OriginDestinationOption = (NodeList) xpath.evaluate(ODXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < OriginDestinationOption.getLength(); i++) {
@@ -77,7 +96,7 @@ public class XMLParser {
                     // 得到舱位等级
                     Element fareReference = (Element) fareInfo.getElementsByTagName("FareReference").item(0);
                     String grade = ticketGrade2Specific(fareReference.getAttribute("CabinCode"));
-                    bundleItem.addAttributeNameValuePair("GRADE", grade);
+                    bundleItem.addAttributeNameValuePair("T_GRADE", grade);
 
                     // 得到折扣
                     Element info = (Element) fareInfo.getElementsByTagName("FareInfo").item(0);
@@ -95,10 +114,17 @@ public class XMLParser {
                 break;
             }
         }
+        System.out.println("时间（ms）："+(System.currentTimeMillis() - startTime));
         return comboSourceMap;
     }
 
-    public List<BundleItem> parseInsurances(Element root) throws XPathExpressionException {
+    /**
+     * 解析XML文件，得到保险信息
+     * @param root XML文件的根节点
+     * @return comboWith中的保险信息（包括属性和Element），map中的key为null（因为保险按理来说覆盖两边）
+     * ，对应的值为列表对应着一个需要单独打包的BundleItem序列，这里这么做是为了方便统一遍历
+     */
+    public Map<String,List<BundleItem>> parseInsurances(Element root) throws XPathExpressionException {
         List<BundleItem> bundleItems = new ArrayList<>();
         XPath xpath = xPathfactory.newXPath();
         String planForQuoteRSXpath = "/OJ_ComboSearchRS/ComboWith/Insurance/PlanForQuoteRS";
@@ -122,11 +148,18 @@ public class XMLParser {
             String companyCode = providerCompany.getAttribute("Code");
             bundleItem.addAttributeNameValuePair("INSURANCE_COMPANYCODE", companyCode);
         }
-        return bundleItems;
+        Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
+        bundleItemsMap.put(null, bundleItems);
+        return bundleItemsMap;
     }
 
-    public List<BundleItem> parseBaggage(Element root) throws XPathExpressionException {
-        List<BundleItem> bundleItems = new ArrayList<>();
+    /**
+     * 解析XML文件，得到行李信息
+     * @param root XML文件的根节点
+     * @return comboWith中的行李信息（包括属性和Element），map中的key为航段，对应的值为列表对应着一个需要单独打包的BundleItem序列
+     */
+    public Map<String,List<BundleItem>> parseBaggage(Element root) throws XPathExpressionException {
+        Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
         XPath xpath = xPathfactory.newXPath();
         String baggageServiceXpath = "/OJ_ComboSearchRS/ComboWith/Ancillary[1]/Baggage/OriginDestination/Service";
         NodeList services = (NodeList) xpath.evaluate(baggageServiceXpath, root, XPathConstants.NODESET);
@@ -137,8 +170,15 @@ public class XMLParser {
             Element baggage = (Element) xpath.evaluate(baggageXpath, service, XPathConstants.NODE);
             String SegmentRef = baggage.getAttribute("SegmentRef");
             BundleItem bundleItem = new BundleItem(SegmentRef, service);
-            bundleItems.add(bundleItem);
-
+            // 判断是否航段对应的列表已经存在
+            // 若不存在则新建一个列表添加到map中
+            if (!bundleItemsMap.containsKey(SegmentRef)) {
+                List<BundleItem> bundleItems = new ArrayList<>();
+                bundleItems.add(bundleItem);
+                bundleItemsMap.put(SegmentRef, bundleItems);
+            }else{
+                bundleItemsMap.get(SegmentRef).add(bundleItem);
+            }
             // 得到重量
             String maxWeightXpath = "MaxWeight";
             Element maxWeight = (Element) xpath.evaluate(maxWeightXpath, baggage, XPathConstants.NODE);
@@ -151,11 +191,16 @@ public class XMLParser {
             String amount = DataParser.floatStr2Attribute(total.getAttribute("Amount"), 200) + "";
             bundleItem.addAttributeNameValuePair("PAYMENTAMOUNT", amount);
         }
-        return bundleItems;
+        return bundleItemsMap;
     }
 
-    public List<BundleItem> parseMeal(Element root) throws XPathExpressionException {
-        List<BundleItem> bundleItems = new ArrayList<>();
+    /**
+     * 解析XML文件，得到餐食信息
+     * @param root XML文件的根节点
+     * @return comboWith中的餐食信息（包括属性和Element），返回的map中的key为航段，对应的值为列表对应着一个需要单独打包的BundleItem序列
+     */
+    public Map<String,List<BundleItem>> parseMeal(Element root) throws XPathExpressionException {
+        Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
         XPath xpath = xPathfactory.newXPath();
         String ancillaryXpath = "/OJ_ComboSearchRS/ComboWith/Ancillary[2]/BoundProducts/AncillaryProducts/Ancillary";
         NodeList ancillaries = (NodeList) xpath.evaluate(ancillaryXpath, root, XPathConstants.NODESET);
@@ -163,7 +208,13 @@ public class XMLParser {
             Element ancillary = (Element) ancillaries.item(i);
             String segmentRef = ancillary.getAttribute("SegmentRef");
             BundleItem bundleItem = new BundleItem(segmentRef, ancillary);
-            bundleItems.add(bundleItem);
+            if (!bundleItemsMap.containsKey(segmentRef)) {
+                List<BundleItem> bundleItems = new ArrayList<>();
+                bundleItems.add(bundleItem);
+                bundleItemsMap.put(segmentRef, bundleItems);
+            }else{
+                bundleItemsMap.get(segmentRef).add(bundleItem);
+            }
             // 得到餐食代码
             String supplierProductCode = ancillary.getAttribute("SupplierProductCode");
             bundleItem.addAttributeNameValuePair("MEAL_CODE", supplierProductCode);
@@ -173,7 +224,7 @@ public class XMLParser {
             String amount = DataParser.floatStr2Attribute(base.getAttribute("Amount"), 4) + "";
             bundleItem.addAttributeNameValuePair("PM_PRICE", amount);
         }
-        return bundleItems;
+        return bundleItemsMap;
     }
 
     public List<BundleItem> parseSeat(Element root) throws XPathExpressionException {
