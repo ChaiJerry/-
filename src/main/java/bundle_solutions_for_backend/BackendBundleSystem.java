@@ -30,6 +30,10 @@ public class BackendBundleSystem {
             Map<String, List<BundleItem>> bundleItems = parseMethods.get(i).execute(root);
             List<BundleItem> sortedBundleList = testBundleMeal(stringBundleItemMap, bundleItems, rulesStorages.get(i));
             System.out.println("time(ms):" + ((double)(System.nanoTime() - start) )/ 1000000);
+            for (BundleItem bundleItem : sortedBundleList) {
+                System.out.println(bundleItem);
+            }
+            break;
         }
 
 

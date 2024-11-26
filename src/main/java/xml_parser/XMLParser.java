@@ -127,7 +127,7 @@ public class XMLParser {
         NodeList planForQuoteRSXs = (NodeList) xpath.evaluate(planForQuoteRSXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < planForQuoteRSXs.getLength(); i++) {
             Element planForQuoteRSX = (Element) planForQuoteRSXs.item(i);
-            BundleItem bundleItem = new BundleItem(null, planForQuoteRSX);
+            BundleItem bundleItem = new BundleItem(null, planForQuoteRSX.cloneNode(true));
             bundleItems.add(bundleItem);
             // 得到保险的名称
             String name = planForQuoteRSX.getAttribute("Name");
@@ -164,7 +164,7 @@ public class XMLParser {
             String baggageXpath = "Baggage";
             Element baggage = (Element) xpath.evaluate(baggageXpath, service, XPathConstants.NODE);
             String SegmentRef = baggage.getAttribute("SegmentRef");
-            BundleItem bundleItem = new BundleItem(SegmentRef, service);
+            BundleItem bundleItem = new BundleItem(SegmentRef, service.cloneNode(true));
             // 判断是否航段对应的列表已经存在
             // 若不存在则新建一个列表添加到map中
             if (!bundleItemsMap.containsKey(SegmentRef)) {
@@ -201,7 +201,7 @@ public class XMLParser {
         for (int i = 0; i < ancillaries.getLength(); i++) {
             Element ancillary = (Element) ancillaries.item(i);
             String segmentRef = ancillary.getAttribute("SegmentRef");
-            BundleItem bundleItem = new BundleItem(segmentRef, ancillary);
+            BundleItem bundleItem = new BundleItem(segmentRef, ancillary.cloneNode(true));
             if (!bundleItemsMap.containsKey(segmentRef)) {
                 List<BundleItem> bundleItems = new ArrayList<>();
                 bundleItems.add(bundleItem);
