@@ -10,11 +10,6 @@
                    comment="这里是折扣率的百分数，值最高为100，在传入的combolSource中由100-discount*100得到"/>
         <attribute name="T_FORMER" type="num" grade="1000" comment="折扣前的价格"/>
     </item>
-    <item name="Insurance">
-        <attribute name="INSUR_AMOUNT" type="halfNum" comment="其实这里应该解析成浮点数后划档处理，是之后改进方向"/>
-        <attribute name="INSUR_PRO_NAME" type="string"/>
-        <attribute name="INSURANCE_COMPANYCODE" type="string"/>
-    </item>
     <item name="Baggage">
         <attribute name="PAYMENTAMOUNT" type="num" grade="200"/>
         <attribute name="BAGGAGE_SPECIFICATION" type="halfNum" comment="这里可以尝试对重量数值尝试划分档位"/>
@@ -22,6 +17,11 @@
     <item name="Meal">
         <attribute name="MEAL_CODE" type="string"/>
         <attribute name="PM_PRICE" type="num" grade="4"/>
+    </item>
+    <item name="Insurance">
+        <attribute name="INSUR_AMOUNT" type="halfNum" comment="其实这里应该解析成浮点数后划档处理，是之后改进方向"/>
+        <attribute name="INSUR_PRO_NAME" type="string"/>
+        <attribute name="INSURANCE_COMPANYCODE" type="string"/>
     </item>
     <item name="Seat">
             <attribute name="SEAT_NO" type="string" comment="这里只有一个字母表示其具体位置 如ABC等"/>
