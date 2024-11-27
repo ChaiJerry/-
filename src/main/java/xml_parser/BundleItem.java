@@ -15,11 +15,20 @@ public class BundleItem implements Comparable<BundleItem> {
     // priority优先级，默认为0，是double的原因是方便以后根据置信度拓展排序优先度计算
     private double priority = 0;
 
+
+    // xmlAttributes是xml元素的属性，用于存储xml元素的属性，以便于后续的处理，这里主要是为了重组Seat的xml属性
+    private  Map<String, String> xmlAttributes;
+
+
+
     public Element getElement() {
         return element;
     }
 
-
+    /**
+     * 设置优先级
+     * @param recommendAttributes 推荐的属性
+     */
     public void setPriority(Map<String, String> recommendAttributes) {
         for (String key : recommendAttributes.keySet()) {
             if (attributes.containsKey(key)) {
@@ -74,6 +83,14 @@ public class BundleItem implements Comparable<BundleItem> {
 
     public Map<String, String> getAttributes() {
         return attributes;
+    }
+
+    public Map<String, String> getXmlAttributes() {
+        return xmlAttributes;
+    }
+
+    public void setXmlAttributes(Map<String, String> xmlAttributes) {
+        this.xmlAttributes = xmlAttributes;
     }
 
     @Override
