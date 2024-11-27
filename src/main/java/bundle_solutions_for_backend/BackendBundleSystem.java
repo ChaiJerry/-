@@ -30,6 +30,8 @@ public class BackendBundleSystem {
         sortBundleItemMethods.add(BackendBundleSystem::testBundleMeal);
         sortBundleItemMethods.add(BackendBundleSystem::testBundleBaggage);
         sortBundleItemMethods.add(BackendBundleSystem::testBundleInsurance);
+        sortBundleItemMethods.add(BackendBundleSystem::testBundleSeat);
+
         try {
             dBuilder = dbFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
@@ -143,7 +145,11 @@ public class BackendBundleSystem {
         Element insurance = sortBundleItemMethods.get(INSURANCE).execute(segTicketMap, bundleItems
                 , rulesStorages.get(INSURANCE), null ,doc);
 
-        //
+        // 处理选座
+        bundleItems = parseMethods.get(SEAT).execute(root);
+        // 得到选座返回的ancillary1
+        ancillary1 = sortBundleItemMethods.get(SEAT).execute(segTicketMap, bundleItems
+                , rulesStorages.get(SEAT), ancillary1, doc);
 
         comboWith.appendChild(insurance);
         comboWith.appendChild(ancillary0);
@@ -220,6 +226,72 @@ public class BackendBundleSystem {
                 originDestination.appendChild(bundleItem.getElement());
             }
         }
+        return ancillary;
+    }
+
+
+    /**
+     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
+     *
+     * @param ticketInfo   机票航段 商品键值对
+     * @param bundleItems  附加产品所属航段 附加产品键值对
+     * @param rulesStorage 附加产品规则存储
+     * @param fatherElement    fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
+     * @param doc         输出的Document
+     */
+    public static Element testBundleSeat(Map<String, BundleItem> ticketInfo
+            , Map<String, List<BundleItem>> bundleItems
+            , RulesStorage rulesStorage,Element fatherElement,Document doc) {
+        //遍历ticketInfo，得到其中的机票属性
+        for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
+            //根据机票属性查询附加产品规则，得到附加产品属性
+            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
+            List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
+            //排序
+            setPriorityAndSort(map, bundleItemList);
+            //将排序好的附加产品添加到节点中
+            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+                BundleItem bundleItem = bundleItemList.get(i);
+                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
+                //originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
+                //破坏性迁移（效率更高）
+                fatherElement.appendChild(buildSeatElement(bundleItem, doc));
+            }
+        }
+        return fatherElement;
+    }
+
+    public static Element buildSeatElement(BundleItem bundleItem, Document doc) {
+        //建立各级节点
+        Element ancillary = doc.createElement("Ancillary");
+        Element prices = doc.createElement("Prices");
+        Element price = doc.createElement("Price");
+        Element total = doc.createElement("Total");
+        
+        //为节点属性赋值
+        Map<String, String> xmlAttributes = bundleItem.getXmlAttributes();
+        /*结构示例
+        <Ancillary Tag="Recommended" SubType="85" SegmentRef="2" SupplierProductCode="L" Type="Seat">
+						<Prices>
+							<Price>
+								<Total Amount="0.0" CurrencyCode="CNY"/>
+							</Price>
+						</Prices>
+					</Ancillary>
+         */
+        ancillary.setAttribute("Tag", xmlAttributes.get("Tag"));
+        ancillary.setAttribute("SubType", xmlAttributes.get("SubType"));
+        ancillary.setAttribute("SegmentRef", xmlAttributes.get("SegmentRef"));
+        ancillary.setAttribute("SupplierProductCode", xmlAttributes.get("SupplierProductCode"));
+        ancillary.setAttribute("Type", "Seat");
+        total.setAttribute("Amount", xmlAttributes.get("Amount"));
+        total.setAttribute("CurrencyCode", xmlAttributes.get("CurrencyCode"));
+
+        //建立节点关系
+        ancillary.appendChild(prices);
+        prices.appendChild(price);
+        price.appendChild(total);
         return ancillary;
     }
 
