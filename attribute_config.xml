@@ -23,6 +23,7 @@
         <attribute name="MEAL_CODE" type="string"/>
         <attribute name="PM_PRICE" type="num" grade="4"/>
     </item>
-
-
+    <item name="Seat">
+            <attribute name="SEAT_NO" type="string" comment="这里只有一个字母表示其具体位置 如ABC等"/>
+    </item>
 </Configuration>

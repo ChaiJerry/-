@@ -89,6 +89,10 @@ public class BackendBundleSystem {
         RulesStorage.shutdownAll();
     }
 
+    /**
+     * 将Document保存到文件
+     * @param doc 希望保存的Document
+     */
     public static void saveDocument(Document doc) throws TransformerException {
         // 指定文件路径
         String filePath = "D:\\programms\\java_projects\\version_control\\output\\test.xml";  // 替换为你想要保存的路径

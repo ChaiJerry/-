@@ -221,6 +221,11 @@ public class XMLParser {
         return bundleItemsMap;
     }
 
+    /**
+     * 解析XML文件，得到选座信息
+     * @param root XML文件的根节点
+     * @return comboWith中的选座信息（包括属性和Element），map中的key为"航段|subType"，对应的值为列表对应着一个需要单独打包的BundleItem序列
+     */
     public List<BundleItem> parseSeat(Element root) throws XPathExpressionException {
         List<BundleItem> bundleItems = new ArrayList<>();
         String seatMapResponseXpath = "/OJ_ComboSearchRS/ComboWith/OJ_AirSeatMapRS/Product/SeatMapResponse";
@@ -239,10 +244,36 @@ public class XMLParser {
             Element seatMapResponse = (Element) seatMapResponses.item(i);
             String segmentRef = seatMapResponse.getAttribute("REF");
             //TODO 座位信息的解析和xml重构
+            // 座位价格和货币代码的map，key为座位等级，对应的值为价格和货币代码,String[0]为Amount、String[0]为CurrencyCode
+            Map<String, String[]> priceAndCurrencyCode = parseSeatPriceAndCurrencyCode(seatMapResponse);
+            // 解析座位图
+            NodeList Rows = getElementsByRelativePath(seatMapResponse, "AAM_SeatMap/Cabin/Row");
 
         }
 
         return bundleItems;
+    }
+
+    /**
+     * 解析XML文件，得到座位价格和货币代码
+     * @param seatMapResponse 包含座位信息的上级节点
+     * @return 座位价格和货币代码，map中的key为座位等级，对应的值为价格和货币代码,String[0]为Amount、String[0]为CurrencyCode
+     */
+    public Map<String,String[]> parseSeatPriceAndCurrencyCode(Element seatMapResponse) throws XPathExpressionException {
+        NodeList ancillaryProducts = getElementsByRelativePath(seatMapResponse, "AncillaryProduct");
+        Map<String,String[]> seatPriceMap = new HashMap<>();
+        for (int i = 0; i < ancillaryProducts.getLength(); i++) {
+            Element ancillaryProduct = (Element) ancillaryProducts.item(i);
+            //得到座位等级
+            String supplierProductCode = ancillaryProduct.getAttribute("SupplierProductCode");
+            //得到座位价格
+            String baseXpath = "Prices/Price/Total";
+            Element total = (Element) xpath.evaluate(baseXpath, ancillaryProduct, XPathConstants.NODE);
+            String amount = total.getAttribute("Amount");
+            String currency = total.getAttribute("CurrencyCode");
+            seatPriceMap.put(supplierProductCode, new String[]{amount, currency});
+        }
+        return seatPriceMap;
     }
 
 

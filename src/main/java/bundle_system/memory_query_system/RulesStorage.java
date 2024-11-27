@@ -139,6 +139,7 @@ public class RulesStorage {
             //在lruPool中查询存储的机票属性对应的商品属性
             Map<String, String> attrInLRUPool = lruPool.tryGet(ateAttributesValeList);
             if (attrInLRUPool != null) {
+                //System.out.println("lru命中，查询到缓存");
                 return attrInLRUPool;
             }
 
