@@ -73,6 +73,7 @@ public class BackendBundleSystem {
         XMLReader xmlReader = new XMLReader();
         XMLParser xmlParser = new XMLParser();
         List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
+        //模拟输入Document
         Document doc =xmlReader.read();
         Element root = doc.getDocumentElement();
         Element comboWith = doc.createElement("ComboWith");
@@ -87,7 +88,7 @@ public class BackendBundleSystem {
         }
         xmlParser.renewComboWith(root,comboWith);
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
-        //saveDocument(doc);
+        saveDocument(doc);
         RulesStorage.shutdownAll();
     }
 
@@ -129,13 +130,13 @@ public class BackendBundleSystem {
             , Element comboWith,Document doc) throws XPathExpressionException {
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
-        // 得到选座/餐食返回的ancillary0
-        Element ancillary1 = sortBundleItemMethods.get(MEAL).execute(segTicketMap
+        // 得到选座/餐食返回的AncillaryProducts
+        Element ancillaryProducts = testBundleMeal(segTicketMap
                 , bundleItems, rulesStorages.get(MEAL), null, doc);
 
         // 处理行李
         bundleItems = parseMethods.get(BAGGAGE).execute(root);
-        // 得到行李返回的ancillary1
+        // 得到行李返回的ancillary0
         Element ancillary0 =sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
                 , rulesStorages.get(BAGGAGE), null ,doc);
 
@@ -148,8 +149,8 @@ public class BackendBundleSystem {
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);
         // 得到选座返回的ancillary1
-        ancillary1 = sortBundleItemMethods.get(SEAT).execute(segTicketMap, bundleItems
-                , rulesStorages.get(SEAT), ancillary1, doc);
+        Element ancillary1 = testBundleSeat(segTicketMap, bundleItems
+                , rulesStorages.get(SEAT), ancillaryProducts, doc);
 
         comboWith.appendChild(insurance);
         comboWith.appendChild(ancillary0);
@@ -189,7 +190,7 @@ public class BackendBundleSystem {
                 ancillaryProducts.appendChild(bundleItem.getElement());
             }
         }
-        return ancillary;
+        return ancillaryProducts;
     }
 
     /**
@@ -234,22 +235,29 @@ public class BackendBundleSystem {
      * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
      *
      * @param ticketInfo   机票航段 商品键值对
-     * @param bundleItems  附加产品所属航段 附加产品键值对
+     * @param bundleItems  附加产品所属航段 附加产品键值对，这里的键为 航段号|subtype
      * @param rulesStorage 附加产品规则存储
-     * @param fatherElement    fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
+     * @param fatherElement    fatherElement节点，大多数时候为null，主要是为了选座和餐食在一个父节点下设计的
      * @param doc         输出的Document
      */
     public static Element testBundleSeat(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
             , RulesStorage rulesStorage,Element fatherElement,Document doc) {
+        Map<String, Map<String, String>> segAttributesmap = new HashMap<>();
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
             //根据机票属性查询附加产品规则，得到附加产品属性
             Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            segAttributesmap.put(entry.getKey(), map);
+        }
+        //遍历bundleItems，得到其中的附加产品属性
+        for (Map.Entry<String, List<BundleItem>> entry : bundleItems.entrySet())
+        {
             //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
-            List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
+            List<BundleItem> bundleItemList = entry.getValue();
+            String segRef = entry.getKey().split("\\|")[0];
             //排序
-            setPriorityAndSort(map, bundleItemList);
+            setPriorityAndSort(segAttributesmap.get(segRef), bundleItemList);
             //将排序好的附加产品添加到节点中
             for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
@@ -259,7 +267,7 @@ public class BackendBundleSystem {
                 fatherElement.appendChild(buildSeatElement(bundleItem, doc));
             }
         }
-        return fatherElement;
+        return (Element) fatherElement.getParentNode().getParentNode();
     }
 
     public static Element buildSeatElement(BundleItem bundleItem, Document doc) {
