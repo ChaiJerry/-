@@ -26,6 +26,7 @@ public class XMLParser {
         parseMethodMethods.add(this::parseMeal);
         parseMethodMethods.add(this::parseBaggage);
         parseMethodMethods.add(this::parseInsurances);
+        parseMethodMethods.add(this::parseSeat);
     }
 
     /**
@@ -226,8 +227,8 @@ public class XMLParser {
      * @param root XML文件的根节点
      * @return comboWith中的选座信息（包括属性和Element），map中的key为"航段|subType"，对应的值为列表对应着一个需要单独打包的BundleItem序列
      */
-    public List<BundleItem> parseSeat(Element root) throws XPathExpressionException {
-        List<BundleItem> bundleItems = new ArrayList<>();
+    public Map<String,List<BundleItem>> parseSeat(Element root) throws XPathExpressionException {
+        Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
         String seatMapResponseXpath = "/OJ_ComboSearchRS/ComboWith/OJ_AirSeatMapRS/Product/SeatMapResponse";
         NodeList seatMapResponses = (NodeList) xpath.evaluate(seatMapResponseXpath, root, XPathConstants.NODESET);
         // 得到座位信息，另外作为需要重构xml的数据格式
@@ -243,15 +244,53 @@ public class XMLParser {
         for (int i = 0; i < seatMapResponses.getLength(); i++) {
             Element seatMapResponse = (Element) seatMapResponses.item(i);
             String segmentRef = seatMapResponse.getAttribute("REF");
-            //TODO 座位信息的解析和xml重构
             // 座位价格和货币代码的map，key为座位等级，对应的值为价格和货币代码,String[0]为Amount、String[0]为CurrencyCode
             Map<String, String[]> priceAndCurrencyCode = parseSeatPriceAndCurrencyCode(seatMapResponse);
             // 解析座位图
             NodeList Rows = getElementsByRelativePath(seatMapResponse, "AAM_SeatMap/Cabin/Row");
-
+            for (int j = 0; j < Rows.getLength(); j++) {
+                Element Row = (Element) Rows.item(j);
+                String subType = Row.getAttribute("Characteristics");
+                NodeList Blocks = getElementsByRelativePath(Row, "Block");
+                for (int k = 0; k < Blocks.getLength(); k++) {
+                    Map<String,String> xmlAttributes = new HashMap<>();
+                    Element Block = (Element) Blocks.item(k);
+                    String supplierProductCode = Block.getAttribute("ProductCode");
+                    //优化点： 不用每次都查询，只有需要组包的5个座位才查询
+                    String[] amountAndCurrencyCode = priceAndCurrencyCode.get(supplierProductCode);
+                    String seatNo = Block.getAttribute("Number");
+                    BundleItem bundleItem = new BundleItem(segmentRef, seatMapResponse.cloneNode(true));
+                    //TODO 处理null值情况，判断avail是否为3（是否可用）
+                    putBundleItemToMap(segmentRef + "|" + subType, bundleItem, bundleItemsMap);
+                    // 座位等级
+                    bundleItem.addAttributeNameValuePair("SEAT_NO", seatNo);
+                    // 加入用于组包的属性
+                    xmlAttributes.put("SubType", subType);
+                    xmlAttributes.put("SegmentRef", segmentRef);
+                    xmlAttributes.put("SupplierProductCode", supplierProductCode);
+                    xmlAttributes.put("Amount", amountAndCurrencyCode[0]);
+                    xmlAttributes.put("CurrencyCode", amountAndCurrencyCode[1]);
+                    bundleItem.setXmlAttributes(xmlAttributes);
+                }
+            }
         }
+        return bundleItemsMap;
+    }
 
-        return bundleItems;
+    /**
+     * 将BundleItem放入map中
+     * @param key 键（可以是航段或者"航段|subType"等）
+     * @param bundleItem 需要加入的BundleItem
+     * @param map 对应的map
+     */
+    private void putBundleItemToMap(String key, BundleItem bundleItem, Map<String, List<BundleItem>> map) {
+        if (!map.containsKey(key)) {
+            List<BundleItem> bundleItems = new ArrayList<>();
+            bundleItems.add(bundleItem);
+            map.put(key, bundleItems);
+        } else {
+            map.get(key).add(bundleItem);
+        }
     }
 
     /**
