@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
 //        QuickQuery quickQuery = new QuickQuery();
 //        quickQuery.test(SEAT);
-        BackendBundleSystem.test1(1);
+        BackendBundleSystem.test1(2000);
 //        XMLReader xmlReader = new XMLReader();
 //        XMLParser xmlParser = new XMLParser();
 //        List<BundleItem> bundleItems = xmlParser.parseMeal(xmlReader.read());
