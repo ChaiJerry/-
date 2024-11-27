@@ -85,7 +85,7 @@ public class BackendBundleSystem {
         }
         xmlParser.renewComboWith(root,comboWith);
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
-        saveDocument(doc);
+        //saveDocument(doc);
         RulesStorage.shutdownAll();
     }
 
@@ -120,7 +120,6 @@ public class BackendBundleSystem {
         rootElement.appendChild(comboWith);
         return comboWith;
     }
-
 
 
     private static void bundleAllItem(List<ParseMethod> parseMethods, Element root
