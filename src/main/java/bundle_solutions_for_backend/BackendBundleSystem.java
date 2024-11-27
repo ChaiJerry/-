@@ -37,11 +37,16 @@ public class BackendBundleSystem {
         }
     }
 
+    /**
+     * 测试Bundle功能，对于原来的doc不修改
+     * @param times 测试次数
+     */
     public static void test(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
         XMLReader xmlReader = new XMLReader();
         XMLParser xmlParser = new XMLParser();
         List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
-        Element root = xmlReader.read();
+        Document originalDoc =xmlReader.read();
+        Element root = originalDoc.getDocumentElement();
         //由ns计算时间ms
         long start = System.nanoTime();
         //新建返回的Document部分
@@ -56,7 +61,32 @@ public class BackendBundleSystem {
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
         saveDocument(doc);
         RulesStorage.shutdownAll();
+    }
 
+    /**
+     * 测试Bundle功能，对于原来的doc修改
+     * @param times 测试次数
+     */
+    public static void test1(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
+        XMLReader xmlReader = new XMLReader();
+        XMLParser xmlParser = new XMLParser();
+        List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
+        Document doc =xmlReader.read();
+        Element root = doc.getDocumentElement();
+        Element comboWith = doc.createElement("ComboWith");
+        //由ns计算时间ms
+        long start = System.nanoTime();
+        //新建返回的Document部分
+        //解析xml文件部分
+        List<ParseMethod> parseMethods = xmlParser.getParseMethods();
+        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
+        for (int i = 0; i < times; i++) {
+            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages,comboWith,doc);
+        }
+        xmlParser.renewComboWith(root,comboWith);
+        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
+        saveDocument(doc);
+        RulesStorage.shutdownAll();
     }
 
     public static void saveDocument(Document doc) throws TransformerException {
@@ -72,6 +102,12 @@ public class BackendBundleSystem {
         System.out.println("XML文件已成功保存到: " + filePath);
     }
 
+    /**
+     * 获取返回的Document模板（用于非破坏性操作）
+     * @param doc 新建的返回的Document
+     * @param xmlns xmlns
+     * @return 返回的Document模板
+     */
     public static Element getReturnDocTemplate(Document doc,String xmlns) {
         Element rootElement = doc.createElement("OJ_ComboSearchRS");
         rootElement.setAttribute("xmlns", xmlns);
@@ -80,6 +116,8 @@ public class BackendBundleSystem {
         rootElement.appendChild(comboWith);
         return comboWith;
     }
+
+
 
     private static void bundleAllItem(List<ParseMethod> parseMethods, Element root
             , Map<String, BundleItem> segTicketMap, List<RulesStorage> rulesStorages
@@ -140,7 +178,9 @@ public class BackendBundleSystem {
             //将排序好的附加产品添加到节点中
             for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
-                ancillaryProducts.appendChild(migrateNode(bundleItem.getElement(),doc));
+                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
+                //ancillaryProducts.appendChild(migrateNode(bundleItem.getElement(),doc));
+                ancillaryProducts.appendChild(bundleItem.getElement());
             }
         }
         return ancillary;
@@ -174,7 +214,10 @@ public class BackendBundleSystem {
             //将排序好的附加产品添加到节点中
             for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
-                originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
+                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
+                //originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
+                //破坏性迁移（效率更高）
+                originDestination.appendChild(bundleItem.getElement());
             }
         }
         return ancillary;
@@ -202,7 +245,10 @@ public class BackendBundleSystem {
             setPriorityAndSort(map, bundleItemList);
             for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
-                insurance.appendChild(migrateNode(bundleItem.getElement(),doc));
+                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
+                //insurance.appendChild(migrateNode(bundleItem.getElement(),doc));
+                //破坏性迁移（效率更高）
+                insurance.appendChild(bundleItem.getElement());
             }
             break;
         }

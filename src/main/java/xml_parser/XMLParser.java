@@ -245,6 +245,19 @@ public class XMLParser {
         return bundleItems;
     }
 
+
+    /**
+     * 重新建立comboWith的节点
+     *
+     * @param root      XML文件的根节点
+     * @param comboWith 需要重建的comboWith节点
+     */
+    public void renewComboWith(Element root, Element comboWith) throws XPathExpressionException {
+        Element oldComboWith = getElementByRelativePath(root, "ComboWith");
+        root.removeChild(oldComboWith);
+        root.appendChild(comboWith);
+    }
+
     /**
      * 通过相对路径从给定的 Element 节点中获取子节点。
      *
@@ -253,7 +266,7 @@ public class XMLParser {
      * @return 返回匹配的 Element 节点。
      * @throws XPathExpressionException 如果 XPath 表达式无效。
      */
-    public  Element getElementByRelativePath(Element element, String relativePath) throws XPathExpressionException {
+    public Element getElementByRelativePath(Element element, String relativePath) throws XPathExpressionException {
         return (Element) xpath.evaluate(relativePath, element, XPathConstants.NODE);
     }
 
