@@ -249,7 +249,8 @@ public class XMLParser {
             if (priceAndCurrencyCode.isEmpty()) {
                 continue;
             }
-
+            // 避免重复添加，这里存储的是主键
+            Set<String> haveVisited = new HashSet<>();
             // 解析座位图
             NodeList Rows = getElementsByRelativePath(seatMapResponse, "AAM_SeatMap/Cabin/Row");
             for (int j = 0; j < Rows.getLength(); j++) {
@@ -260,7 +261,7 @@ public class XMLParser {
                     Map<String,String> xmlAttributes = new HashMap<>();
                     Element Block = (Element) Blocks.item(k);
                     String supplierProductCode = Block.getAttribute("ProductCode");
-                    if (supplierProductCode.isEmpty()) {
+                    if (supplierProductCode.isEmpty() || haveVisited.contains(subType+"|"+supplierProductCode)) {
                         continue;
                     }
 
@@ -279,6 +280,8 @@ public class XMLParser {
                     xmlAttributes.put("Amount", amountAndCurrencyCode[0]);
                     xmlAttributes.put("CurrencyCode", amountAndCurrencyCode[1]);
                     bundleItem.setXmlAttributes(xmlAttributes);
+                    // 将已经访问过的主键添加到集合中
+                    haveVisited.add(subType+"|"+supplierProductCode);
                 }
             }
         }

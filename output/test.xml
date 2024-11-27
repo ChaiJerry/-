@@ -468,6 +468,27 @@
                             </Image>
                         </Content>
                     </Ancillary>
+                    <Ancillary SegmentRef="2" SubType=" " SupplierProductCode="L" Tag="" Type="Seat">
+                        <Prices>
+                            <Price>
+                                <Total Amount="0.0" CurrencyCode="CNY"/>
+                            </Price>
+                        </Prices>
+                    </Ancillary>
+                    <Ancillary SegmentRef="2" SubType=" " SupplierProductCode="G" Tag="" Type="Seat">
+                        <Prices>
+                            <Price>
+                                <Total Amount="916.0" CurrencyCode="CNY"/>
+                            </Price>
+                        </Prices>
+                    </Ancillary>
+                    <Ancillary SegmentRef="2" SubType=" " SupplierProductCode="Q" Tag="" Type="Seat">
+                        <Prices>
+                            <Price>
+                                <Total Amount="916.0" CurrencyCode="CNY"/>
+                            </Price>
+                        </Prices>
+                    </Ancillary>
                 </AncillaryProducts>
             </BoundProducts>
         </Ancillary>
