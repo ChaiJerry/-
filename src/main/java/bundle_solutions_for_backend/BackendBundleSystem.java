@@ -125,11 +125,6 @@ public class BackendBundleSystem {
     private static void bundleAllItem(List<ParseMethod> parseMethods, Element root
             , Map<String, BundleItem> segTicketMap, List<RulesStorage> rulesStorages
             , Element comboWith,Document doc) throws XPathExpressionException {
-        for (int i = MEAL; i < parseMethods.size(); i++) {
-            Map<String, List<BundleItem>> bundleItems = parseMethods.get(i).execute(root);
-            sortBundleItemMethods.get(i).execute(segTicketMap
-                    , bundleItems, rulesStorages.get(i), comboWith ,doc);
-        }
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的ancillary0
@@ -147,6 +142,8 @@ public class BackendBundleSystem {
         // 得到保险返回的insurance
         Element insurance = sortBundleItemMethods.get(INSURANCE).execute(segTicketMap, bundleItems
                 , rulesStorages.get(INSURANCE), null ,doc);
+
+        //
 
         comboWith.appendChild(insurance);
         comboWith.appendChild(ancillary0);

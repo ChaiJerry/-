@@ -246,6 +246,10 @@ public class XMLParser {
             String segmentRef = seatMapResponse.getAttribute("REF");
             // 座位价格和货币代码的map，key为座位等级，对应的值为价格和货币代码,String[0]为Amount、String[0]为CurrencyCode
             Map<String, String[]> priceAndCurrencyCode = parseSeatPriceAndCurrencyCode(seatMapResponse);
+            if (priceAndCurrencyCode.isEmpty()) {
+                continue;
+            }
+
             // 解析座位图
             NodeList Rows = getElementsByRelativePath(seatMapResponse, "AAM_SeatMap/Cabin/Row");
             for (int j = 0; j < Rows.getLength(); j++) {
@@ -256,6 +260,10 @@ public class XMLParser {
                     Map<String,String> xmlAttributes = new HashMap<>();
                     Element Block = (Element) Blocks.item(k);
                     String supplierProductCode = Block.getAttribute("ProductCode");
+                    if (supplierProductCode.isEmpty()) {
+                        continue;
+                    }
+
                     //优化点： 不用每次都查询，只有需要组包的5个座位才查询
                     String[] amountAndCurrencyCode = priceAndCurrencyCode.get(supplierProductCode);
                     String seatNo = Block.getAttribute("Number");
