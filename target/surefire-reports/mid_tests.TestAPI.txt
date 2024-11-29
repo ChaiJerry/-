@@ -1,8 +1,0 @@
--------------------------------------------------------------------------------
-Test set: mid_tests.TestAPI
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 7.355 sec <<< FAILURE! - in mid_tests.TestAPI
-test(mid_tests.TestAPI)  Time elapsed: 7.313 sec  <<< FAILURE!
-java.lang.AssertionError
-	at mid_tests.TestAPI.test(TestAPI.java:32)
-

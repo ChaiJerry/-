@@ -28,4 +28,11 @@ public class XMLReader {
         return builder.parse(file);
     }
 
+    public Document read(String path) throws ParserConfigurationException, IOException, SAXException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        File file = new File(path);
+        return builder.parse(file);
+    }
+
 }

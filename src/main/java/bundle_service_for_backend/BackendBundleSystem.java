@@ -66,7 +66,7 @@ public class BackendBundleSystem {
         }
     }
 
-    public Document submitBundleTasks(Document doc) {
+    public Document submitBundleTask(Document doc) {
         // 提交查询任务到线程池
         Future<?> future = executorService.submit(new BundleTask(doc,rulesStorages));
         try {
@@ -198,6 +198,21 @@ public class BackendBundleSystem {
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
         saveDocument(doc);
         RulesStorage.shutdownAll();
+    }
+
+    /**
+     * 将Document保存到文件
+     *
+     * @param doc 希望保存的Document
+     */
+    public static void saveDocument(Document doc,String filePath) throws TransformerException {
+        // 将Document转换并保存到文件
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(new File(filePath));
+        transformer.transform(source, result);
+        System.out.println("XML文件已成功保存到: " + filePath);
     }
 
     /**

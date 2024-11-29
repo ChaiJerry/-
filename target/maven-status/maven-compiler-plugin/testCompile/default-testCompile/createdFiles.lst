@@ -1,6 +1,8 @@
 mid_tests\TestDataConverter.class
 mid_tests\TestQuerySystem.class
-mid_tests\TestCsvFileIO.class
-mid_tests\TestItemPack.class
 mid_tests\TestMongoUtils.class
 mid_tests\TestAPI.class
+mid_tests\TestBundleItemPack.class
+mid_tests\TestXMLReader.class
+mid_tests\TestCsvFileIO.class
+mid_tests\TestQuickQuery.class
