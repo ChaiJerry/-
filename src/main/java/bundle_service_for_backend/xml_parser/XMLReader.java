@@ -1,4 +1,4 @@
-package xml_parser;
+package bundle_service_for_backend.xml_parser;
 
 import javax.xml.parsers.*;
 

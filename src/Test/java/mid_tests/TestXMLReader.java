@@ -1,9 +1,8 @@
 package mid_tests;
 
 import org.junit.*;
-import org.w3c.dom.Document;
 import org.xml.sax.*;
-import xml_parser.XMLReader;
+import bundle_service_for_backend.xml_parser.XMLReader;
 
 import javax.xml.parsers.*;
 import java.io.*;

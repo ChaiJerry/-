@@ -1,5 +1,6 @@
-package bundle_solutions_for_backend;
+package bundle_service_for_backend;
 
+import bundle_service_for_backend.xml_parser.*;
 import bundle_system.memory_query_system.*;
 import org.w3c.dom.*;
 import xml_parser.*;
@@ -9,7 +10,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static bundle_solutions_for_backend.BackendBundleSystem.*;
+import static bundle_service_for_backend.BackendBundleSystem.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class BundleTask implements Callable<Void> {
