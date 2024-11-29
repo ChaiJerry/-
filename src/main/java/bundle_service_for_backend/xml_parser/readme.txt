@@ -3,3 +3,4 @@ xml和训练数据中名称的对应关系
 MONTH,DepartureDateTime
 FROM,LocationCode
 TO,LocationCode
+（未完）
