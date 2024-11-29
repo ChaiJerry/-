@@ -1,10 +1,10 @@
-package bundle_solutions_for_backend;
+package bundle_service_for_backend;
 
+import bundle_service_for_backend.xml_parser.*;
+import bundle_service_for_backend.xml_parser.XMLReader;
 import bundle_system.memory_query_system.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
-import xml_parser.*;
-import xml_parser.XMLReader;
 
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
@@ -265,8 +265,7 @@ public class BackendBundleSystem {
             //将排序好的附加产品添加到节点中
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
-                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
-                //ancillaryProducts.appendChild(migrateNode(bundleItem.getElement(),doc));
+                // 将附加产品添加到节点中（这里是用的是破坏性迁移，效率更高，会直接修改原来的doc）
                 ancillaryProducts.appendChild(bundleItem.getElement());
             }
         }
@@ -301,9 +300,7 @@ public class BackendBundleSystem {
             //将排序好的附加产品添加到节点中
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
-                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
-                //originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
-                //破坏性迁移（效率更高）
+                //将附加产品添加到节点中
                 originDestination.appendChild(bundleItem.getElement());
             }
         }
@@ -339,9 +336,7 @@ public class BackendBundleSystem {
             //将排序好的附加产品添加到节点中
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
-                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
-                //originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
-                //破坏性迁移（效率更高）
+                //将附加产品添加到节点中
                 fatherElement.appendChild(buildSeatElement(bundleItem, doc));
             }
         }
@@ -403,9 +398,7 @@ public class BackendBundleSystem {
             setPriorityAndSort(map, bundleItemList);
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
-                //非破坏性迁移 TODO 确认是否需要非破坏性迁移
-                //insurance.appendChild(migrateNode(bundleItem.getElement(),doc));
-                //破坏性迁移（效率更高）
+                //将排序好的附加产品添加到节点中
                 insurance.appendChild(bundleItem.getElement());
             }
             break;

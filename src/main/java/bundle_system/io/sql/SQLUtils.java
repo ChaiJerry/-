@@ -76,25 +76,35 @@ public class SQLUtils {
         stmt.executeUpdate(sql);
     }
 
+    public static String getNextTrainId() {
+        List<TrainRecord> trainRecords = TrainRecord.sortByTrainId(loadTrainRecords());
+        if (trainRecords.isEmpty()) {
+            return "train-0";
+        }
+        return trainRecords.get(0).getNextTrainId();
+    }
+
     /**
      * 从数据库中读取所有的训练记录，并返回一个List<Map<String, String>>
      *     其中的记录按照"train-1"的"train-"后面的数字的顺序降序排列
      * @return 排好序的训练记录
      */
-    public static List<Map<String, String>> loadTrainRecords(){
+    public static List<TrainRecord> loadTrainRecords(){
         try {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT * FROM train_record ORDER BY CAST(SUBSTRING(train_id, 6) AS UNSIGNED INTEGER) DESC");
-            List<Map<String, String>> records = new ArrayList<>();
+            List<TrainRecord> records = new ArrayList<>();
             while (rs.next()) {
-                Map<String, String> record = new HashMap<>();
-                record.put("train_id", rs.getString("train_id"));
-                record.put("startTime", rs.getString("startTime"));
-                record.put("endTime", rs.getString("endTime"));
-                record.put("orderNumber", rs.getString("orderNumber"));
-                record.put("comments", rs.getString("comments"));
-                record.put("minSupport", rs.getString("minSupport"));
-                record.put("minConfidence", rs.getString("minConfidence"));
+                Map<String, String> recordMap = new HashMap<>();
+                //这里用Map暂存是为了符合sonarlint的规则
+                recordMap.put("train_id", rs.getString("train_id"));
+                recordMap.put("startTime", rs.getString("startTime"));
+                recordMap.put("endTime", rs.getString("endTime"));
+                recordMap.put("orderNumber", rs.getString("orderNumber"));
+                recordMap.put("comments", rs.getString("comments"));
+                recordMap.put("minSupport", rs.getString("minSupport"));
+                recordMap.put("minConfidence", rs.getString("minConfidence"));
+                TrainRecord record = new TrainRecord(recordMap);
                 records.add(record);
             }
             return records;
