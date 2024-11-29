@@ -39,8 +39,8 @@ public class BundleItem implements Comparable<BundleItem> {
                 AttrValueConfidencePriority attrValueConfidencePriority = recommendAttributes.get(key);
                 String recommendValue = attrValueConfidencePriority.getAttributeValue();
                 if (value.equalsIgnoreCase(recommendValue)) {
-                    //优先级加上置信度的对数
-                    priority += log(attrValueConfidencePriority.getConfidence());
+                    //优先级加上置信度
+                    priority += attrValueConfidencePriority.getConfidence();
                 }
             }
         }
@@ -60,12 +60,12 @@ public class BundleItem implements Comparable<BundleItem> {
                 AttrValueConfidencePriority attrValueConfidencePriority = recommendAttributes.get(key);
                 String recommendValue = attrValueConfidencePriority.getAttributeValue();
                 if (value.equalsIgnoreCase(recommendValue)) {
-                    //优先级加上置信度的对数
-                    priority += log(attrValueConfidencePriority.getConfidence());
+                    //优先级加上置信度
+                    priority += attrValueConfidencePriority.getConfidence();
                 }else if (isNum(value) && isNum(recommendValue)) {
                     //判断不相等的情况，判断是否为浮点数或整数
                     //优先级加上二者之差的绝对值的负指数
-                    priority += log(attrValueConfidencePriority.getConfidence())*exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
+                    priority += attrValueConfidencePriority.getConfidence()*exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
                 }
             }
         }

@@ -18,8 +18,6 @@ import java.util.concurrent.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class BackendBundleSystem {
-    private final int poolSize; // 线程池的大小
-    private final ExecutorService executorService;
 
     // 创建DocumentBuilderFactory和DocumentBuilder
     static DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -43,19 +41,34 @@ public class BackendBundleSystem {
         }
     }
 
+    private final int poolSize; // 线程池的大小
+    private final ExecutorService executorService;
+    private List<RulesStorage> rulesStorages;
+
+
     public BackendBundleSystem() {
         this.poolSize = 16;
         executorService = Executors.newFixedThreadPool(poolSize);
+        try {
+            rulesStorages = QuickQuery.initAllRulesStorage();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public BackendBundleSystem(int poolSize) {
         this.poolSize = poolSize;
         executorService = Executors.newFixedThreadPool(poolSize);
+        try {
+            rulesStorages = QuickQuery.initAllRulesStorage();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Document submit(Document doc) {
+    public Document submitBundleTasks(Document doc) {
         // 提交查询任务到线程池
-        Future<?> future = executorService.submit(new BundleTask(doc));
+        Future<?> future = executorService.submit(new BundleTask(doc,rulesStorages));
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -64,11 +77,22 @@ public class BackendBundleSystem {
         return doc;
     }
 
-    public void submit(List<Document> docs) {
+    public Document submitQueryTask(Document doc) {
+        // 提交查询任务到线程池
+        Future<?> future = executorService.submit(new QueryTask(doc,rulesStorages));
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return doc;
+    }
+
+    public void submitBundleTasks(List<Document> docs) {
         // 提交查询任务到线程池
         List<Future<?>> futures = new ArrayList<>();
         for (Document doc : docs) {
-            futures.add(executorService.submit(new BundleTask(doc)));
+            futures.add(executorService.submit(new BundleTask(doc,rulesStorages)));
         }
         try {
             for (Future<?> future : futures) {
@@ -96,7 +120,7 @@ public class BackendBundleSystem {
         }
         System.out.println("文档输入完成，开始打包");
         long start = System.nanoTime();
-        submit(docs);
+        submitBundleTasks(docs);
         long end = System.nanoTime();
         sum += end - start;
         System.out.println("完成，平均耗时time(ms):" + (sum) / 1000000 / num);
@@ -110,10 +134,14 @@ public class BackendBundleSystem {
         //模拟输入Document
         XMLReader xmlReader = new XMLReader();
         long start = System.nanoTime();
-        Document doc = xmlReader.read();
-        submit(doc);
-        saveDocument(doc);
+        Document doc;
+//         doc = xmlReader.read();
+//        submitBundleTasks(doc);
+//        saveDocument(doc);
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
+        doc = xmlReader.read();
+        submitQueryTask(doc);
+        saveDocument(doc);
         shutdownAll();
     }
 
@@ -301,7 +329,7 @@ public class BackendBundleSystem {
 
 
     /**
-     * 将一个节点从一个文档迁移到另一个文档。
+     * 将一个节点从一个文档安全迁移到另一个文档。
      *
      * @param node      要迁移的节点
      * @param targetDoc 目标文档

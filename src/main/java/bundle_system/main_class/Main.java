@@ -15,10 +15,10 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class Main {
     public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
-        QuickQuery quickQuery = new QuickQuery();
-        quickQuery.test(MEAL);
-//        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(4);
-//        backendBundleSystem.test3();
+//        QuickQuery quickQuery = new QuickQuery();
+//        quickQuery.test(MEAL);
+        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(4);
+        backendBundleSystem.test3();
 //        SQLUtils sqlUtils = new SQLUtils();
 //        sqlUtils.renewTables();
 //        sqlUtils.insertTrainDataRecord("1.csv","2023...",MEAL);
