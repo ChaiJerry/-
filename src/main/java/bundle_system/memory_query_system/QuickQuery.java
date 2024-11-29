@@ -1,5 +1,6 @@
 package bundle_system.memory_query_system;
 
+import bundle_system.io.sql.*;
 import com.mongodb.client.*;
 import org.bson.*;
 import bundle_system.db_query_system.*;
@@ -15,6 +16,8 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class QuickQuery {
     private static final Map<String, ItemPack> itemPackMap = new HashMap<>();
+
+
 
 
     public static List<RulesStorage> initAllRulesStorage() throws IOException {
@@ -41,7 +44,22 @@ public class QuickQuery {
         printProgressBar(33, info);
         //测算训练用时
         long startTime1 = System.nanoTime();
-        associationRulesMining(listOfAttributeList, false, true, itemTicketFreqItemSets, itemTicketRules, 0.08, 0);
+        try {
+            //如果已经存在，则直接加载
+            itemTicketRules = SQLUtils.loadRules(type, "test");
+            if(itemTicketRules.isEmpty()) {
+                associationRulesMining(listOfAttributeList, false
+                        , true, itemTicketFreqItemSets, itemTicketRules
+                        , 0.08, 0);
+                SQLUtils.storeRules(type, itemTicketRules, "test");
+            }
+        }catch (Exception e) {
+            //否则，进行训练
+            associationRulesMining(listOfAttributeList, false
+                    , true, itemTicketFreqItemSets, itemTicketRules
+                    , 0.08, 0);
+            SQLUtils.storeRules(type, itemTicketRules, "test");
+        }
         printProgressBar(67, info);
         //System.out.println("Training time: " + (System.nanoTime() - startTime1) / 1000000+ "ms");
         for (List<String> itemTicketRule : itemTicketRules) {

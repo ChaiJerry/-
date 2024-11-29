@@ -10,9 +10,7 @@ import static bundle_system.data_processer.DataConverter.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class XMLParser {
-    // 创建XPath工厂对象，用于创建XPath对象，为之后的多线程解析做预先准备
-    private final XPathFactory xPathfactory = XPathFactory.newInstance();
-    private final XPath xpath = xPathfactory.newXPath();
+    private final XPath xpath;
 
     public List<ParseMethod> getParseMethods() {
         return parseMethodMethods;
@@ -20,13 +18,14 @@ public class XMLParser {
 
     private final List<ParseMethod> parseMethodMethods = new ArrayList<>();
 
-    public XMLParser() {
+    public XMLParser(XPath xpath) {
         parseMethodMethods.add(null);
         parseMethodMethods.add(null);
         parseMethodMethods.add(this::parseMeal);
         parseMethodMethods.add(this::parseBaggage);
         parseMethodMethods.add(this::parseInsurances);
         parseMethodMethods.add(this::parseSeat);
+        this.xpath = xpath;
     }
 
     /**
@@ -112,7 +111,7 @@ public class XMLParser {
                 break;
             }
         }
-        System.out.println("时间（ms）："+(System.currentTimeMillis() - startTime));
+        //System.out.println("时间（ms）："+(System.currentTimeMillis() - startTime));
         return comboSourceMap;
     }
 

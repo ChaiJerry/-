@@ -17,7 +17,7 @@ public class RulesStorage {
     private Map<String, Map<String, Set<Integer>>> atttributeMap = new HashMap<>();
     private int ruleCount = 0;
     // 创建一个固定大小的线程池
-    private final ExecutorService executorService = Executors.newFixedThreadPool(16);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
     private final RandomLRUPool lruPool = new RandomLRUPool(40);
 
     int type;

@@ -1,6 +1,7 @@
 package bundle_system.main_class;
 
 import bundle_solutions_for_backend.*;
+import bundle_system.io.*;
 import bundle_system.memory_query_system.*;
 import org.xml.sax.*;
 import xml_parser.*;
@@ -17,9 +18,14 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class Main {
     public static void main(String[] args) throws IOException, SQLException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
-//        QuickQuery quickQuery = new QuickQuery();
-//        quickQuery.test(SEAT);
-        BackendBundleSystem.test1(1);
+        QuickQuery quickQuery = new QuickQuery();
+        //quickQuery.test(MEAL);
+        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(4);
+        backendBundleSystem.test3(1000);
+//        SQLUtils.dropRuleTables();
+//        SQLUtils.createTablesForMemQueryIfNotExist();
+//        QuickQuery.initAllRulesStorage();
+        //SQLUtils.createRuleTableForMemQuery();
 //        XMLReader xmlReader = new XMLReader();
 //        XMLParser xmlParser = new XMLParser();
 //        List<BundleItem> bundleItems = xmlParser.parseMeal(xmlReader.read());
