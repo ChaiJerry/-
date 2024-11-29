@@ -11,23 +11,30 @@ import static com.mongodb.client.model.Projections.*;
 import static bundle_system.data_processer.DataConverter.*;
 import static bundle_system.io.SharedAttributes.*;
 
-public class ItemSearchUnit {
+public class BasicItemSearchUnit {
+    //用于单个搜索的属性
     private final List<Map.Entry<String, String>> itemAttributes;
+    //用于多个搜索的属性
+    private List<Map.Entry<String, String>> itemAttributeAndConfidencePriority;
     private final MongoCollection<Document> collection;
-    private final Queue<ItemSearchUnit> bfsQueue;
+    private final Queue<BasicItemSearchUnit> bfsQueue;
     private final Set<Integer> haveVisited;
     private final int type;
 
 
-    public ItemSearchUnit(List<Map.Entry<String, String>> itemAttributes
+    public BasicItemSearchUnit(List<Map.Entry<String, String>> itemAttributes
             , MongoCollection<Document> collection, int type
-            , Queue<ItemSearchUnit> bfsQueue, Set<Integer> haveVisited) {
+            , Queue<BasicItemSearchUnit> bfsQueue, Set<Integer> haveVisited) {
         this.itemAttributes = itemAttributes;
         this.collection = collection;
         this.type = type;
         this.bfsQueue = bfsQueue;
         this.haveVisited = haveVisited;
     }
+
+//    public ItemSearchUnit(List<Map.Entry<String, AttrValueConfidencePriority>> attributeList, MongoCollection<Document> ordersCollection, int type, Queue<ItemSearchUnit> bfsQueue, Set<Integer> haveVisited) {
+//
+//    }
 
     public Document search() {
         List<Bson> bsonList = new ArrayList<>();
@@ -61,7 +68,7 @@ public class ItemSearchUnit {
             haveVisited.add(nextStatus);
             List<Map.Entry<String, String>> temp = new ArrayList<>(itemAttributes);
             temp.set(i, null);
-            bfsQueue.add(new ItemSearchUnit(temp, collection, type, bfsQueue, haveVisited));
+            bfsQueue.add(new BasicItemSearchUnit(temp, collection, type, bfsQueue, haveVisited));
         }
         return new Document();
     }

@@ -1,12 +1,14 @@
 package bundle_system.memory_query_system.lru_pool;
 
+import bundle_system.memory_query_system.*;
+
 import java.util.*;
 
 public class RandomLRUPool {
     //用于lru时间查询的map
     private final Map<List<String>,Long> timeMap=new HashMap<>();
     //用于通过机票条件进行缓存结果查询的map
-    private final Map<List<String>,Map<String,String>> resultMap =new HashMap<>();
+    private final Map<List<String>,Map<String, AttrValueConfidencePriority>> resultMap =new HashMap<>();
     //使用ArrayListList提高访问时随机淘汰的效率
     private final List<List<String>> keys=new ArrayList<>();
     //指向keys的指针用于随机访问
@@ -19,12 +21,12 @@ public class RandomLRUPool {
      * @param max 最大容量，必须为8的倍数
      */
     public RandomLRUPool(int max) {this.max=max;}
-    public Map<String,String> tryGet(List<String> key){
-        Map<String,String> res=resultMap.getOrDefault(key,null);
+    public Map<String, AttrValueConfidencePriority> tryGet(List<String> key){
+        Map<String, AttrValueConfidencePriority> res=resultMap.getOrDefault(key,null);
         if(res!=null) timeMap.put(key,time++);
         return res;
     }
-    public void add(List<String> key, Map<String, String> value){
+    public void add(List<String> key, HashMap<String, AttrValueConfidencePriority> value){
         if(value==null||value.isEmpty()) return;
         if(resultMap.size()==max) {
             //从所有key中随机选择8个key，然后比较这8个key对应的value，选择最小的value，然后删除这个key

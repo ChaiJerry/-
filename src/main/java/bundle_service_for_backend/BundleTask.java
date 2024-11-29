@@ -43,7 +43,7 @@ public class BundleTask implements Callable<Void> {
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的AncillaryProducts
-        Element ancillaryProducts = testBundleMeal(segTicketMap
+        Element ancillaryProducts = BundleMethods.testBundleMeal(segTicketMap
                 , bundleItems, rulesStorages.get(MEAL), null, doc);
 
         // 处理行李
@@ -61,7 +61,7 @@ public class BundleTask implements Callable<Void> {
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);
         // 得到选座返回的ancillary1
-        Element ancillary1 = testBundleSeat(segTicketMap, bundleItems
+        Element ancillary1 = BundleMethods.testBundleSeat(segTicketMap, bundleItems
                 , rulesStorages.get(SEAT), ancillaryProducts, doc);
 
         // 将返回的ancillaryProducts、insurance、ancillary0、ancillary1添加到comboWith中

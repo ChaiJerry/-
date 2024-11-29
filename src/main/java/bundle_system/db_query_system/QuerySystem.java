@@ -1,5 +1,6 @@
 package bundle_system.db_query_system;
 
+import bundle_system.memory_query_system.*;
 import com.mongodb.client.*;
 
 import org.bson.*;
@@ -440,11 +441,11 @@ public class QuerySystem {
         }
 
         //根据itemAttributeMap中的属性，查询ordersCollection中对应的订单
-        Queue<ItemSearchUnit> bfsQueue = new LinkedList<>();
+        Queue<BasicItemSearchUnit> bfsQueue = new LinkedList<>();
         Set<Integer> haveVisited = new HashSet<>();
         List<Map.Entry<String, String>> attributeList = map2List(itemAttributeMap, type);
         //开始bfs搜索，设定根节点，并加入队列
-        ItemSearchUnit root = new ItemSearchUnit(attributeList
+        BasicItemSearchUnit root = new BasicItemSearchUnit(attributeList
                 , ordersCollection, type, bfsQueue, haveVisited);
         haveVisited.add(listToBits(attributeList));
 
@@ -456,6 +457,57 @@ public class QuerySystem {
             }
         }
         return "";
+    }
+
+    public static List<String> itemsQuery(Map<String, String> itemAttributeMap
+            , MongoCollection<Document> ordersCollection, int type) {
+        List<String> itemNameAndPrices = new ArrayList<>();
+        //根据itemAttributeMap中的属性，查询ordersCollection中对应的订单
+        Queue<BasicItemSearchUnit> bfsQueue = new LinkedList<>();
+        Set<Integer> haveVisited = new HashSet<>();
+        List<Map.Entry<String, String>> attributeList = map2List(itemAttributeMap, type);
+        //开始bfs搜索，设定根节点，并加入队列
+        BasicItemSearchUnit root = new BasicItemSearchUnit(attributeList
+                , ordersCollection, type, bfsQueue, haveVisited);
+        haveVisited.add(listToBits(attributeList));
+
+        bfsQueue.add(root);
+        while (!bfsQueue.isEmpty()) {
+            Document item = bfsQueue.poll().search();
+            if (item != null && !item.isEmpty()) {
+                itemNameAndPrices.add(getItemNameAndPriceFromDocument(item, type));
+                if(itemNameAndPrices.size() == 5) {
+                    break;
+                }
+            }
+        }
+        return itemNameAndPrices;
+    }
+
+    public static List<String> itemsQueryWithLog(Map<String, AttrValueConfidencePriority> itemAttributeConfMap
+            , MongoCollection<Document> ordersCollection, int type) {
+        List<String> itemNameAndPrices = new ArrayList<>();
+        //根据itemAttributeMap中的属性，查询ordersCollection中对应的订单
+        Queue<AdvancedItemSearchUnit> bfsQueue = new LinkedList<>();
+        Set<Integer> haveVisited = new HashSet<>();
+        List<Map.Entry<String, AttrValueConfidencePriority>> attributeList
+                = attributeConfMap2List(itemAttributeConfMap, type);
+        //开始bfs搜索，设定根节点，并加入队列
+        AdvancedItemSearchUnit root = new AdvancedItemSearchUnit(attributeList
+                , ordersCollection, type, bfsQueue, haveVisited);
+        haveVisited.add(listToBits(attributeList));
+
+        bfsQueue.add(root);
+        while (!bfsQueue.isEmpty()) {
+            Document item = bfsQueue.poll().search();
+            if (item != null && !item.isEmpty()) {
+                itemNameAndPrices.add(getItemNameAndPriceFromDocument(item, type));
+                if(itemNameAndPrices.size() == 5) {
+                    break;
+                }
+            }
+        }
+        return itemNameAndPrices;
     }
 
 

@@ -1,10 +1,12 @@
 package bundle_system.memory_query_system;
 
-public class ItemAttributeValueAndConfidenceAndPriority {
+import java.util.*;
+
+public class AttrValueConfidencePriority {
     private String attributeValue = "";
     private double confidence = 0.0;
     private int priority = 0;
-    public ItemAttributeValueAndConfidenceAndPriority() {
+    public AttrValueConfidencePriority() {
     }
 
     /**
@@ -27,4 +29,22 @@ public class ItemAttributeValueAndConfidenceAndPriority {
         return attributeValue;
     }
 
+    public void setAttributeValue(String attributeValue) {
+        this.attributeValue = attributeValue;
+    }
+    public double getConfidence() {
+        return confidence;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AttrValueConfidencePriority that)) return false;
+        return Double.compare(confidence, that.confidence) == 0 && Objects.equals(getAttributeValue(), that.getAttributeValue());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getAttributeValue(), confidence);
+    }
 }
