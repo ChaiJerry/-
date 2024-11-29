@@ -2,6 +2,7 @@ package bundle_service_for_backend;
 
 import bundle_service_for_backend.xml_parser.*;
 import bundle_system.memory_query_system.*;
+import com.github.luben.zstd.*;
 import org.w3c.dom.*;
 
 import javax.xml.xpath.*;
@@ -15,18 +16,11 @@ import static bundle_system.io.SharedAttributes.*;
 public class BundleTask implements Callable<Void> {
     private final Document doc;
     private static final XPathFactory xPathfactory = XPathFactory.newInstance();
-    private static final List<RulesStorage> rulesStorages;
+    private final List<RulesStorage> rulesStorages;
 
-    static {
-        try {
-            rulesStorages = QuickQuery.initAllRulesStorage();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public BundleTask(Document doc) {
+    public BundleTask(Document doc, List<RulesStorage> rulesStorages) {
         this.doc = doc;
+        this.rulesStorages = rulesStorages;
     }
 
     @Override
@@ -49,7 +43,7 @@ public class BundleTask implements Callable<Void> {
         // 处理行李
         bundleItems = parseMethods.get(BAGGAGE).execute(root);
         // 得到行李返回的ancillary0
-        Element ancillary0 =sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
+        Element ancillary0 = sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
                 , rulesStorages.get(BAGGAGE), null ,doc);
 
         // 处理保险
