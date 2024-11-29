@@ -254,11 +254,11 @@ public class XMLParser {
             NodeList Rows = getElementsByRelativePath(seatMapResponse, "AAM_SeatMap/Cabin/Row");
             for (int j = 0; j < Rows.getLength(); j++) {
                 Element Row = (Element) Rows.item(j);
-                String subType = Row.getAttribute("Characteristics");
                 NodeList Blocks = getElementsByRelativePath(Row, "Block");
                 for (int k = 0; k < Blocks.getLength(); k++) {
                     Map<String,String> xmlAttributes = new HashMap<>();
                     Element Block = (Element) Blocks.item(k);
+                    String subType = preProcessSubType(Block.getAttribute("Characteristics"));
                     String supplierProductCode = Block.getAttribute("ProductCode");
                     if (supplierProductCode.isEmpty() || haveVisited.contains(subType+"|"+supplierProductCode)) {
                         continue;
@@ -266,12 +266,11 @@ public class XMLParser {
 
                     //优化点： 不用每次都查询，只有需要组包的5个座位才查询
                     String[] amountAndCurrencyCode = priceAndCurrencyCode.get(supplierProductCode);
-                    String seatNo = Block.getAttribute("Number");
+
                     BundleItem bundleItem = new BundleItem(segmentRef, seatMapResponse.cloneNode(true));
-                    //TODO 处理null值情况，判断avail是否为3（是否可用）
-                    putBundleItemToMap(segmentRef + "|" + subType, bundleItem, bundleItemsMap);
-                    // 座位等级
-                    bundleItem.addAttributeNameValuePair("SEAT_NO", seatNo);
+                    putBundleItemToMap(segmentRef, bundleItem, bundleItemsMap);
+                    //因为要和之后的推荐属性匹配，这里直接将得到的subType载入了座位的属性中
+                    bundleItem.addAttributeNameValuePair("SubType", subType);
                     // 加入用于组包的属性
                     xmlAttributes.put("SubType", subType);
                     xmlAttributes.put("SegmentRef", segmentRef);
@@ -285,6 +284,16 @@ public class XMLParser {
             }
         }
         return bundleItemsMap;
+    }
+
+    private String preProcessSubType(String subType) {
+        String[] splits = subType.split(" ");
+        for(String split : splits) {
+            if(split.equals("3") || split.equals("85")) {
+                return split;
+            }
+        }
+        return "";
     }
 
     /**

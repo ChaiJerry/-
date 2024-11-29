@@ -26,10 +26,29 @@ public class BundleItem implements Comparable<BundleItem> {
     }
 
     /**
-     * 设置优先级
+     * 设置优先级，直接比较字符串
      * @param recommendAttributes 推荐的属性
      */
     public void setPriority(Map<String, String> recommendAttributes) {
+        for (String key : recommendAttributes.keySet()) {
+            if (attributes.containsKey(key)) {
+                // 实际的属性值
+                String value = attributes.get(key);
+                // 推荐属性值
+                String recommendValue = recommendAttributes.get(key);
+                if (value.equalsIgnoreCase(recommendValue)) {
+                    priority++;
+                }
+            }
+        }
+    }
+
+    /**
+     * 设置优先级，如果是字符串，直接比较，如果是数字，则计算二者的差值的负指数
+     * 但是有风险在于字符串要是内容是数值但是其实是应该直接比较的情况下可能造成错误
+     * @param recommendAttributes 推荐的属性
+     */
+    public void setPriorityWithNumParse(Map<String, String> recommendAttributes) {
         for (String key : recommendAttributes.keySet()) {
             if (attributes.containsKey(key)) {
                 //实际的属性值
@@ -38,7 +57,7 @@ public class BundleItem implements Comparable<BundleItem> {
                 String recommendValue = recommendAttributes.get(key);
                 if (value.equalsIgnoreCase(recommendValue)) {
                     priority++;
-                } else if (isNum(value)) {
+                } else if (isNum(value) && isNum(recommendValue)) {
                     //判断不相等的情况，判断是否为浮点数或整数
                     //优先级加上二者之差的绝对值的负指数
                     priority += exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
@@ -46,6 +65,7 @@ public class BundleItem implements Comparable<BundleItem> {
             }
         }
     }
+
 
     /**
      * 特殊的判断段是否为数字的方法
@@ -55,7 +75,7 @@ public class BundleItem implements Comparable<BundleItem> {
      * @return 是否为数字
      */
     private boolean isNum(String s) {
-        return Character.isDigit(s.charAt(s.length() - 1));
+        return !s.isEmpty() && Character.isDigit(s.charAt(s.length() - 1));
     }
 
     public BundleItem(String rph) {
@@ -141,6 +161,6 @@ public class BundleItem implements Comparable<BundleItem> {
      */
     @Override
     public int compareTo(@NotNull BundleItem o) {
-        return Double.compare(this.priority, o.priority);
+        return Double.compare(o.priority,this.priority);
     }
 }

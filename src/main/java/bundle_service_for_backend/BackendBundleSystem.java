@@ -67,11 +67,11 @@ public class BackendBundleSystem {
     public void submit(List<Document> docs) {
         // 提交查询任务到线程池
         List<Future<?>> futures = new ArrayList<>();
-        for(Document doc : docs) {
+        for (Document doc : docs) {
             futures.add(executorService.submit(new BundleTask(doc)));
         }
         try {
-            for(Future<?> future : futures) {
+            for (Future<?> future : futures) {
                 future.get();
             }
         } catch (InterruptedException | ExecutionException e) {
@@ -89,7 +89,7 @@ public class BackendBundleSystem {
         XMLReader xmlReader = new XMLReader();
         long sum = 0;
         List<Document> docs = new ArrayList<>();
-        System.out.println("正在模拟输入文档，数量："+num);
+        System.out.println("正在模拟输入文档，数量：" + num);
         for (int i = 0; i < num; i++) {
             Document doc = xmlReader.read();
             docs.add(doc);
@@ -114,6 +114,7 @@ public class BackendBundleSystem {
         submit(doc);
         saveDocument(doc);
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
+        shutdownAll();
     }
 
     /**
@@ -324,6 +325,8 @@ public class BackendBundleSystem {
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
             //根据机票属性查询附加产品规则，得到附加产品属性
             Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            //预处理属性map，将座位列和subType对应
+            preProcessSeatNoTOSubType(map);
             segAttributesmap.put(entry.getKey(), map);
         }
         //遍历bundleItems，得到其中的附加产品属性
@@ -334,13 +337,34 @@ public class BackendBundleSystem {
             //排序
             setPriorityAndSort(segAttributesmap.get(segRef), bundleItemList);
             //将排序好的附加产品添加到节点中
-            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
+            for (int i = 0, size = bundleItemList.size(); i < size; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
                 //将附加产品添加到节点中
                 fatherElement.appendChild(buildSeatElement(bundleItem, doc));
             }
         }
         return (Element) fatherElement.getParentNode().getParentNode();
+    }
+
+    private static void preProcessSeatNoTOSubType(Map<String, String> map) {
+        String seatNo = map.get("SEAT_NO");
+        map.remove("SEAT_NO");
+        if (seatNo == null) {
+            return;
+        }
+        String key = "SubType";
+        //靠窗座位：A（左）, K（右）——适用于所有飞机；
+        //
+        //靠走廊座位：C, D, G, H ——适用于双通道飞机；C, H——适用于单通道飞机。
+        if (seatNo.equals("K") || seatNo.equals("A")) {
+            map.put(key, "85");
+        } else if (seatNo.equals("C") || seatNo.equals("D")
+                || seatNo.equals("G") || seatNo.equals("H")) {
+            map.put(key, "3");
+        } else {
+            map.put(key, "");
+        }
+
     }
 
     public static Element buildSeatElement(BundleItem bundleItem, Document doc) {
@@ -418,6 +442,22 @@ public class BackendBundleSystem {
         }
         Collections.sort(bundleItemList);
     }
+
+    /**
+     * 给附加产品排序的方法，但这个更高级一点，当遇到数值类型字符串时
+     * 会解析后使用负指数取数值之间的差值来排序
+     * @param map            推荐的附加产品属性键值对
+     * @param bundleItemList 附加产品键列表
+     */
+    public static void setPriorityAndSortWithNumParse(Map<String, String> map, List<BundleItem> bundleItemList) {
+        for (BundleItem bundleItem : bundleItemList) {
+            bundleItem.setPriorityWithNumParse(map);
+        }
+        Collections.sort(bundleItemList);
+    }
+
+
+
 
     /**
      * 将一个节点从一个文档迁移到另一个文档。
