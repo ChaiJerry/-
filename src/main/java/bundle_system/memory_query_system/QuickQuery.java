@@ -42,23 +42,24 @@ public class QuickQuery {
         List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
         List<List<String>> itemTicketRules = new ArrayList<>();
         printProgressBar(33, info);
+        SQLUtils sqlUtils = new SQLUtils();
         //测算训练用时
         long startTime1 = System.nanoTime();
         try {
             //如果已经存在，则直接加载
-            itemTicketRules = SQLUtils.loadRules(type, "test");
+            itemTicketRules = sqlUtils.loadRules(type, "test");
             if(itemTicketRules.isEmpty()) {
                 associationRulesMining(listOfAttributeList, false
                         , true, itemTicketFreqItemSets, itemTicketRules
                         , 0.08, 0);
-                SQLUtils.storeRules(type, itemTicketRules, "test");
+                sqlUtils.storeRules(type, itemTicketRules, "test");
             }
         }catch (Exception e) {
             //否则，进行训练
             associationRulesMining(listOfAttributeList, false
                     , true, itemTicketFreqItemSets, itemTicketRules
                     , 0.08, 0);
-            SQLUtils.storeRules(type, itemTicketRules, "test");
+            sqlUtils.storeRules(type, itemTicketRules, "test");
         }
         printProgressBar(67, info);
         //System.out.println("Training time: " + (System.nanoTime() - startTime1) / 1000000+ "ms");
