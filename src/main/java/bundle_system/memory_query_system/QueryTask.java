@@ -8,12 +8,12 @@ import java.util.concurrent.*;
 public class QueryTask implements Callable<Void> {
     private final int queryId;
     private final List<Set<Integer>> sets;
-    private final HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap;
+    private final HashMap<String, AttrValueConfidencePriority> attributesMap;
     private final Map<Integer, AssociationRuleConsResult> rulesMap;
     private final Set<Integer> havaVisited;
     private final List<Set<Integer>> nullSets;
 
-    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleConsResult> rulesMap, List<Set<Integer>> nullSets, Set<Integer> threadSafeSet) {
+    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, AttrValueConfidencePriority> attributesMap, Map<Integer, AssociationRuleConsResult> rulesMap, List<Set<Integer>> nullSets, Set<Integer> threadSafeSet) {
         this.queryId = queryId;
         this.sets = sets;
         this.attributesMap = attributesMap;
@@ -22,7 +22,7 @@ public class QueryTask implements Callable<Void> {
         this.nullSets = nullSets;
     }
 
-    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap, Map<Integer, AssociationRuleConsResult> rulesMap, List<Set<Integer>> nullSets) {
+    public QueryTask(int queryId, List<Set<Integer>> sets, HashMap<String, AttrValueConfidencePriority> attributesMap, Map<Integer, AssociationRuleConsResult> rulesMap, List<Set<Integer>> nullSets) {
         this.queryId = queryId;
         this.sets = sets;
         this.attributesMap = attributesMap;

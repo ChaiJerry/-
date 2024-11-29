@@ -102,7 +102,6 @@ public class QuickQuery {
             //遍历listOfTicketAttributeList（属性值列表的列表）
             for (List<String> attributeValues : listOfTicketAttributeList) {
                 //System.out.println(total++ + ": " + orderNum);
-
                 //得到每个机票属性列表特征键
                 String itemPackKey = ItemPack.generateItemPackKey(attributeValues);
                 //判断是否已经存在于itemPackMap中
@@ -115,13 +114,14 @@ public class QuickQuery {
                     itemPackMap.put(itemPackKey, itemPack);
                 }
                 long startTime = System.nanoTime();
-                Map<String, String> singleAttributeQuery = rulesStorage
-                        .queryItemAttributes(ticketAttributesStorage
+                Map<String, AttrValueConfidencePriority> singleAttributeQuery = rulesStorage
+                        .queryItemAttributesAndConfidence(ticketAttributesStorage
                                 .generateOrderedAttributeListFromAttributeValueListForEva(attributeValues));
                 long endTime = System.nanoTime();
                 totalTime += endTime - startTime;
+                Map<String, String> commendedAttributes = convertVCPToAttributes(singleAttributeQuery);
                 //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
-                String singleItemQuery = singleItemQuery(singleAttributeQuery, ordersCollection, type);
+                String singleItemQuery = singleItemQuery(commendedAttributes, ordersCollection, type);
                 //加入原订单中同时出现的商品
                 itemPack.addOrderItem(correctTargetItems, type);
                 //加入推荐系统推荐的商品
@@ -144,6 +144,14 @@ public class QuickQuery {
         //输出时间
         System.out.println((totalTime)/1000000 + "ms");
         rulesStorage.shutdown();
+    }
+
+    private static Map<String,String> convertVCPToAttributes(Map<String, AttrValueConfidencePriority> vcpMap) {
+        Map<String,String> map = new HashMap<>();
+        for (String s : vcpMap.keySet()) {
+            map.put(s,vcpMap.get(s).getAttributeValue());
+        }
+        return map;
     }
 
 

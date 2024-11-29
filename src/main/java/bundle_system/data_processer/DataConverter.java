@@ -1,5 +1,6 @@
 package bundle_system.data_processer;
 
+import bundle_system.memory_query_system.*;
 import org.apache.spark.sql.*;
 import org.bson.*;
 
@@ -169,44 +170,9 @@ public class DataConverter {
     }
 
     public static List<Map.Entry<String, String>> map2List(Map<String, String> map, int type) {
-//        String target;
-//        String targetName;
-//        switch (type) {
-//            case HOTEL:
-//                targetName = HOTEL_ATTRIBUTES[4];
-//                //targetName = HOTEL_ATTRIBUTES[3];
-//                target= map.get(targetName);
-//                map.clear();
-//                map.put(targetName, target);
-//
-//                break;
-//            case MEAL:
-//                targetName = MEAL_ATTRIBUTES[0];
-//                target= map.get(targetName);
-//                map.clear();
-//                map.put(targetName, target);
-//                break;
-//            case BAGGAGE:
-//                targetName = BAGGAGE_ATTRIBUTES[1];
-//                target= map.get(targetName);
-//                map.clear();
-//                map.put(targetName, target);
-//                break;
-//            case INSURANCE:
-//                targetName = INSURANCE_ATTRIBUTES[2];
-//                target= map.get(targetName);
-//                map.clear();
-//                map.put(targetName, target);
-//                break;
-//            case SEAT:
-//                targetName = SEAT_ATTRIBUTES[1];
-//                target= map.get(targetName);
-//                map.clear();
-//                map.put(targetName, target);
-//                break;
-//            default:
-//                break;
-//        }
+        return new ArrayList<>(map.entrySet());
+    }
+    public static List<Map.Entry<String, AttrValueConfidencePriority>> attributeConfMap2List(Map<String, AttrValueConfidencePriority> map, int type) {
         return new ArrayList<>(map.entrySet());
     }
 
@@ -223,6 +189,18 @@ public class DataConverter {
     }
 
     public static String getItemNameFromDocument(Document document,int type) {
+        List<String> targetItemNames = getTargetItemNames(type);
+        StringBuilder sb = new StringBuilder();
+        for (String itemName : targetItemNames) {
+            if(document.get(ATTRIBUTES_FIELD_NAME) != null){
+                sb.append(((Document)document.get(ATTRIBUTES_FIELD_NAME))
+                        .getString(itemName)).append(";");
+            }
+        }
+        return sb.toString();
+    }
+
+    public static String getItemNameAndPriceFromDocument(Document document,int type) {
         List<String> targetItemNames = getTargetItemNames(type);
         StringBuilder sb = new StringBuilder();
         for (String itemName : targetItemNames) {

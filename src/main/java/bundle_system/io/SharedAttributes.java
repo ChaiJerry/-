@@ -69,10 +69,10 @@ public class SharedAttributes {
     }
 
 
-    public static HashMap<String, ItemAttributeValueAndConfidenceAndPriority> getAttributesMap(int type) {
-        HashMap<String, ItemAttributeValueAndConfidenceAndPriority> attributesMap = new HashMap<>();
+    public static HashMap<String, AttrValueConfidencePriority> getAttributesMap(int type) {
+        HashMap<String, AttrValueConfidencePriority> attributesMap = new HashMap<>();
         for(String attributeName : itemAttributeNames.get(type)) {
-           attributesMap.put(attributeName, new ItemAttributeValueAndConfidenceAndPriority());
+           attributesMap.put(attributeName, new AttrValueConfidencePriority());
         }
         return attributesMap;
     }

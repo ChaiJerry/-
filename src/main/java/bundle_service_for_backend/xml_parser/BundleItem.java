@@ -1,5 +1,6 @@
 package bundle_service_for_backend.xml_parser;
 
+import bundle_system.memory_query_system.*;
 import org.jetbrains.annotations.*;
 import org.w3c.dom.*;
 
@@ -29,15 +30,17 @@ public class BundleItem implements Comparable<BundleItem> {
      * 设置优先级，直接比较字符串
      * @param recommendAttributes 推荐的属性
      */
-    public void setPriority(Map<String, String> recommendAttributes) {
+    public void setPriority(Map<String, AttrValueConfidencePriority> recommendAttributes) {
         for (String key : recommendAttributes.keySet()) {
             if (attributes.containsKey(key)) {
                 // 实际的属性值
                 String value = attributes.get(key);
                 // 推荐属性值
-                String recommendValue = recommendAttributes.get(key);
+                AttrValueConfidencePriority attrValueConfidencePriority = recommendAttributes.get(key);
+                String recommendValue = attrValueConfidencePriority.getAttributeValue();
                 if (value.equalsIgnoreCase(recommendValue)) {
-                    priority++;
+                    //优先级加上置信度的对数
+                    priority += log(attrValueConfidencePriority.getConfidence());
                 }
             }
         }
@@ -48,19 +51,21 @@ public class BundleItem implements Comparable<BundleItem> {
      * 但是有风险在于字符串要是内容是数值但是其实是应该直接比较的情况下可能造成错误
      * @param recommendAttributes 推荐的属性
      */
-    public void setPriorityWithNumParse(Map<String, String> recommendAttributes) {
+    public void setPriorityWithNumParse(Map<String, AttrValueConfidencePriority> recommendAttributes) {
         for (String key : recommendAttributes.keySet()) {
             if (attributes.containsKey(key)) {
-                //实际的属性值
+                // 实际的属性值
                 String value = attributes.get(key);
-                //推荐属性值
-                String recommendValue = recommendAttributes.get(key);
+                // 推荐属性值
+                AttrValueConfidencePriority attrValueConfidencePriority = recommendAttributes.get(key);
+                String recommendValue = attrValueConfidencePriority.getAttributeValue();
                 if (value.equalsIgnoreCase(recommendValue)) {
-                    priority++;
-                } else if (isNum(value) && isNum(recommendValue)) {
+                    //优先级加上置信度的对数
+                    priority += log(attrValueConfidencePriority.getConfidence());
+                }else if (isNum(value) && isNum(recommendValue)) {
                     //判断不相等的情况，判断是否为浮点数或整数
                     //优先级加上二者之差的绝对值的负指数
-                    priority += exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
+                    priority += log(attrValueConfidencePriority.getConfidence())*exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
                 }
             }
         }

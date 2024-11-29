@@ -31,10 +31,10 @@ public class BackendBundleSystem {
     static {
         sortBundleItemMethods.add(null);
         sortBundleItemMethods.add(null);
-        sortBundleItemMethods.add(BackendBundleSystem::testBundleMeal);
-        sortBundleItemMethods.add(BackendBundleSystem::testBundleBaggage);
-        sortBundleItemMethods.add(BackendBundleSystem::testBundleInsurance);
-        sortBundleItemMethods.add(BackendBundleSystem::testBundleSeat);
+        sortBundleItemMethods.add(BundleMethods::testBundleMeal);
+        sortBundleItemMethods.add(BundleMethods::testBundleBaggage);
+        sortBundleItemMethods.add(BundleMethods::testBundleInsurance);
+        sortBundleItemMethods.add(BundleMethods::testBundleSeat);
 
         try {
             dBuilder = dbFactory.newDocumentBuilder();
@@ -212,7 +212,7 @@ public class BackendBundleSystem {
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的AncillaryProducts
-        Element ancillaryProducts = testBundleMeal(segTicketMap
+        Element ancillaryProducts = BundleMethods.testBundleMeal(segTicketMap
                 , bundleItems, rulesStorages.get(MEAL), null, doc);
 
         // 处理行李
@@ -230,141 +230,12 @@ public class BackendBundleSystem {
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);
         // 得到选座返回的ancillary1
-        Element ancillary1 = testBundleSeat(segTicketMap, bundleItems
+        Element ancillary1 = BundleMethods.testBundleSeat(segTicketMap, bundleItems
                 , rulesStorages.get(SEAT), ancillaryProducts, doc);
 
         comboWith.appendChild(insurance);
         comboWith.appendChild(ancillary0);
         comboWith.appendChild(ancillary1);
-    }
-
-    /**
-     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
-     *
-     * @param ticketInfo    机票航段 商品键值对
-     * @param bundleItems   附加产品所属航段 附加产品键值对
-     * @param rulesStorage  附加产品规则存储
-     * @param fatherElement 父节点
-     * @param doc           最终返回到Document，这里用来创造节点
-     */
-    public static Element testBundleMeal(Map<String, BundleItem> ticketInfo
-            , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
-        Element ancillary = doc.createElement("Ancillary");
-        Element boundProducts = doc.createElement("BoundProducts");
-        Element ancillaryProducts = doc.createElement("AncillaryProducts");
-        ancillary.appendChild(boundProducts);
-        boundProducts.appendChild(ancillaryProducts);
-        //遍历ticketInfo，得到其中的机票属性
-        for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
-            //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
-            //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
-            List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
-            //排序
-            setPriorityAndSort(map, bundleItemList);
-            //将排序好的附加产品添加到节点中
-            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
-                BundleItem bundleItem = bundleItemList.get(i);
-                // 将附加产品添加到节点中（这里是用的是破坏性迁移，效率更高，会直接修改原来的doc）
-                ancillaryProducts.appendChild(bundleItem.getElement());
-            }
-        }
-        return ancillaryProducts;
-    }
-
-    /**
-     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
-     *
-     * @param ticketInfo    机票航段 商品键值对
-     * @param bundleItems   附加产品所属航段 附加产品键值对
-     * @param rulesStorage  附加产品规则存储
-     * @param fatherElement fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
-     * @param doc           输出的Document
-     */
-    public static Element testBundleBaggage(Map<String, BundleItem> ticketInfo
-            , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
-        Element ancillary = doc.createElement("Ancillary");
-        Element baggage = doc.createElement("Baggage");
-        ancillary.appendChild(baggage);
-        Element originDestination = doc.createElement("OriginDestination");
-        baggage.appendChild(originDestination);
-        //遍历ticketInfo，得到其中的机票属性
-        for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
-            //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
-            //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
-            List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
-            //排序
-            setPriorityAndSort(map, bundleItemList);
-            //将排序好的附加产品添加到节点中
-            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
-                BundleItem bundleItem = bundleItemList.get(i);
-                //将附加产品添加到节点中
-                originDestination.appendChild(bundleItem.getElement());
-            }
-        }
-        return ancillary;
-    }
-
-    /**
-     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
-     *
-     * @param ticketInfo    机票航段 商品键值对
-     * @param bundleItems   附加产品所属航段 附加产品键值对，这里的键为 航段号|subtype
-     * @param rulesStorage  附加产品规则存储
-     * @param fatherElement fatherElement节点，大多数时候为null，主要是为了选座和餐食在一个父节点下设计的
-     * @param doc           输出的Document
-     */
-    public static Element testBundleSeat(Map<String, BundleItem> ticketInfo
-            , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
-        Map<String, Map<String, String>> segAttributesmap = new HashMap<>();
-        //遍历ticketInfo，得到其中的机票属性
-        for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
-            //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
-            //预处理属性map，将座位列和subType对应
-            preProcessSeatNoTOSubType(map);
-            segAttributesmap.put(entry.getKey(), map);
-        }
-        //遍历bundleItems，得到其中的附加产品属性
-        for (Map.Entry<String, List<BundleItem>> entry : bundleItems.entrySet()) {
-            //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
-            List<BundleItem> bundleItemList = entry.getValue();
-            String segRef = entry.getKey().split("\\|")[0];
-            //排序
-            setPriorityAndSort(segAttributesmap.get(segRef), bundleItemList);
-            //将排序好的附加产品添加到节点中
-            for (int i = 0, size = bundleItemList.size(); i < size; i++) {
-                BundleItem bundleItem = bundleItemList.get(i);
-                //将附加产品添加到节点中
-                fatherElement.appendChild(buildSeatElement(bundleItem, doc));
-            }
-        }
-        return (Element) fatherElement.getParentNode().getParentNode();
-    }
-
-    private static void preProcessSeatNoTOSubType(Map<String, String> map) {
-        String seatNo = map.get("SEAT_NO");
-        map.remove("SEAT_NO");
-        if (seatNo == null) {
-            return;
-        }
-        String key = "SubType";
-        //靠窗座位：A（左）, K（右）——适用于所有飞机；
-        //
-        //靠走廊座位：C, D, G, H ——适用于双通道飞机；C, H——适用于单通道飞机。
-        if (seatNo.equals("K") || seatNo.equals("A")) {
-            map.put(key, "85");
-        } else if (seatNo.equals("C") || seatNo.equals("D")
-                || seatNo.equals("G") || seatNo.equals("H")) {
-            map.put(key, "3");
-        } else {
-            map.put(key, "");
-        }
-
     }
 
     public static Element buildSeatElement(BundleItem bundleItem, Document doc) {
@@ -401,42 +272,12 @@ public class BackendBundleSystem {
     }
 
     /**
-     * 保险打包方法（测试版本）
-     *
-     * @param ticketInfo   机票航段 商品键值对
-     * @param bundleItems  保险所属航段 保险键值对
-     * @param rulesStorage 保险规则存储
-     * @return 返回打包后排序好的结果对应Insurance节点
-     */
-    public static Element testBundleInsurance(Map<String, BundleItem> ticketInfo
-            , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
-        Element insurance = doc.createElement("Insurance");
-        //遍历ticketInfo，得到其中的机票属性
-        for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
-            //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, String> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
-            //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
-            List<BundleItem> bundleItemList = bundleItems.get(null);
-            //排序
-            setPriorityAndSort(map, bundleItemList);
-            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
-                BundleItem bundleItem = bundleItemList.get(i);
-                //将排序好的附加产品添加到节点中
-                insurance.appendChild(bundleItem.getElement());
-            }
-            break;
-        }
-        return insurance;
-    }
-
-    /**
      * 给附加产品排序的方法
      *
      * @param map            推荐的附加产品属性键值对
      * @param bundleItemList 附加产品键列表
      */
-    public static void setPriorityAndSort(Map<String, String> map, List<BundleItem> bundleItemList) {
+    public static void setPriorityAndSort(Map<String, AttrValueConfidencePriority> map, List<BundleItem> bundleItemList) {
         for (BundleItem bundleItem : bundleItemList) {
             bundleItem.setPriority(map);
         }
@@ -449,7 +290,7 @@ public class BackendBundleSystem {
      * @param map            推荐的附加产品属性键值对
      * @param bundleItemList 附加产品键列表
      */
-    public static void setPriorityAndSortWithNumParse(Map<String, String> map, List<BundleItem> bundleItemList) {
+    public static void setPriorityAndSortWithNumParse(Map<String, AttrValueConfidencePriority> map, List<BundleItem> bundleItemList) {
         for (BundleItem bundleItem : bundleItemList) {
             bundleItem.setPriorityWithNumParse(map);
         }
