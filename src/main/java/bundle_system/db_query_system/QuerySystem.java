@@ -222,6 +222,7 @@ public class QuerySystem {
         Evaluator evaluator = new Evaluator(itemPackMap);
         double averageAccuracy = evaluator.getAverageAccuracy();
         double averageRecallRate = evaluator.getAverageRecallRate();
+        System.out.print("total"+ total);
 
         String accuracyInfo = "" + averageAccuracy;
         String recallInfo = "" + averageRecallRate;

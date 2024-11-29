@@ -13,14 +13,18 @@ import javax.xml.transform.stream.*;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 import static bundle_system.io.SharedAttributes.*;
 
 public class BackendBundleSystem {
+    private final int poolSize; // 线程池的大小
+    private final ExecutorService executorService;
 
     // 创建DocumentBuilderFactory和DocumentBuilder
     static DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     static DocumentBuilder dBuilder;
+    private static final XPathFactory xPathfactory = XPathFactory.newInstance();
 
     static List<SortBundleItemMethod> sortBundleItemMethods = new ArrayList<>();
 
@@ -39,15 +43,89 @@ public class BackendBundleSystem {
         }
     }
 
+    public BackendBundleSystem() {
+        this.poolSize = 16;
+        executorService = Executors.newFixedThreadPool(poolSize);
+    }
+
+    public BackendBundleSystem(int poolSize) {
+        this.poolSize = poolSize;
+        executorService = Executors.newFixedThreadPool(poolSize);
+    }
+
+    public Document submit(Document doc) {
+        // 提交查询任务到线程池
+        Future<?> future = executorService.submit(new BundleTask(doc));
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return doc;
+    }
+
+    public void submit(List<Document> docs) {
+        // 提交查询任务到线程池
+        List<Future<?>> futures = new ArrayList<>();
+        for(Document doc : docs) {
+            futures.add(executorService.submit(new BundleTask(doc)));
+        }
+        try {
+            for(Future<?> future : futures) {
+                future.get();
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 测试多线程，会对于原来的doc修改
+     *
+     * @param num 测试次数
+     */
+    public void test3(int num) throws ParserConfigurationException, IOException, SAXException {
+        //模拟输入Document
+        XMLReader xmlReader = new XMLReader();
+        long sum = 0;
+        List<Document> docs = new ArrayList<>();
+        System.out.println("正在模拟输入文档，数量："+num);
+        for (int i = 0; i < num; i++) {
+            Document doc = xmlReader.read();
+            docs.add(doc);
+        }
+        System.out.println("文档输入完成，开始打包");
+        long start = System.nanoTime();
+        submit(docs);
+        long end = System.nanoTime();
+        sum += end - start;
+        System.out.println("完成，平均耗时time(ms):" + (sum) / 1000000 / num);
+        shutdownAll();
+    }
+
+    /**
+     * 测试多线程，会对于原来的doc修改，最后保存
+     */
+    public void test3() throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
+        //模拟输入Document
+        XMLReader xmlReader = new XMLReader();
+        long start = System.nanoTime();
+        Document doc = xmlReader.read();
+        submit(doc);
+        saveDocument(doc);
+        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
+    }
+
     /**
      * 测试Bundle功能，对于原来的doc不修改
+     *
      * @param times 测试次数
      */
     public static void test(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
         XMLReader xmlReader = new XMLReader();
-        XMLParser xmlParser = new XMLParser();
+        XMLParser xmlParser = new XMLParser(xPathfactory.newXPath());
         List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
-        Document originalDoc =xmlReader.read();
+        Document originalDoc = xmlReader.read();
         Element root = originalDoc.getDocumentElement();
         //由ns计算时间ms
         long start = System.nanoTime();
@@ -58,7 +136,7 @@ public class BackendBundleSystem {
         List<ParseMethod> parseMethods = xmlParser.getParseMethods();
         Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
         for (int i = 0; i < times; i++) {
-            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages,comboWith,doc);
+            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages, comboWith, doc);
         }
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
         saveDocument(doc);
@@ -67,14 +145,15 @@ public class BackendBundleSystem {
 
     /**
      * 测试Bundle功能，对于原来的doc修改
+     *
      * @param times 测试次数
      */
     public static void test1(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
         XMLReader xmlReader = new XMLReader();
-        XMLParser xmlParser = new XMLParser();
+        XMLParser xmlParser = new XMLParser(xPathfactory.newXPath());
         List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
         //模拟输入Document
-        Document doc =xmlReader.read();
+        Document doc = xmlReader.read();
         Element root = doc.getDocumentElement();
         Element comboWith = doc.createElement("ComboWith");
         //由ns计算时间ms
@@ -84,9 +163,9 @@ public class BackendBundleSystem {
         List<ParseMethod> parseMethods = xmlParser.getParseMethods();
         Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
         for (int i = 0; i < times; i++) {
-            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages,comboWith,doc);
+            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages, comboWith, doc);
         }
-        xmlParser.renewComboWith(root,comboWith);
+        xmlParser.renewComboWith(root, comboWith);
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
         saveDocument(doc);
         RulesStorage.shutdownAll();
@@ -94,6 +173,7 @@ public class BackendBundleSystem {
 
     /**
      * 将Document保存到文件
+     *
      * @param doc 希望保存的Document
      */
     public static void saveDocument(Document doc) throws TransformerException {
@@ -111,11 +191,12 @@ public class BackendBundleSystem {
 
     /**
      * 获取返回的Document模板（用于非破坏性操作）
-     * @param doc 新建的返回的Document
+     *
+     * @param doc   新建的返回的Document
      * @param xmlns xmlns
      * @return 返回的Document模板
      */
-    public static Element getReturnDocTemplate(Document doc,String xmlns) {
+    public static Element getReturnDocTemplate(Document doc, String xmlns) {
         Element rootElement = doc.createElement("OJ_ComboSearchRS");
         rootElement.setAttribute("xmlns", xmlns);
         doc.appendChild(rootElement);
@@ -124,10 +205,9 @@ public class BackendBundleSystem {
         return comboWith;
     }
 
-
     private static void bundleAllItem(List<ParseMethod> parseMethods, Element root
             , Map<String, BundleItem> segTicketMap, List<RulesStorage> rulesStorages
-            , Element comboWith,Document doc) throws XPathExpressionException {
+            , Element comboWith, Document doc) throws XPathExpressionException {
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的AncillaryProducts
@@ -137,14 +217,14 @@ public class BackendBundleSystem {
         // 处理行李
         bundleItems = parseMethods.get(BAGGAGE).execute(root);
         // 得到行李返回的ancillary0
-        Element ancillary0 =sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
-                , rulesStorages.get(BAGGAGE), null ,doc);
+        Element ancillary0 = sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
+                , rulesStorages.get(BAGGAGE), null, doc);
 
         // 处理保险
         bundleItems = parseMethods.get(INSURANCE).execute(root);
         // 得到保险返回的insurance
         Element insurance = sortBundleItemMethods.get(INSURANCE).execute(segTicketMap, bundleItems
-                , rulesStorages.get(INSURANCE), null ,doc);
+                , rulesStorages.get(INSURANCE), null, doc);
 
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);
@@ -160,15 +240,15 @@ public class BackendBundleSystem {
     /**
      * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
      *
-     * @param ticketInfo   机票航段 商品键值对
-     * @param bundleItems  附加产品所属航段 附加产品键值对
-     * @param rulesStorage 附加产品规则存储
-     * @param fatherElement     父节点
-     * @param doc         最终返回到Document，这里用来创造节点
+     * @param ticketInfo    机票航段 商品键值对
+     * @param bundleItems   附加产品所属航段 附加产品键值对
+     * @param rulesStorage  附加产品规则存储
+     * @param fatherElement 父节点
+     * @param doc           最终返回到Document，这里用来创造节点
      */
     public static Element testBundleMeal(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage,Element fatherElement ,Document doc) {
+            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
         Element ancillary = doc.createElement("Ancillary");
         Element boundProducts = doc.createElement("BoundProducts");
         Element ancillaryProducts = doc.createElement("AncillaryProducts");
@@ -183,7 +263,7 @@ public class BackendBundleSystem {
             //排序
             setPriorityAndSort(map, bundleItemList);
             //将排序好的附加产品添加到节点中
-            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
                 //非破坏性迁移 TODO 确认是否需要非破坏性迁移
                 //ancillaryProducts.appendChild(migrateNode(bundleItem.getElement(),doc));
@@ -196,15 +276,15 @@ public class BackendBundleSystem {
     /**
      * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
      *
-     * @param ticketInfo   机票航段 商品键值对
-     * @param bundleItems  附加产品所属航段 附加产品键值对
-     * @param rulesStorage 附加产品规则存储
-     * @param fatherElement    fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
-     * @param doc         输出的Document
+     * @param ticketInfo    机票航段 商品键值对
+     * @param bundleItems   附加产品所属航段 附加产品键值对
+     * @param rulesStorage  附加产品规则存储
+     * @param fatherElement fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
+     * @param doc           输出的Document
      */
     public static Element testBundleBaggage(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage,Element fatherElement,Document doc) {
+            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
         Element ancillary = doc.createElement("Ancillary");
         Element baggage = doc.createElement("Baggage");
         ancillary.appendChild(baggage);
@@ -219,7 +299,7 @@ public class BackendBundleSystem {
             //排序
             setPriorityAndSort(map, bundleItemList);
             //将排序好的附加产品添加到节点中
-            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
                 //非破坏性迁移 TODO 确认是否需要非破坏性迁移
                 //originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
@@ -230,19 +310,18 @@ public class BackendBundleSystem {
         return ancillary;
     }
 
-
     /**
      * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
      *
-     * @param ticketInfo   机票航段 商品键值对
-     * @param bundleItems  附加产品所属航段 附加产品键值对，这里的键为 航段号|subtype
-     * @param rulesStorage 附加产品规则存储
-     * @param fatherElement    fatherElement节点，大多数时候为null，主要是为了选座和餐食在一个父节点下设计的
-     * @param doc         输出的Document
+     * @param ticketInfo    机票航段 商品键值对
+     * @param bundleItems   附加产品所属航段 附加产品键值对，这里的键为 航段号|subtype
+     * @param rulesStorage  附加产品规则存储
+     * @param fatherElement fatherElement节点，大多数时候为null，主要是为了选座和餐食在一个父节点下设计的
+     * @param doc           输出的Document
      */
     public static Element testBundleSeat(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage,Element fatherElement,Document doc) {
+            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
         Map<String, Map<String, String>> segAttributesmap = new HashMap<>();
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
@@ -251,15 +330,14 @@ public class BackendBundleSystem {
             segAttributesmap.put(entry.getKey(), map);
         }
         //遍历bundleItems，得到其中的附加产品属性
-        for (Map.Entry<String, List<BundleItem>> entry : bundleItems.entrySet())
-        {
+        for (Map.Entry<String, List<BundleItem>> entry : bundleItems.entrySet()) {
             //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
             List<BundleItem> bundleItemList = entry.getValue();
             String segRef = entry.getKey().split("\\|")[0];
             //排序
             setPriorityAndSort(segAttributesmap.get(segRef), bundleItemList);
             //将排序好的附加产品添加到节点中
-            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
                 //非破坏性迁移 TODO 确认是否需要非破坏性迁移
                 //originDestination.appendChild(migrateNode(bundleItem.getElement(),doc));
@@ -276,7 +354,7 @@ public class BackendBundleSystem {
         Element prices = doc.createElement("Prices");
         Element price = doc.createElement("Price");
         Element total = doc.createElement("Total");
-        
+
         //为节点属性赋值
         Map<String, String> xmlAttributes = bundleItem.getXmlAttributes();
         /*结构示例
@@ -313,7 +391,7 @@ public class BackendBundleSystem {
      */
     public static Element testBundleInsurance(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage,Element fatherElement,Document doc) {
+            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
         Element insurance = doc.createElement("Insurance");
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
@@ -323,7 +401,7 @@ public class BackendBundleSystem {
             List<BundleItem> bundleItemList = bundleItems.get(null);
             //排序
             setPriorityAndSort(map, bundleItemList);
-            for(int i = 0 ,size=bundleItemList.size();i<size && i<5;i++) {
+            for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
                 //非破坏性迁移 TODO 确认是否需要非破坏性迁移
                 //insurance.appendChild(migrateNode(bundleItem.getElement(),doc));
@@ -351,7 +429,7 @@ public class BackendBundleSystem {
     /**
      * 将一个节点从一个文档迁移到另一个文档。
      *
-     * @param node 要迁移的节点
+     * @param node      要迁移的节点
      * @param targetDoc 目标文档
      * @return 迁移后的节点
      */
@@ -402,5 +480,10 @@ public class BackendBundleSystem {
         }
 
         return newNode;
+    }
+
+    public void shutdownAll() {
+        executorService.shutdown();
+        RulesStorage.shutdownAll();
     }
 }
