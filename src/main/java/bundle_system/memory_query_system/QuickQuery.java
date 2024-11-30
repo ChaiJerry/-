@@ -52,14 +52,14 @@ public class QuickQuery {
                 associationRulesMining(listOfAttributeList, false
                         , true, itemTicketFreqItemSets, itemTicketRules
                         , 0.08, 0);
-                sqlUtils.storeRules(type, itemTicketRules, "test");
+                sqlUtils.storeRules(type, itemTicketRules, "test",10);
             }
         }catch (Exception e) {
             //否则，进行训练
             associationRulesMining(listOfAttributeList, false
                     , true, itemTicketFreqItemSets, itemTicketRules
                     , 0.08, 0);
-            sqlUtils.storeRules(type, itemTicketRules, "test");
+            sqlUtils.storeRules(type, itemTicketRules, "test",10);
         }
         printProgressBar(67, info);
         //System.out.println("Training time: " + (System.nanoTime() - startTime1) / 1000000+ "ms");

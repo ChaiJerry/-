@@ -21,8 +21,8 @@ public class MainClass {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
 //        QuickQuery quickQuery = new QuickQuery();
 //        quickQuery.test(MEAL);
-        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(4);
-        backendBundleSystem.test3();
+        BackendBundleSystem backendBundleSystem = new BackendBundleSystem();
+        backendBundleSystem.test1(1);
 //        SQLUtils sqlUtils = new SQLUtils();
 //        sqlUtils.renewTables();
 //        sqlUtils.insertTrainDataRecord("1.csv","2023...",MEAL);

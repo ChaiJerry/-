@@ -15,11 +15,12 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class CSVFileIO {
 
+
     //csv文件结果输出的目录路径
-    private final String resultDirPath;
+    private String resultDirPath;
     //csv文件读取的路径，数组长度为types.length，数组下标与types对应
     private final String[] csvPaths = new String[SharedAttributes.types.length + 2];
-
+    protected Map<String, List<List<String>>> trainTicketsMap;
     // 初始化日志记录器
     private static final Logger logger = Logger.getLogger(CSVFileIO.class.getName());
 
@@ -41,28 +42,62 @@ public class CSVFileIO {
         // 输出结果路径
         this.resultDirPath = resultDirPath;
         // 机票订单相关数据csv文件路径
-        csvPaths[SharedAttributes.TICKET] = pathT;
+        csvPaths[TICKET] = pathT;
         // 酒店相关数据csv文件路径
-        csvPaths[SharedAttributes.HOTEL] = pathH;
+        csvPaths[HOTEL] = pathH;
         // 餐食相关数据csv文件路径
-        csvPaths[SharedAttributes.MEAL] = pathM;
+        csvPaths[MEAL] = pathM;
         // 行李相关数据csv文件路径
-        csvPaths[SharedAttributes.BAGGAGE] = pathB;
+        csvPaths[BAGGAGE] = pathB;
         // 保险相关数据csv文件路径
-        csvPaths[SharedAttributes.INSURANCE] = pathI;
+        csvPaths[INSURANCE] = pathI;
         // 座位相关数据csv文件路径
-        csvPaths[SharedAttributes.SEAT] = pathS;
+        csvPaths[SEAT] = pathS;
         // 初始化类型与索引的映射
         for (int i = 0; i < SharedAttributes.types.length; i++) {
             SharedAttributes.type2index.put(SharedAttributes.types[i], i);
         }
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
         SharedAttributes.ticketMap = null;
-        //训练用机票订单
-        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, "Test");
         //测试用机票订单
-        SharedAttributes.trainTicketsMap = CSVFileIO.read(PATH_TRAIN_T, "Train");
+        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, "Test");
+        //训练用机票订单
+        trainTicketsMap = CSVFileIO.read(PATH_TRAIN_T, "Train");
     }
+
+    /**
+     * 初始化CSVFileIO，用于实际生产环境的构造方法
+     * @param pathT 机票订单csv文件路径
+     * @param pathH 酒店csv文件路径，如果不用就写成null
+     * @param pathM 餐食csv文件路径
+     * @param pathB 行李csv文件路径
+     * @param pathI 保险csv文件路径
+     * @param pathS 选座csv文件路径
+     */
+    public CSVFileIO(String pathT
+            , String pathH, String pathM, String pathB
+            , String pathI, String pathS) throws IOException {
+        // 初始化路径
+        // 机票订单相关数据csv文件路径
+        csvPaths[TICKET] = pathT;
+        // 酒店相关数据csv文件路径
+        csvPaths[HOTEL] = pathH;
+        // 餐食相关数据csv文件路径
+        csvPaths[MEAL] = pathM;
+        // 行李相关数据csv文件路径
+        csvPaths[BAGGAGE] = pathB;
+        // 保险相关数据csv文件路径
+        csvPaths[INSURANCE] = pathI;
+        // 座位相关数据csv文件路径
+        csvPaths[SEAT] = pathS;
+        //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
+        SharedAttributes.ticketMap = null;
+        //测试用机票订单
+        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, "Test");
+        //训练用机票订单
+        trainTicketsMap = CSVFileIO.read(csvPaths[TICKET], "Train");
+    }
+
 
     public void csv2DB() throws IOException {
         for (int i = 1; i < 6; i++) {
@@ -97,7 +132,7 @@ public class CSVFileIO {
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
             // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到data中
-            for (Iterator<String> iterator = SharedAttributes.trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+            for (Iterator<String> iterator = trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
                 String key = iterator.next();
                 // 得到属性列表
                 List<List<String>> attributeLists = attributeMap.get(key);
@@ -106,7 +141,7 @@ public class CSVFileIO {
                 if (attributeLists != null) {
                     for (List<String> attributeList : attributeLists) {
                         //加入共现的机票订单属性数据
-                        attributeList.add(SharedAttributes.trainTicketsMap.get(key).get(0).get(eva));
+                        attributeList.add(trainTicketsMap.get(key).get(0).get(eva));
                         data.add(RowFactory.create(attributeList));
                     }
                 }
@@ -135,7 +170,7 @@ public class CSVFileIO {
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
             // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到data中
-            for (Iterator<String> iterator = SharedAttributes.trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+            for (Iterator<String> iterator = trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
                 String key = iterator.next();
                 // 得到属性列表
                 List<List<String>> attributeLists = attributeMap.get(key);
@@ -144,7 +179,7 @@ public class CSVFileIO {
                 if (attributeLists != null) {
                     for (List<String> attributeList : attributeLists) {
                         //加入共现的机票订单属性数据
-                        attributeList.addAll(SharedAttributes.trainTicketsMap.get(key).get(0));
+                        attributeList.addAll(trainTicketsMap.get(key).get(0));
                         data.add(RowFactory.create(attributeList));
                     }
                 }
@@ -173,7 +208,7 @@ public class CSVFileIO {
         attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
         //筛选出能和机票订单号匹配的订单数据
         // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到listOfAttributeList中
-        for (Iterator<String> iterator = SharedAttributes.trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
+        for (Iterator<String> iterator = trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
             String key = iterator.next();
             // 得到属性列表
             List<List<String>> attributeLists = attributeMap.get(key);
@@ -182,7 +217,7 @@ public class CSVFileIO {
             if (attributeLists != null) {
                 for (List<String> attributeList : attributeLists) {
                     //加入共现的机票订单属性数据
-                    attributeList.addAll(SharedAttributes.trainTicketsMap.get(key).get(0));
+                    attributeList.addAll(trainTicketsMap.get(key).get(0));
                     listOfAttributeList.add(attributeList);
                 }
             }
