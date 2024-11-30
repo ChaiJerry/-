@@ -2,6 +2,8 @@ package bundle_service_for_backend;
 
 import bundle_service_for_backend.xml_parser.*;
 import bundle_service_for_backend.xml_parser.XMLReader;
+import bundle_system.io.*;
+import bundle_system.io.sql.*;
 import bundle_system.memory_query_system.*;
 import org.w3c.dom.*;
 import org.xml.sax.*;
@@ -15,7 +17,9 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static bundle_system.api.API.*;
 import static bundle_system.io.SharedAttributes.*;
+import static bundle_system.memory_query_system.QuickQuery.*;
 
 public class BackendBundleSystem {
 
@@ -44,26 +48,78 @@ public class BackendBundleSystem {
     private final int poolSize; // 线程池的大小
     private final ExecutorService executorService;
     private List<RulesStorage> rulesStorages;
+    private final SQLUtils sqlUtils;
+    private final CSVFileIO fileIO;
 
-
+    /**
+     * 请勿使用默认构造函数，请使用带参数的构造函数，这只是用来测试的
+     */
     public BackendBundleSystem() {
-        this.poolSize = 16;
+        this.poolSize = 8;
         executorService = Executors.newFixedThreadPool(poolSize);
+        sqlUtils = new SQLUtils();
         try {
-            rulesStorages = QuickQuery.initAllRulesStorage();
+            rulesStorages = initAllRulesStorage(null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        fileIO = SharedAttributes.fileIO;
     }
 
-    public BackendBundleSystem(int poolSize) {
+    /**
+     * 当想要从数据库中读取训练然后保存到对应的数据库中就用这个构造函数
+     * @param poolSize 线程池的大小
+     * @param sqlUtils 数据库操作对象
+     * @param trainId 希望作为知识库的训练数据的id
+     */
+    public BackendBundleSystem(int poolSize,SQLUtils sqlUtils,String trainId) {
+        this.poolSize = poolSize;
+        this.sqlUtils = sqlUtils;
+        executorService = Executors.newFixedThreadPool(poolSize);
+        try {
+            rulesStorages = initAllRulesStorage(trainId);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        fileIO = null;
+    }
+
+    /**
+     * 当想要若是数据库中没有读到数据时就从csv文件中读取训练然后保存到对应的数据库中就用这个构造函数
+     * @param poolSize 线程池的大小
+     * @param fileIO csv文件操作对象
+     * @param sqlUtils 数据库操作对象
+     * @param trainId 训练数据的id
+     */
+    public BackendBundleSystem(int poolSize,CSVFileIO fileIO,SQLUtils sqlUtils, String trainId) {
+        this.poolSize = poolSize;
+        executorService = Executors.newFixedThreadPool(poolSize);
+        this.sqlUtils = sqlUtils;
+        this.fileIO = fileIO;
+        try {
+            rulesStorages = initAllRulesStorage(trainId);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    /**
+     * 当想要直接csv文件中训练然后加载到内存就用这个构造函数
+     * @param poolSize 线程池的大小
+     * @param fileIO csv文件操作对象
+     */
+    public BackendBundleSystem(int poolSize,CSVFileIO fileIO) {
+        this.sqlUtils = null;
+        this.fileIO = fileIO;
         this.poolSize = poolSize;
         executorService = Executors.newFixedThreadPool(poolSize);
         try {
-            rulesStorages = QuickQuery.initAllRulesStorage();
+            rulesStorages = initAllRulesStorage(null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     public Document submitBundleTask(Document doc) {
@@ -135,13 +191,13 @@ public class BackendBundleSystem {
         XMLReader xmlReader = new XMLReader();
         long start = System.nanoTime();
         Document doc;
-//         doc = xmlReader.read();
-//        submitBundleTasks(doc);
-//        saveDocument(doc);
-        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
-        doc = xmlReader.read();
-        submitQueryTask(doc);
+         doc = xmlReader.read();
+        submitBundleTask(doc);
         saveDocument(doc);
+        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
+//        doc = xmlReader.read();
+//        submitQueryTask(doc);
+//        saveDocument(doc);
         shutdownAll();
     }
 
@@ -153,22 +209,22 @@ public class BackendBundleSystem {
     public static void test(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
         XMLReader xmlReader = new XMLReader();
         XMLParser xmlParser = new XMLParser(xPathfactory.newXPath());
-        List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
-        Document originalDoc = xmlReader.read();
-        Element root = originalDoc.getDocumentElement();
-        //由ns计算时间ms
-        long start = System.nanoTime();
-        //新建返回的Document部分
-        Document doc = dBuilder.newDocument();
-        Element comboWith = getReturnDocTemplate(doc, root.getAttribute("xmlns"));
-        //解析xml文件部分
-        List<ParseMethod> parseMethods = xmlParser.getParseMethods();
-        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
-        for (int i = 0; i < times; i++) {
-            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages, comboWith, doc);
-        }
-        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
-        saveDocument(doc);
+        List<RulesStorage> rulesStorages =  QuickQuery.initAllRulesStorage();
+//        Document originalDoc = xmlReader.read();
+//        Element root = originalDoc.getDocumentElement();
+//        //由ns计算时间ms
+//        long start = System.nanoTime();
+//        //新建返回的Document部分
+//        Document doc = dBuilder.newDocument();
+//        Element comboWith = getReturnDocTemplate(doc, root.getAttribute("xmlns"));
+//        //解析xml文件部分
+//        List<ParseMethod> parseMethods = xmlParser.getParseMethods();
+//        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
+//        for (int i = 0; i < times; i++) {
+//            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages, comboWith, doc);
+//        }
+//        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
+//        saveDocument(doc);
         RulesStorage.shutdownAll();
     }
 
@@ -339,6 +395,68 @@ public class BackendBundleSystem {
         }
         Collections.sort(bundleItemList);
     }
+
+    /**
+     * 初始化打包系统实例中所有规则存储的方法
+     * @return List<RulesStorage>
+     * @throws IOException IO异常
+     */
+    private List<RulesStorage> initAllRulesStorage(String trainId) throws IOException {
+        List<RulesStorage> rulesStorages = new ArrayList<>();
+        //跳过机票标号
+        rulesStorages.add(null);
+        //跳过酒店品类（没有使用）
+        rulesStorages.add(null);
+        boolean autoSave = trainId== null || trainId.isEmpty();
+        for(int type = 2; type < SharedAttributes.getFullNames().length; type++) {
+            List<List<String>> rules;
+            if(sqlUtils != null && trainId!=null){
+                rules = getRulesFromDB(type, trainId);
+                if(rules==null){
+                    rules = getRulesFromCSVFile(type,trainId,autoSave);
+                }
+            }else{
+                rules = getRulesFromCSVFile(type,trainId,autoSave);
+            }
+            RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type,rules);
+            rulesStorages.add(rulesStorage);
+        }
+        return rulesStorages;
+    }
+
+    private List<List<String>> getRulesFromCSVFile(int  type) throws IOException {
+        List<List<String>> itemTicketRules = new ArrayList<>();
+        //否则，进行训练
+        List<List<String>> listOfAttributeList = fileIO.singleTypeCsv2ListOfAttributeList(type);
+        associationRulesMining(listOfAttributeList, false
+                    , true, null, itemTicketRules
+                    , 0.08, 0);
+        return itemTicketRules;
+    }
+
+    public List<List<String>> getRulesFromCSVFile(int type,String trainId,boolean autoSave) throws IOException {
+        List<List<String>> itemTicketRules = getRulesFromCSVFile(type);
+        if(autoSave && sqlUtils!=null) {
+            try {
+                sqlUtils.storeRules(type, itemTicketRules, trainId);
+            } catch (Exception e) {
+                System.out.println("自动存储规则失败");
+            }
+        }
+        return itemTicketRules;
+    }
+    public List<List<String>> getRulesFromDB(int  type,String trainId) {
+        List<List<String>> itemTicketRules;
+        try {
+            //如果已经存在，则直接加载
+            itemTicketRules = sqlUtils.loadRules(type, trainId);
+        }catch (Exception e) {
+            return null;
+        }
+        return itemTicketRules;
+    }
+
+
 
 
 

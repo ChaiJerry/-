@@ -91,9 +91,6 @@ public class SharedAttributes {
 
     protected static Map<String, List<List<String>>> testTicketsMap;
 
-
-    protected static Map<String, List<List<String>>> trainTicketsMap;
-
     //将type与index对应，用于快速查找
     protected static HashMap<String, Integer> type2index = new HashMap<>();
 
@@ -216,6 +213,11 @@ public class SharedAttributes {
         targetItemNames.add(Arrays.asList("INSUR_PRO_NAME","INSURANCE_COMPANYCODE"));
         targetItemNames.add(List.of("SEAT_NO"));
 
+        // 初始化类型与索引的映射
+        for (int i = 0; i < SharedAttributes.types.length; i++) {
+            SharedAttributes.type2index.put(SharedAttributes.types[i], i);
+        }
+
     }
 
     public static List<String> getTargetItemNames(int type) {
@@ -229,10 +231,6 @@ public class SharedAttributes {
 
     public static Map<String, List<List<String>>> getTestTicketsMap() {
         return testTicketsMap;
-    }
-
-    public static Map<String, List<List<String>>> getTrainTicketsMap() {
-        return trainTicketsMap;
     }
 
     public static String[] getFullNames() {

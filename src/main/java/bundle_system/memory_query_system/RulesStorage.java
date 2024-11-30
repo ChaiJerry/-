@@ -3,10 +3,12 @@ package bundle_system.memory_query_system;
 import bundle_system.io.*;
 import bundle_system.memory_query_system.lru_pool.*;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
 import static bundle_system.io.SharedAttributes.*;
+import static bundle_system.memory_query_system.QuickQuery.*;
 
 public class RulesStorage {
     //规则编号-规则map
@@ -71,6 +73,28 @@ public class RulesStorage {
             }
         }
         ruleCount++;
+    }
+
+    /**
+     * 初始化所有规则存储对象的方法
+     * @param type 商品品类代码
+     * @param itemTicketRules 商品规则列表
+     * @return RulesStorage对象
+     */
+    public static RulesStorage initRulesStorageByType(int type,List<List<String>> itemTicketRules){
+        //训练阶段
+        String info = "正在初始化"+SharedAttributes.getFullNames()[type]+"知识库";
+        printProgressBar(0, info);
+        RulesStorage rulesStorage = new RulesStorage(type);
+        for (List<String> itemTicketRule : itemTicketRules) {
+            String[] split = itemTicketRule.get(0).split("; ");
+            String consequent = itemTicketRule.get(1).split("; ")[0];
+            double confidence = Double.parseDouble(itemTicketRule.get(2).split("::")[1]);
+            rulesStorage.addRule(split, new AssociationRuleConsResult(consequent, confidence));
+        }
+        printProgressBar(100, info);
+        System.out.println();
+        return rulesStorage;
     }
 
     /**

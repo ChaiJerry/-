@@ -325,6 +325,13 @@ public class SQLUtils {
         }
     }
 
+    public void storeRules(int type, List<List<String>> itemRulesList, String train_id,int limit) {
+        //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
+        for(int i=0;i<limit&&i<itemRulesList.size();i++) {
+            storeRule(type, itemRulesList.get(i), train_id);
+        }
+    }
+
     /**
      * 根据训练编号和品类加载出对应的规则
      *
