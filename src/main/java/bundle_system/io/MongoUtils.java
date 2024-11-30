@@ -179,7 +179,7 @@ public class MongoUtils {
 
     public static void initializeItemAttributesStorages() {
         //排除测试以及训练集这两个特殊的种类
-        for (int type = 1; type < SharedAttributes.types.length - 2; type++) {
+        for (int type = 1; type < SharedAttributes.FULL_NAMES.length; type++) {
             SharedAttributes.itemAttributesStorage[type] = new ItemAttributesStorage();
             MongoCollection<Document> collection = getFrequentItemSetsCollection(type);
             FindIterable<Document> records = collection.find().sort(Sorts.descending(TRAINING_NUMBER_FIELD_NAME));

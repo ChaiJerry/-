@@ -26,8 +26,6 @@ public class BackendBundleSystem {
     // 创建DocumentBuilderFactory和DocumentBuilder
     static DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     static DocumentBuilder dBuilder;
-    private static final XPathFactory xPathfactory = XPathFactory.newInstance();
-
     static List<SortBundleItemMethod> sortBundleItemMethods = new ArrayList<>();
 
     static {
@@ -193,11 +191,11 @@ public class BackendBundleSystem {
         Document doc;
         doc = xmlReader.read();
         submitBundleTask(doc);
-        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test1.xml");
+        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test2.xml");
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
         doc = xmlReader.read();
         submitQueryTask(doc);
-        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test2.xml");
+        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test1.xml");
         shutdownAll();
     }
 
@@ -225,14 +223,7 @@ public class BackendBundleSystem {
     public static void saveDocument(Document doc) throws TransformerException {
         // 指定文件路径
         String filePath = "D:\\programms\\java_projects\\version_control\\output\\test.xml";  // 替换为你想要保存的路径
-
-        // 将Document转换并保存到文件
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        DOMSource source = new DOMSource(doc);
-        StreamResult result = new StreamResult(new File(filePath));
-        transformer.transform(source, result);
-        System.out.println("XML文件已成功保存到: " + filePath);
+        saveDocument(doc, filePath);
     }
 
     /**
@@ -358,7 +349,7 @@ public class BackendBundleSystem {
             List<List<String>> rules;
             if(sqlUtils != null && trainId!=null){
                 rules = getRulesFromDB(type, trainId);
-                if(rules==null){
+                if(rules==null || rules.isEmpty()){
                     rules = getRulesFromCSVFile(type,trainId,autoSave);
                 }
             }else{

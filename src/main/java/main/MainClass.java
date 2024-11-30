@@ -1,6 +1,7 @@
 package main;
 
 import bundle_service_for_backend.*;
+import bundle_system.io.sql.*;
 import bundle_system.memory_query_system.*;
 import bundle_system.api.*;
 import bundle_system.io.*;
@@ -20,11 +21,12 @@ import static bundle_system.io.SharedAttributes.*;
 public class MainClass {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
 //        QuickQuery quickQuery = new QuickQuery();
-//        quickQuery.test(MEAL);
+//        quickQuery.test(SEAT);
+
         CSVFileIO csvFileIO = new CSVFileIO(PATH_T,null,PATH_M,PATH_B, PATH_I, PATH_S);
         BackendBundleSystem backendBundleSystem = new BackendBundleSystem(8,csvFileIO);
         backendBundleSystem.test3();
-//        SQLUtils sqlUtils = new SQLUtils();
+
 //        sqlUtils.renewTables();
 //        sqlUtils.insertTrainDataRecord("1.csv","2023...",MEAL);
 //        QuickQuery.initAllRulesStorage();

@@ -23,7 +23,6 @@ public class QuickQuery {
         //训练阶段
         String info = "正在初始化"+SharedAttributes.getFullNames()[type]+"知识库";
         printProgressBar(0, info);
-        RulesStorage rulesStorage = new RulesStorage(type);
         List<List<String>> listOfAttributeList = fileIO.singleTypeCsv2ListOfAttributeList(type);
         List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
         List<List<String>> itemTicketRules = new ArrayList<>();
@@ -31,28 +30,30 @@ public class QuickQuery {
         SQLUtils sqlUtils = new SQLUtils();
         //测算训练用时
         long startTime1 = System.nanoTime();
-        try {
-            //如果已经存在，则直接加载
-            itemTicketRules = sqlUtils.loadRules(type, "test");
-            if(itemTicketRules.isEmpty()) {
-                associationRulesMining(listOfAttributeList, false
-                        , true, itemTicketFreqItemSets, itemTicketRules
-                        , 0.08, 0);
-                sqlUtils.storeRules(type, itemTicketRules, "test",10);
-            }
-        }catch (Exception e) {
-            //否则，进行训练
-            associationRulesMining(listOfAttributeList, false
-                    , true, itemTicketFreqItemSets, itemTicketRules
-                    , 0.08, 0);
-            sqlUtils.storeRules(type, itemTicketRules, "test",10);
-        }
-        printProgressBar(67, info);
-        //System.out.println("Training time: " + (System.nanoTime() - startTime1) / 1000000+ "ms");
-        initRulesStorageByType(type, itemTicketRules);
-        printProgressBar(100, info);
-        System.out.println();
-        return rulesStorage;
+        associationRulesMining(listOfAttributeList, false
+                , true, itemTicketFreqItemSets, itemTicketRules
+                , 0.08, 0);
+        return initRulesStorageByType(type, itemTicketRules);
+//        try {
+//            //如果已经存在，则直接加载
+//            itemTicketRules = sqlUtils.loadRules(type, "test");
+//            if(itemTicketRules.isEmpty()) {
+//                associationRulesMining(listOfAttributeList, false
+//                        , true, itemTicketFreqItemSets, itemTicketRules
+//                        , 0.08, 0);
+//                sqlUtils.storeRules(type, itemTicketRules, "test",10);
+//            }
+//        }catch (Exception e) {
+//            //否则，进行训练
+//            associationRulesMining(listOfAttributeList, false
+//                    , true, itemTicketFreqItemSets, itemTicketRules
+//                    , 0.08, 0);
+//            sqlUtils.storeRules(type, itemTicketRules, "test",10);
+//        }
+//        printProgressBar(67, info);
+//        printProgressBar(100, info);
+//        System.out.println();
+//        return initRulesStorageByType(type, itemTicketRules);
     }
 
 
@@ -67,7 +68,7 @@ public class QuickQuery {
         long totalTime = 0;
         MongoCollection<Document> ordersCollection = getOrdersCollection(type);
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TEST_TICKET];
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(CSVFileIO.read(PATH_TEST_T, "Test"), ticketAttributesStorage);
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(CSVFileIO.read(PATH_TEST_T, TEST_TICKET), ticketAttributesStorage);
         itemPackMap.clear();
         int total = 0;
         int round = 0;

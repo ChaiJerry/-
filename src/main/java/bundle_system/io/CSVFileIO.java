@@ -20,7 +20,7 @@ public class CSVFileIO {
     //csv文件结果输出的目录路径
     private String resultDirPath;
     //csv文件读取的路径，数组长度为types.length，数组下标与types对应
-    private final String[] csvPaths = new String[SharedAttributes.types.length + 2];
+    private final String[] csvPaths = new String[FULL_NAMES.length + 2];
     protected Map<String, List<List<String>>> trainTicketsMap;
     // 初始化日志记录器
     private static final Logger logger = Logger.getLogger(CSVFileIO.class.getName());
@@ -54,15 +54,11 @@ public class CSVFileIO {
         csvPaths[INSURANCE] = pathI;
         // 座位相关数据csv文件路径
         csvPaths[SEAT] = pathS;
-        // 初始化类型与索引的映射
-        for (int i = 0; i < SharedAttributes.types.length; i++) {
-            SharedAttributes.type2index.put(SharedAttributes.types[i], i);
-        }
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
         //测试用机票订单
-        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, "Test");
+        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, TEST_TICKET);
         //训练用机票订单
-        trainTicketsMap = CSVFileIO.read(PATH_TRAIN_T, "Train");
+        trainTicketsMap = CSVFileIO.read(PATH_TRAIN_T, TRAIN_TICKET);
     }
 
     /**
@@ -92,7 +88,7 @@ public class CSVFileIO {
         csvPaths[SEAT] = pathS;
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
         //训练用机票订单
-        trainTicketsMap = CSVFileIO.read(csvPaths[TICKET], "Train");
+        trainTicketsMap = CSVFileIO.read(csvPaths[TICKET], TRAIN_TICKET);
     }
 
     /**
@@ -109,7 +105,7 @@ public class CSVFileIO {
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+            attributeMap = CSVFileIO.read(csvPaths[type], type);
             MongoUtils.ordersMap2DB(attributeMap, type);
         } else {
             // 当读取的csv文件是Ticket时
@@ -126,7 +122,7 @@ public class CSVFileIO {
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+            attributeMap = CSVFileIO.read(csvPaths[type], type);
             // 创建数据集
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
@@ -164,7 +160,7 @@ public class CSVFileIO {
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+            attributeMap = CSVFileIO.read(csvPaths[type], type);
             // 创建数据集
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
@@ -204,7 +200,7 @@ public class CSVFileIO {
         //订单与属性之间的映射map
         Map<String, List<List<String>>> attributeMap;
         // 读取商品类型，这里type不能为Ticket，因为一般不需要通过ticket推荐ticket自己
-        attributeMap = CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+        attributeMap = CSVFileIO.read(csvPaths[type], type);
         //筛选出能和机票订单号匹配的订单数据
         // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到listOfAttributeList中
         for (Iterator<String> iterator = trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
@@ -290,7 +286,7 @@ public class CSVFileIO {
     }
 
     public Map<String, List<List<String>>> read(int type) throws IOException {
-        return CSVFileIO.read(csvPaths[type], SharedAttributes.types[type]);
+        return CSVFileIO.read(csvPaths[type], type);
     }
 
 
@@ -298,10 +294,10 @@ public class CSVFileIO {
      * 读取CSV文件
      *
      * @param path 文件路径
-     * @param type 商品类型
+     * @param type 商品类型代码
      * @return 返回订单号和订单对应的商品属性之间的键值对 Map<String, List<String>>
      */
-    public static Map<String, List<List<String>>> read(String path, String type) throws IOException {
+    public static Map<String, List<List<String>>> read(String path, int type) throws IOException {
         // 创建HashMap，key为订单号，value为订单对应的属性键值对
         HashMap<String, List<List<String>>> map = new HashMap<>();
         // 第一参数：读取文件的路径 第二个参数：分隔符 第三个参数：字符集
@@ -309,35 +305,17 @@ public class CSVFileIO {
         // 读取表头
         csvReader.readHeaders();
         //通过type判断调用哪个方法
-        //将表头存入HeaderStorage之中，方便后续存入数据库
-        SharedAttributes.itemAttributesStorage[SharedAttributes.type2index.get(type)] = new ItemAttributesStorage();
-        //得到对应的属性头类
-        ItemAttributesStorage header = SharedAttributes.itemAttributesStorage[SharedAttributes.type2index.get(type)];
-        for (int i = 1; i < csvReader.getHeaderCount(); i++) {
-            //将表头存入HeaderStorage之中，方便后续存入数据库
-            header.addAttribute(csvReader.getHeader(i));
-        }
+        //将表头存入AttributeStorage之中，方便后续存入数据库
+        SharedAttributes.itemAttributesStorage[type] = new ItemAttributesStorage();
         switch (type) {
-            case "M":
-                //处理餐食数据
-                //删除餐食名字
-                header.clear();
-                for (String s:MEAL_ATTRIBUTES){
-                    header.addAttribute(s);
-                }
+            case MEAL:
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
                     dealM(csvReader, map);
                 }
                 break;
-            case "B":
-                //处理行李数据
-                header.clear();
-                //添加处理后得到的属性头
-                for (String s:BAGGAGE_ATTRIBUTES){
-                    header.addAttribute(s);
-                }
+            case BAGGAGE:
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
@@ -345,12 +323,7 @@ public class CSVFileIO {
                     //dealCommon(csvReader, map, B_SIGN, BAGGAGE_ATTRIBUTES[0]);
                 }
                 break;
-            case "H":
-                header.clear();
-                //添加属性名
-                for (String s:HOTEL_ATTRIBUTES){
-                    header.addAttribute(s);
-                }
+            case HOTEL:
                 //处理酒店数据
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -358,23 +331,14 @@ public class CSVFileIO {
                     dealH(csvReader, map);
                 }
                 break;
-            case "I":
-                //处理保险数据
-                header.clear();
-                for (String s:INSURANCE_ATTRIBUTES){
-                    header.addAttribute(s);
-                }
+            case INSURANCE:
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
                     dealI(csvReader, map);
                 }
                 break;
-            case "S":
-                header.clear();
-                for(String s:SEAT_ATTRIBUTES){
-                    header.addAttribute(s);
-                }
+            case SEAT:
                 //处理座位数据
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -382,22 +346,8 @@ public class CSVFileIO {
                     dealS(csvReader, map);
                 }
                 break;
-            case "T":
-            case "Train":
-                //特殊处理机票数据的属性
-                header.clear();
-                //添加处理后得到的属性头
-                header.addAttribute("MONTH",0);
-                header.addAttribute("FROM",1);
-                header.addAttribute("TO",2);
-                header.addAttribute("T_GRADE",3);
-                header.addAttribute("HAVE_CHILD",4);
-                header.addAttribute("PROMOTION_RATE",5);
-                header.addAttribute("T_FORMER",6);
-                //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
-                //删去多余的属性头
-
-
+            case TICKET:
+            case TRAIN_TICKET:
                 //用于字段作用评估
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -405,21 +355,21 @@ public class CSVFileIO {
                     dealT(csvReader, map);
                 }
                 break;
-            case "Test":
-                //特殊处理机票数据的属性
-                header.clear();
+            case TEST_TICKET:
+                //这是用于评估的测试数据类型，实际生产环境不需要 使用这个地方
+                //得到对应的属性头实例
+                ItemAttributesStorage attributesStorage = SharedAttributes.itemAttributesStorage[type];
                 //添加处理后得到的属性头
-                header.addAttribute("MONTH",0);
-                header.addAttribute("FROM",1);
-                header.addAttribute("TO",2);
-                header.addAttribute("T_GRADE",3);
-                header.addAttribute("HAVE_CHILD",4);
-                header.addAttribute("PROMOTION_RATE",5);
-                header.addAttribute("T_FORMER",6);
-                header.addAttribute("T_CARRIER",7);
+                attributesStorage.addAttribute("MONTH",0);
+                attributesStorage.addAttribute("FROM",1);
+                attributesStorage.addAttribute("TO",2);
+                attributesStorage.addAttribute("T_GRADE",3);
+                attributesStorage.addAttribute("HAVE_CHILD",4);
+                attributesStorage.addAttribute("PROMOTION_RATE",5);
+                attributesStorage.addAttribute("T_FORMER",6);
+                attributesStorage.addAttribute("T_CARRIER",7);
                 //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
                 //删去多余的属性头
-
 
                 //用于字段作用评估
                 while (csvReader.readRecord()) {
