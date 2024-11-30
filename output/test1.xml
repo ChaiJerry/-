@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><!-- 用于查询附加服务动态打包信息请求 --><OJ_ComboSearchRS xmlns="http://www.opentravel.org/OTA/2003/05">
+	<!-- 机票行程信息 -->
+	<ComboSource>
+		<PricedItinerary Airline="HU" SequenceNumber="1" SupplierCode="TSDF">
+			<AirItinerary DirectionInd="Return" DocumentationRequired="None">
+				<OriginDestinationOptions>
+					<OriginDestinationOption BookingChannel="TSDF" MajorityCarrier="HU" RPH="1">
+						<FlightSegment ArrivalDateTime="2024-11-15T11:45:00" DepartureDateTime="2024-11-15T08:00:00" Duration="3:45" FlightNumber="7382" InfoSource="Domestic" MealCode="B" Mileage="2310" OnlineCheckin="true" RPH="1" ResBookDesigCode="K" StopQuantity="0">
+							<DepartureAirport CodeContext="IATA" LocationCode="PEK" TS_CityCode="PEK" Terminal="T2"/>
+							<ArrivalAirport CodeContext="IATA" LocationCode="HAK" TS_CityCode="HAK" Terminal="T2"/>
+							<OperatingAirline Code="HU"/>
+							<Equipment AirEquipType="338"/>
+							<MarketingAirline Code="HU"/>
+							<BookingClassAvails>
+								<BookingClassAvail RPH="000" ResBookDesigCode="C" ResBookDesigQuantity="A"/>
+								<BookingClassAvail RPH="001" ResBookDesigCode="D" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="002" ResBookDesigCode="Z" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="003" ResBookDesigCode="I" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="004" ResBookDesigCode="R" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="005" ResBookDesigCode="J" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="006" ResBookDesigCode="Y" ResBookDesigQuantity="S"/>
+								<BookingClassAvail RPH="007" ResBookDesigCode="B" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="008" ResBookDesigCode="Q" ResBookDesigQuantity="A"/>
+								<BookingClassAvail RPH="009" ResBookDesigCode="E" ResBookDesigQuantity="S"/>
+								<BookingClassAvail RPH="0010" ResBookDesigCode="H" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0011" ResBookDesigCode="K" ResBookDesigQuantity="1"/>
+								<BookingClassAvail RPH="0012" ResBookDesigCode="L" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0013" ResBookDesigCode="M" ResBookDesigQuantity="S"/>
+								<BookingClassAvail RPH="0014" ResBookDesigCode="X" ResBookDesigQuantity="S"/>
+								<BookingClassAvail RPH="0015" ResBookDesigCode="V" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0016" ResBookDesigCode="N" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0017" ResBookDesigCode="P" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0018" ResBookDesigCode="A" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0019" ResBookDesigCode="U" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0020" ResBookDesigCode="T" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0021" ResBookDesigCode="S" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0022" ResBookDesigCode="G" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0023" ResBookDesigCode="O" ResBookDesigQuantity="Q"/>
+							</BookingClassAvails>
+							<Comment CharSet="每日12:00后可办理次日海航、大新华航空实际执行的北京始发国内、部分国际航班的乘机手续，代码共享航班除外，航班起飞前2小时停止办理。国际航班办理网上乘机手续后，根据机场要求，暂不提供自行打印A4纸登机牌功能，请根据页面提示到北京首都机场2号航站楼相应柜台补打登机牌（参考柜台：柏林D06-D10柜台、布鲁塞尔C11-C15柜台、多伦多/台北/西雅图D01-D08柜台、莫斯科C15-C20，以上柜台可能根据实际情况进行调整，请以机场实际提示为准）。" Language="zh" Type="OnlineCheckin"/>
+						</FlightSegment>
+						<Baggage BaggageRPH="1" FlightSegmentRPH="1" Pieces="2" PricingRPH="1">
+							<Weight Unit="KG" Weight="20"/>
+							<TPA_Extensions>
+								<PassageType Code="ADT"/>
+							</TPA_Extensions>
+							<Size Description="200*600"/>
+						</Baggage>
+					</OriginDestinationOption>
+					<OriginDestinationOption BookingChannel="TSDF" MajorityCarrier="HU" RPH="2">
+						<FlightSegment ArrivalDateTime="2024-11-17T11:00:00" DepartureDateTime="2024-11-17T09:00:00" Duration="2:0" FlightNumber="155F" InfoSource="Domestic" Mileage="2310" OnlineCheckin="true" RPH="2" ResBookDesigCode="Y" StopQuantity="0">
+							<DepartureAirport CodeContext="IATA" LocationCode="HAK" TS_CityCode="HAK" Terminal="T2"/>
+							<ArrivalAirport CodeContext="IATA" LocationCode="PEK" TS_CityCode="PEK" Terminal="T2"/>
+							<OperatingAirline Code="HU"/>
+							<Equipment AirEquipType="738"/>
+							<MarketingAirline Code="HU"/>
+							<BookingClassAvails>
+								<BookingClassAvail RPH="000" ResBookDesigCode="C" ResBookDesigQuantity="8"/>
+								<BookingClassAvail RPH="001" ResBookDesigCode="D" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="002" ResBookDesigCode="Z" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="003" ResBookDesigCode="I" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="004" ResBookDesigCode="R" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="005" ResBookDesigCode="J" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="006" ResBookDesigCode="Y" ResBookDesigQuantity="A"/>
+								<BookingClassAvail RPH="007" ResBookDesigCode="B" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="008" ResBookDesigCode="Q" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="009" ResBookDesigCode="E" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0010" ResBookDesigCode="H" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0011" ResBookDesigCode="K" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0012" ResBookDesigCode="L" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0013" ResBookDesigCode="M" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0014" ResBookDesigCode="X" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0015" ResBookDesigCode="V" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0016" ResBookDesigCode="N" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0017" ResBookDesigCode="P" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0018" ResBookDesigCode="A" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0019" ResBookDesigCode="U" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0020" ResBookDesigCode="T" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0021" ResBookDesigCode="S" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0022" ResBookDesigCode="G" ResBookDesigQuantity="Q"/>
+								<BookingClassAvail RPH="0023" ResBookDesigCode="O" ResBookDesigQuantity="Q"/>
+							</BookingClassAvails>
+							<Comment CharSet="每日14:00后可办理次日海航海口始发国内航班的乘机手续，代码共享航班除外,航班起飞前2小时停止办理。" Language="zh" Type="OnlineCheckin"/>
+						</FlightSegment>
+						<Baggage BaggageRPH="2" FlightSegmentRPH="2" Pieces="2" PricingRPH="1">
+							<Weight Unit="KG" Weight="20"/>
+							<TPA_Extensions>
+								<PassageType Code="ADT"/>
+							</TPA_Extensions>
+							<Size Description="200*600"/>
+						</Baggage>
+					</OriginDestinationOption>
+				</OriginDestinationOptions>
+			</AirItinerary>
+			<AirItineraryPricingInfo FarefamilyCode="TOURISMROVER" FarefamilyName="旅游乐行">
+				<ItinTotalFare>
+					<BaseFare Adjusted="7370.0" Amount="7370.0" CurrencyCode="CNY" OriginalAmount="7370.0" OriginalCurrencyCode="CNY"/>
+					<Taxes>
+						<Tax Amount="100.0" CurrencyCode="CNY" OriginalAmount="100.0" OriginalCurrencyCode="CNY" TaxCode="CN"/>
+						<Tax Amount="100.0" CurrencyCode="CNY" OriginalAmount="100.0" OriginalCurrencyCode="CNY" TaxCode="YQ"/>
+					</Taxes>
+					<TotalFare Adjusted="7570" Amount="7570.0" CurrencyCode="CNY" OriginalAmount="7570.0" OriginalCurrencyCode="CNY"/>
+					<PriceAdjustments>
+						<PriceAdjustment Amount="0" Code="ROW.3" CodeContext="markup table" CurrencyCode="CNY" Date="2024-11-14T06:22:35" Manual="false" Modular="true" ProductType="FLIGHT" Stage="Markup"/>
+						<PriceAdjustment Amount="0" Code="ROUNDING" CodeContext="PACK-rounding" CurrencyCode="CNY" Date="2024-11-14T06:22:35" Description="round-to 1" Manual="false" Modular="true" ProductType="FLIGHT" Stage="Rounding"/>
+					</PriceAdjustments>
+				</ItinTotalFare>
+				<PTC_FareBreakdowns Seq="1">
+					<PTC_FareBreakdown>
+						<PassengerTypeQuantity Code="ADT" Quantity="1"/>
+						<PassengerFare>
+							<BaseFare Adjusted="7370.0" Amount="7370.0" CurrencyCode="CNY" OriginalAmount="7370.0" OriginalCurrencyCode="CNY"/>
+							<Taxes>
+								<Tax Amount="100.0" CurrencyCode="CNY" OriginalAmount="100.0" OriginalCurrencyCode="CNY" TaxCode="CN"/>
+								<Tax Amount="100.0" CurrencyCode="CNY" OriginalAmount="100.0" OriginalCurrencyCode="CNY" TaxCode="YQ"/>
+							</Taxes>
+							<TotalFare Adjusted="7570.0" Amount="7570.0" CurrencyCode="CNY" OriginalAmount="7570.0" OriginalCurrencyCode="CNY"/>
+							<PriceAdjustments/>
+						</PassengerFare>
+					</PTC_FareBreakdown>
+				</PTC_FareBreakdowns>
+				<FareInfos Seq="1">
+					<FareInfo FlightSegmentRPH="1" OriginDestinationRPH="1">
+						<FareReference CabinCode="Y" ResBookDesigCode="K"/>
+						<FilingAirline Code="HU"/>
+						<DepartureAirport CodeContext="IATA" LocationCode="PEK"/>
+						<ArrivalAirport CodeContext="IATA" LocationCode="HAK"/>
+						<FareInfo DisCount="0.7589498806682577" FareBasis="K" FareSystemId="" GdsEi="不得自愿签转" RmkOt="RMK OT/0/4789/0-1HU6050P1HAK.1HU6049P1BJS" Zkey="" Zvalue="-1.000000" fareRph="">
+							<Fare BaseAmount="3180.0" BaseCabinClassAmount="4190.000000" TaxAmount="100.0" TotalFare="3280.0" yFareAmount="4190.0">
+								<Taxes>
+									<Tax Amount="50.0" CurrencyCode="CNY" OriginalAmount="50.0" OriginalCurrencyCode="CNY" TaxCode="CN"/>
+									<Tax Amount="50.0" CurrencyCode="CNY" OriginalAmount="50.0" OriginalCurrencyCode="CNY" TaxCode="YQ"/>
+								</Taxes>
+							</Fare>
+							<PTC PassengerTypeCode="ADT" Quantity="1"/>
+							<Loyalty>
+								<Combinations>
+									<Combination>
+										<Earn Quantity="2310"/>
+									</Combination>
+								</Combinations>
+							</Loyalty>
+						</FareInfo>
+						<FareFamily Code="TOURISMROVER" Name="旅游乐行">
+							<AddOns/>
+						</FareFamily>
+						<TPA_Extensions>
+							<ProductInfo CKIN="" EI="" Name="普通" Type="NORMAL"/>
+							<FareFamilyInfo CabinName="" ChangeToOpen="true" Description="不得签转" DomesticSelfCheckin="true" FareBasis="K" FareFamilyCode="TOURISMROVER" FareFamilyName="旅游乐行" InternationalSelfCheckin="true" Upgradable="true" UserType="" Username="">
+								<Datechange AfterDepartureRate="0.3" BeforeDepartureRate="0.2" Limit="3" TimeThreshold="-4" Type="percent"/>
+								<Refund AfterDepartureRate="0.3" BeforeDepartureRate="0.2" Eligible="true" LoyaltyRefundRuleID="201" TimeThreshold="-48" Voluntary="true"/>
+								<Datechange AfterDepartureRate="0.15" BeforeDepartureRate="0.1" Limit="3" TimeThreshold="-168" Type="percent"/>
+								<Datechange AfterDepartureRate="0.2" BeforeDepartureRate="0.15" Limit="3" TimeThreshold="-48" Type="percent"/>
+								<Refund AfterDepartureRate="0.2" BeforeDepartureRate="0.15" Eligible="true" LoyaltyRefundRuleID="201" TimeThreshold="-168" Voluntary="true"/>
+								<Refund AfterDepartureRate="0.4" BeforeDepartureRate="0.3" Eligible="true" LoyaltyRefundRuleID="201" TimeThreshold="-4" Voluntary="true"/>
+							</FareFamilyInfo>
+							<MarketingData>
+								<LowestFare Amount="3180.0" Cabin="K"/>
+							</MarketingData>
+						</TPA_Extensions>
+					</FareInfo>
+					<FareInfo FlightSegmentRPH="2" OriginDestinationRPH="2">
+						<FareReference CabinCode="Y" ResBookDesigCode="Y"/>
+						<FilingAirline Code="HU"/>
+						<DepartureAirport CodeContext="IATA" LocationCode="HAK"/>
+						<ArrivalAirport CodeContext="IATA" LocationCode="PEK"/>
+						<FareInfo DisCount="1.0" FareBasis="Y" FareSystemId="" GdsEi="不得自愿签转" RmkOt="RMK OT/0/4789/0-1HU6050P1HAK.1HU6049P1BJS" Zkey="" Zvalue="-1.000000" fareRph="">
+							<Fare BaseAmount="4190.0" BaseCabinClassAmount="4190.000000" TaxAmount="100.0" TotalFare="4290.0" yFareAmount="4190.0">
+								<Taxes>
+									<Tax Amount="50.0" CurrencyCode="CNY" OriginalAmount="50.0" OriginalCurrencyCode="CNY" TaxCode="CN"/>
+									<Tax Amount="50.0" CurrencyCode="CNY" OriginalAmount="50.0" OriginalCurrencyCode="CNY" TaxCode="YQ"/>
+								</Taxes>
+							</Fare>
+							<PTC PassengerTypeCode="ADT" Quantity="1"/>
+							<Loyalty>
+								<Combinations>
+									<Combination>
+										<Earn Quantity="2888"/>
+									</Combination>
+								</Combinations>
+							</Loyalty>
+						</FareInfo>
+						<FareFamily Code="FULLPRICE" Name="全价经济舱">
+							<AddOns>
+								<AddOn Code="VIP" Sort="5" Type="trpcode">
+									<Description Name="AddonName">
+										<Text>贵宾休息室</Text>
+									</Description>
+									<Description Name="LongDescription">
+										<Text>这是一段文字描述</Text>
+									</Description>
+									<Description Name="IconClass">
+										<Text>icon-lounge</Text>
+									</Description>
+									<Description Name="DeliverType">
+										<Text>segment</Text>
+									</Description>
+									<Description Name="ReissueRecover">
+										<Text>optional</Text>
+									</Description>
+								</AddOn>
+							</AddOns>
+						</FareFamily>
+						<TPA_Extensions>
+							<ProductInfo CKIN="" EI="" Name="普通" Type="NORMAL"/>
+							<FareFamilyInfo CabinName="" ChangeToOpen="true" Description="自愿签转" DomesticSelfCheckin="true" FareBasis="Y" FareFamilyCode="FULLPRICE" FareFamilyName="全价经济舱" InternationalSelfCheckin="true" Upgradable="true" UserType="" Username="">
+								<Datechange AfterDepartureRate="0" BeforeDepartureRate="0" Limit="2" TimeThreshold="-168" Type="percent"/>
+								<Refund AfterDepartureRate="0.1" BeforeDepartureRate="0.05" Eligible="true" LoyaltyRefundRuleID="201" TimeThreshold="-4" Voluntary="true"/>
+								<Refund AfterDepartureRate="0.05" BeforeDepartureRate="0.05" Eligible="true" LoyaltyRefundRuleID="201" TimeThreshold="-168" Voluntary="true"/>
+								<Refund AfterDepartureRate="0.05" BeforeDepartureRate="0.05" Eligible="true" LoyaltyRefundRuleID="201" TimeThreshold="-48" Voluntary="true"/>
+								<Datechange AfterDepartureRate="0" BeforeDepartureRate="0" Limit="2" TimeThreshold="-48" Type="percent"/>
+								<Datechange AfterDepartureRate="0.1" BeforeDepartureRate="0" Limit="2" TimeThreshold="-4" Type="percent"/>
+							</FareFamilyInfo>
+							<MarketingData>
+								<LowestFare Amount="4190.0" Cabin="Y"/>
+							</MarketingData>
+						</TPA_Extensions>
+					</FareInfo>
+				</FareInfos>
+				<BagAllowRefs>
+					<BagAllowRef BaggageRPH="1" FlightSegmentRPH="1" OriginDestinationRPH="1"/>
+					<BagAllowRef BaggageRPH="2" FlightSegmentRPH="2" OriginDestinationRPH="2"/>
+				</BagAllowRefs>
+			</AirItineraryPricingInfo>
+			<AirItineraryPricingInfo FarefamilyCode="ENJOY_PLUS" FarefamilyName="超享惠"/>
+			<AirItineraryPricingInfo FarefamilyCode="BESTSELLING" FarefamilyName="商务畅行"/>
+			<AirItineraryPricingInfo FarefamilyCode="FLEX_PLUS" FarefamilyName="超自由"/>
+			<AirItineraryPricingInfo FarefamilyCode="FULLPRICE" FarefamilyName="全价经济舱"/>
+			<AirItineraryPricingInfo FarefamilyCode="PCPT_PLUS" FarefamilyName="特惠行"/>
+			<AirItineraryPricingInfo FarefamilyCode="SPECIAL_PACKAGE" FarefamilyName="打包专享"/>
+			<AirItineraryPricingInfo FarefamilyCode="SPECIAL" FarefamilyName="超值特惠"/>
+			<AirItineraryPricingInfo FarefamilyCode="BASIC_PLUS" FarefamilyName="超优惠"/>
+		</PricedItinerary>
+	</ComboSource>
+	
+<ComboWith><Insurance><PlanForQuoteRS BookPartSegments="false" InsuranceID="57" MaximumAmountToBook="1" Name="行李险新" PlanID="HHZA" PricingBySegments="true" ProductID="8a8637b845fe741b014641ac3aba000d" PropertionInsurance="" ProtocolID="206140034" RPH="1" RefundAloneByAgent="true" ReshopRule="Reshop" ReshopRuleUrl="http://www.hnair.com/qt/assuranceinformation/" SalesAgencyCode="hkk068b" SegmentBased="false" SelectedByDefault="false" SupplierCode="AUIS" Type="1" TypeID="1001581" TypeOfPassenger="-">
+				<PlanCost Amount="20.0" CurrencyCode="CNY" DedicatePayment="true" OriginalAmount="20" OriginalCurrencyCode="CNY">
+					<IncrementalPrices>
+						<IncrementalPrice Amount="0" Frequency="1"/>
+					</IncrementalPrices>
+					<BasePremium Amount="20" CurrencyCode="CNY" OriginalAmount="20" OriginalCurrencyCode="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<PriceAdjustments>
+						<PriceAdjustment Amount="0" Code="ROUNDING" CodeContext="PACK-rounding" CurrencyCode="CNY" Date="2024-11-13T13:46" Description="round-to 1" Manual="false" Modular="true" ProductType="INSURANCE" Stage="Rounding"/>
+					</PriceAdjustments>
+				</PlanCost>
+				<QuoteDetail>
+					<ProviderCompany Code="HHZA" CodeContext="08688003" CompanyShortName="众安在线财产保险股份有限公司" Division="8000001"/>
+					<QuoteDetailURL>http://www.hnair.com/qt/assuranceinformation/</QuoteDetailURL>
+					<BookingDetailURL>http://www.hnair.com/qt/assuranceinformation/</BookingDetailURL>
+				</QuoteDetail>
+				<InsCoverageDetail EffectiveDate="2024-11-14T16:00:00" ExpireDate="2024-11-17T11:45:00">
+					<CoverageRequirements>
+						<CoverageRequirement CoverageType="">
+							<PolicyLimit Amount="5000"/>
+						</CoverageRequirement>
+					</CoverageRequirements>
+					<FlightSegmentRefs>
+						<FlightSegmentRef FlightSegmentRPH="1" OriginDestinationRPH="1"/>
+						<FlightSegmentRef FlightSegmentRPH="2" OriginDestinationRPH="2"/>
+					</FlightSegmentRefs>
+				</InsCoverageDetail>
+				<Description Language="zh" Name="行李险新">乘客飞机意外身故、伤残290万元人民币；附加乘客飞机意外烧伤10万元人民币</Description>
+			</PlanForQuoteRS><PlanForQuoteRS BookPartSegments="false" InsuranceID="58" MaxAge="80" MaximumAmountToBook="1" MinAge="2" Name="退票险最新" PlanID="HHHT" PricingBySegments="true" ProductID="8a8637b8405d80890140961b94a60007" ProtocolID="206080077" RPH="2" RefundAloneByAgent="true" ReshopRule="Reshop" ReshopRuleUrl="http://www.hnair.com/qt/assuranceinformation/" SalesAgencyCode="hkk068b" SegmentBased="false" SelectedByDefault="false" SupplierCode="AUIS" Type="1" TypeID="1001704" TypeOfPassenger="-">
+				<PlanCost Amount="20.0" CurrencyCode="CNY" DedicatePayment="true" OriginalAmount="20" OriginalCurrencyCode="CNY">
+					<IncrementalPrices>
+						<IncrementalPrice Amount="0" Frequency="1"/>
+					</IncrementalPrices>
+					<BasePremium Amount="20" CurrencyCode="CNY" OriginalAmount="20" OriginalCurrencyCode="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<ExchangeRate Date="2024-11-13T13:46:00" FromCurrency="CNY" Rate="1.0" ToCurrency="CNY"/>
+					<PriceAdjustments>
+						<PriceAdjustment Amount="0" Code="ROUNDING" CodeContext="PACK-rounding" CurrencyCode="CNY" Date="2024-11-13T13:46" Description="round-to 1" Manual="false" Modular="true" ProductType="INSURANCE" Stage="Rounding"/>
+					</PriceAdjustments>
+				</PlanCost>
+				<QuoteDetail>
+					<ProviderCompany Code="HHHT" CodeContext="08688003" CompanyShortName="华泰财产保险有限公司" Division="6000002"/>
+					<QuoteDetailURL>http://www.hnair.com/qt/assuranceinformation/</QuoteDetailURL>
+					<BookingDetailURL>http://www.hnair.com/qt/assuranceinformation/</BookingDetailURL>
+				</QuoteDetail>
+				<InsCoverageDetail EffectiveDate="2024-11-14T16:00:00" ExpireDate="2024-11-17T11:45:00">
+					<CoverageRequirements>
+						<CoverageRequirement CoverageType="1">
+							<PolicyLimit Amount="500"/>
+						</CoverageRequirement>
+					</CoverageRequirements>
+					<FlightSegmentRefs>
+						<FlightSegmentRef FlightSegmentRPH="1" OriginDestinationRPH="1"/>
+						<FlightSegmentRef FlightSegmentRPH="2" OriginDestinationRPH="2"/>
+					</FlightSegmentRefs>
+				</InsCoverageDetail>
+				<Description Language="zh" Name="退票险最新">乘客飞机意外身故、伤残290万元人民币；附加乘客飞机意外烧伤10万元人民币</Description>
+			</PlanForQuoteRS></Insurance><Ancillary><Baggage><OriginDestination><Service>
+						<Baggage SegmentRef="1">
+							<MaxWeight Unit="KG">30</MaxWeight>
+							<Prices>
+								<Price>
+									<Total Amount="1698" CurrencyCode="CNY"/>
+								</Price>
+							</Prices>
+						</Baggage>
+					</Service><Service>
+						<Baggage SegmentRef="2">
+							<MaxWeight Unit="KG">35</MaxWeight>
+							<Prices>
+								<Price>
+									<Total Amount="1981" CurrencyCode="CNY"/>
+								</Price>
+							</Prices>
+						</Baggage>
+					</Service></OriginDestination></Baggage></Ancillary><Ancillary><BoundProducts><AncillaryProducts><Ancillary Available="99" BookingChannel="TSDF" Carrier="HU" Category="segment" Code="NB9J9HE9" Date="2024-11-06T08:00:00" Destination="HAK" FlightNumber="7382" Origin="PEK" Refundable="false" SegmentRef="1" SubType="" SupplierProductCode="BPG" Type="MEAL">
+						<Prices>
+							<Price LoyaltyLevel="C" PassengerTypeCode="" RBD="BPG">
+								<Base Amount="52" CurrencyCode="CNY"/>
+								<Total Adjusted="52" Amount="52" CurrencyCode="CNY"/>
+							</Price>
+						</Prices>
+						<Loyalty>
+							<Combinations>
+								<Combination>
+									<Redemption>
+										<Redeem LoyaltyLevel="">
+											<Rule PassengerTypeCode="" Quantity="1040"/>
+										</Redeem>
+									</Redemption>
+								</Combination>
+							</Combinations>
+						</Loyalty>
+						<TravelerInfo>
+							<AirTraveler OJ_SuperPNR_RPH="" PassengerTypeCode=""/>
+						</TravelerInfo>
+						<Content Language="zh">
+							<ProductName>付费</ProductName>
+							<ShortContent>鸡排饭A</ShortContent>
+							<LongContent>鸡排饭A</LongContent>
+							<Image ContentData="local" ID="267">
+								<ImageURL>NB9J9HE9/1721634034091_11.jpeg</ImageURL>
+								<ImageThumbnailURL>NB9J9HE9/tn_1721634034091_11.jpeg</ImageThumbnailURL>
+							</Image>
+						</Content>
+					</Ancillary><Ancillary Available="98" BookingChannel="TSDF" Carrier="HU" Category="segment" Code="NB9J9HE9" Date="2024-11-17T09:00:00" Destination="PEK" FlightNumber="155F" Origin="HAK" Refundable="true" SegmentRef="2" SubType="" SupplierProductCode="CSH" Type="MEAL">
+						<Prices>
+							<Price LoyaltyLevel="C" PassengerTypeCode="" RBD="CSH">
+								<Base Amount="22" CurrencyCode="CNY"/>
+								<Total Adjusted="22" Amount="22" CurrencyCode="CNY"/>
+							</Price>
+						</Prices>
+						<Loyalty>
+							<Combinations>
+								<Combination>
+									<Redemption>
+										<Redeem LoyaltyLevel="">
+											<Rule PassengerTypeCode="" Quantity="1040"/>
+										</Redeem>
+									</Redemption>
+								</Combination>
+							</Combinations>
+						</Loyalty>
+						<TravelerInfo>
+							<AirTraveler OJ_SuperPNR_RPH="" PassengerTypeCode=""/>
+						</TravelerInfo>
+						<Content Language="zh">
+							<ProductName>付费</ProductName>
+							<ShortContent>鸡排饭A</ShortContent>
+							<LongContent>鸡排饭A</LongContent>
+							<Image ContentData="local" ID="267">
+								<ImageURL>NB9J9HE9/1721634034091_11.jpeg</ImageURL>
+								<ImageThumbnailURL>NB9J9HE9/tn_1721634034091_11.jpeg</ImageThumbnailURL>
+							</Image>
+						</Content>
+					</Ancillary><Ancillary SegmentRef="2" SubType="85" SupplierProductCode="L" Tag="" Type="Seat"><Prices><Price><Total Amount="0.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="85" SupplierProductCode="G" Tag="" Type="Seat"><Prices><Price><Total Amount="916.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="85" SupplierProductCode="Q" Tag="" Type="Seat"><Prices><Price><Total Amount="916.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="3" SupplierProductCode="L" Tag="" Type="Seat"><Prices><Price><Total Amount="0.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="" SupplierProductCode="L" Tag="" Type="Seat"><Prices><Price><Total Amount="0.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="" SupplierProductCode="G" Tag="" Type="Seat"><Prices><Price><Total Amount="916.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="3" SupplierProductCode="G" Tag="" Type="Seat"><Prices><Price><Total Amount="916.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="" SupplierProductCode="Q" Tag="" Type="Seat"><Prices><Price><Total Amount="916.0" CurrencyCode="CNY"/></Price></Prices></Ancillary><Ancillary SegmentRef="2" SubType="3" SupplierProductCode="Q" Tag="" Type="Seat"><Prices><Price><Total Amount="916.0" CurrencyCode="CNY"/></Price></Prices></Ancillary></AncillaryProducts></BoundProducts></Ancillary></ComboWith></OJ_ComboSearchRS>

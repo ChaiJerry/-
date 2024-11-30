@@ -86,9 +86,6 @@ public class SharedAttributes {
         return attributeNumForEachType;
     }
 
-    //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
-    protected static Map<String, List<List<String>>> ticketMap;
-
     protected static Map<String, List<List<String>>> testTicketsMap;
 
     //将type与index对应，用于快速查找

@@ -58,12 +58,12 @@ public class BackendBundleSystem {
         this.poolSize = 8;
         executorService = Executors.newFixedThreadPool(poolSize);
         sqlUtils = new SQLUtils();
+        fileIO = SharedAttributes.fileIO;
         try {
             rulesStorages = initAllRulesStorage(null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        fileIO = SharedAttributes.fileIO;
     }
 
     /**
@@ -191,70 +191,16 @@ public class BackendBundleSystem {
         XMLReader xmlReader = new XMLReader();
         long start = System.nanoTime();
         Document doc;
-         doc = xmlReader.read();
+        doc = xmlReader.read();
         submitBundleTask(doc);
-        saveDocument(doc);
+        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test1.xml");
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
-//        doc = xmlReader.read();
-//        submitQueryTask(doc);
-//        saveDocument(doc);
+        doc = xmlReader.read();
+        submitQueryTask(doc);
+        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test2.xml");
         shutdownAll();
     }
 
-    /**
-     * 测试Bundle功能，对于原来的doc不修改
-     *
-     * @param times 测试次数
-     */
-    public static void test(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
-        XMLReader xmlReader = new XMLReader();
-        XMLParser xmlParser = new XMLParser(xPathfactory.newXPath());
-        List<RulesStorage> rulesStorages =  QuickQuery.initAllRulesStorage();
-//        Document originalDoc = xmlReader.read();
-//        Element root = originalDoc.getDocumentElement();
-//        //由ns计算时间ms
-//        long start = System.nanoTime();
-//        //新建返回的Document部分
-//        Document doc = dBuilder.newDocument();
-//        Element comboWith = getReturnDocTemplate(doc, root.getAttribute("xmlns"));
-//        //解析xml文件部分
-//        List<ParseMethod> parseMethods = xmlParser.getParseMethods();
-//        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
-//        for (int i = 0; i < times; i++) {
-//            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages, comboWith, doc);
-//        }
-//        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
-//        saveDocument(doc);
-        RulesStorage.shutdownAll();
-    }
-
-    /**
-     * 测试Bundle功能，对于原来的doc修改
-     *
-     * @param times 测试次数
-     */
-    public static void test1(int times) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
-        XMLReader xmlReader = new XMLReader();
-        XMLParser xmlParser = new XMLParser(xPathfactory.newXPath());
-        List<RulesStorage> rulesStorages = QuickQuery.initAllRulesStorage();
-        //模拟输入Document
-        Document doc = xmlReader.read();
-        Element root = doc.getDocumentElement();
-        Element comboWith = doc.createElement("ComboWith");
-        //由ns计算时间ms
-        long start = System.nanoTime();
-        //新建返回的Document部分
-        //解析xml文件部分
-        List<ParseMethod> parseMethods = xmlParser.getParseMethods();
-        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
-        for (int i = 0; i < times; i++) {
-            bundleAllItem(parseMethods, root, segTicketMap, rulesStorages, comboWith, doc);
-        }
-        xmlParser.renewComboWith(root, comboWith);
-        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000 / times);
-        saveDocument(doc);
-        RulesStorage.shutdownAll();
-    }
 
     /**
      * 将Document保存到文件
@@ -407,7 +353,7 @@ public class BackendBundleSystem {
         rulesStorages.add(null);
         //跳过酒店品类（没有使用）
         rulesStorages.add(null);
-        boolean autoSave = trainId== null || trainId.isEmpty();
+        boolean autoSave = trainId!= null && trainId.isEmpty();
         for(int type = 2; type < SharedAttributes.getFullNames().length; type++) {
             List<List<String>> rules;
             if(sqlUtils != null && trainId!=null){
