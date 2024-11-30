@@ -18,9 +18,9 @@ public class RulesStorage {
     //内层map的key为属性值，value为该属性值对应的规则编号集合
     private Map<String, Map<String, Set<Integer>>> atttributeMap = new HashMap<>();
     private int ruleCount = 0;
-    // 创建一个固定大小的线程池
-    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
-    private final RandomLRUPool lruPool = new RandomLRUPool(40);
+    // 创建一个固定大小的线程池，现在暂时为1，主要是为了之后的拓展可以调整
+    private final ExecutorService executorService = Executors.newFixedThreadPool(1);
+    //private final RandomLRUPool lruPool = new RandomLRUPool(40);
 
     int type;
     private static final List<RulesStorage> allRulesStorages = new ArrayList<>();
@@ -160,12 +160,12 @@ public class RulesStorage {
                 futures.add(executorService.submit(new QueryTask(ruleId, ruleIdSets, attributeNameVCPMap, rulesMap,nullRuleIdSets)));
             }
 
-            //在lruPool中查询存储的机票属性对应的商品属性
-            Map<String, AttrValueConfidencePriority> attrInLRUPoolQueryRes = lruPool.tryGet(ateAttributesValeList);
-            if (attrInLRUPoolQueryRes != null) {
-                //System.out.println("lru命中，查询到缓存");
-                return attrInLRUPoolQueryRes;
-            }
+//            //在lruPool中查询存储的机票属性对应的商品属性
+//            Map<String, AttrValueConfidencePriority> attrInLRUPoolQueryRes = null;//lruPool.tryGet(ateAttributesValeList);
+//            if (attrInLRUPoolQueryRes != null) {
+//                //System.out.println("lru命中，查询到缓存");
+//                return attrInLRUPoolQueryRes;
+//            }
 
             // 等待并获取查询结果
             for (Future<?> future : futures) {
@@ -176,8 +176,8 @@ public class RulesStorage {
                 }
             }
 
-            // 将查询结果添加到lruPool中
-            lruPool.add(ateAttributesValeList, attributeNameVCPMap);
+//            // 将查询结果添加到lruPool中
+//            lruPool.add(ateAttributesValeList, attributeNameVCPMap);
             return attributeNameVCPMap;
     }
 
@@ -215,12 +215,12 @@ public class RulesStorage {
             futures.add(executorService.submit(new QueryTask(ruleId, ruleIdSets, attributeNameVCPMap, rulesMap,nullRuleIdSets)));
         }
 
-        //在lruPool中查询存储的机票属性对应的商品属性
-        Map<String, AttrValueConfidencePriority> attrInLRUPool = lruPool.tryGet(ateAttributesValeList);
-        if (attrInLRUPool != null) {
-            //System.out.println("lru命中，查询到缓存");
-            return attrInLRUPool;
-        }
+//        //在lruPool中查询存储的机票属性对应的商品属性
+//        Map<String, AttrValueConfidencePriority> attrInLRUPool = lruPool.tryGet(ateAttributesValeList);
+//        if (attrInLRUPool != null) {
+//            //System.out.println("lru命中，查询到缓存");
+//            return attrInLRUPool;
+//        }
 
         // 创建属性名-属性值查询结果
         HashMap<String, String> result = new HashMap<>();
@@ -235,7 +235,7 @@ public class RulesStorage {
         for (String attributeName : attributeNameVCPMap.keySet()) {
             result.put(attributeName, attributeNameVCPMap.get(attributeName).getAttributeValue());
         }
-        lruPool.add(ateAttributesValeList, attributeNameVCPMap);
+//        lruPool.add(ateAttributesValeList, attributeNameVCPMap);
         return attributeNameVCPMap;
     }
 }

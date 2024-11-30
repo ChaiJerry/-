@@ -14,7 +14,7 @@ public class RandomLRUPool {
     //指向keys的指针用于随机访问
     private int keysPtr=0;
     private static Long time= 0L;
-    private int max;
+    private final int max;
 
     /**
      * 构造函数
