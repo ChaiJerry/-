@@ -13,27 +13,13 @@ import static bundle_system.api.API.*;
 import static bundle_system.db_query_system.QuerySystem.*;
 import static bundle_system.io.MongoUtils.*;
 import static bundle_system.io.SharedAttributes.*;
+import static bundle_system.memory_query_system.RulesStorage.*;
 
 public class QuickQuery {
     private static final Map<String, ItemPack> itemPackMap = new HashMap<>();
 
 
-
-
-    public static List<RulesStorage> initAllRulesStorage() throws IOException {
-        List<RulesStorage> rulesStorages = new ArrayList<>();
-        //跳过机票标号
-        rulesStorages.add(null);
-        //跳过酒店品类（没有使用）
-        rulesStorages.add(null);
-        for(int type = 2; type < SharedAttributes.getFullNames().length; type++) {
-            RulesStorage rulesStorage = initRulesStorageByType(type);
-            rulesStorages.add(rulesStorage);
-        }
-        return rulesStorages;
-    }
-
-    public static RulesStorage initRulesStorageByType(int type) throws IOException {
+    public static RulesStorage initRulesStorageByTypeForQuickQueryTest(int type) throws IOException {
         //训练阶段
         String info = "正在初始化"+SharedAttributes.getFullNames()[type]+"知识库";
         printProgressBar(0, info);
@@ -63,12 +49,7 @@ public class QuickQuery {
         }
         printProgressBar(67, info);
         //System.out.println("Training time: " + (System.nanoTime() - startTime1) / 1000000+ "ms");
-        for (List<String> itemTicketRule : itemTicketRules) {
-            String[] split = itemTicketRule.get(0).split("; ");
-            String consequent = itemTicketRule.get(1).split("; ")[0];
-            double confidence = Double.parseDouble(itemTicketRule.get(2).split("::")[1]);
-            rulesStorage.addRule(split, new AssociationRuleConsResult(consequent, confidence));
-        }
+        initRulesStorageByType(type, itemTicketRules);
         printProgressBar(100, info);
         System.out.println();
         return rulesStorage;
@@ -78,7 +59,7 @@ public class QuickQuery {
     public void test(int type) throws IOException {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         //训练阶段
-        RulesStorage rulesStorage = initRulesStorageByType(type);
+        RulesStorage rulesStorage = initRulesStorageByTypeForQuickQueryTest(type);
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         //测试阶段
         //获取ordersCollection，用于查询订单

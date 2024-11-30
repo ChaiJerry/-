@@ -5,15 +5,10 @@ import org.junit.*;
 import java.io.*;
 import java.util.*;
 
-import static bundle_system.io.CSVFileIO.*;
 import static bundle_system.io.SharedAttributes.*;
 import static org.junit.Assert.*;
 
 public class TestCsvFileIO {
-    @Test
-    public void test() throws IOException {
-        assertEquals(fileIO.read(TICKET).size(), getTestMap().size()+getTrainingMap().size());
-    }
 
     @Test
     public void testReadTicket() throws IOException {
@@ -34,11 +29,5 @@ public class TestCsvFileIO {
         assertTrue(count >= 10);
     }
 
-    @Test
-    public void TestGetMaps() {
-        Map<String, List<List<String>>> testMap = getTestMap();
-        assertFalse(testMap.isEmpty());
-        Map<String, List<List<String>>> trainingMap = getTrainingMap();
-        assertFalse(trainingMap.isEmpty());
-    }
+
 }

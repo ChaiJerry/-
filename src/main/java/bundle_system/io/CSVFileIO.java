@@ -15,7 +15,8 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class CSVFileIO {
 
-
+    //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
+//    private static Map<String, List<List<String>>> ticketMap;
     //csv文件结果输出的目录路径
     private String resultDirPath;
     //csv文件读取的路径，数组长度为types.length，数组下标与types对应
@@ -58,7 +59,6 @@ public class CSVFileIO {
             SharedAttributes.type2index.put(SharedAttributes.types[i], i);
         }
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
-        SharedAttributes.ticketMap = null;
         //测试用机票订单
         SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, "Test");
         //训练用机票订单
@@ -91,14 +91,13 @@ public class CSVFileIO {
         // 座位相关数据csv文件路径
         csvPaths[SEAT] = pathS;
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
-        SharedAttributes.ticketMap = null;
-        //测试用机票订单
-        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, "Test");
         //训练用机票订单
         trainTicketsMap = CSVFileIO.read(csvPaths[TICKET], "Train");
     }
 
-
+    /**
+     * 将csv存入MongoDB数据库的方法
+     */
     public void csv2DB() throws IOException {
         for (int i = 1; i < 6; i++) {
             singleTypeCsv2database(i);
@@ -433,111 +432,5 @@ public class CSVFileIO {
                 break;
         }
         return map;
-    }
-
-    //得到训练集
-    public static Map<String, List<List<String>>> getTrainingMap() {
-        //得到训练集的keys
-        Set<String> keys;
-        try {
-            keys = getTrainKeys();
-        } catch (IOException e) {
-            logger.info("无机票训练集数据");
-            return new HashMap<>();
-        }
-        //得到训练集
-        return getTargetMap(keys);
-    }
-
-    //得到测试集
-    public static Map<String, List<List<String>>> getTestMap() {
-        //得到测试集的keys
-        Set<String> keys;
-        try {
-            keys = getTestKeys();
-        } catch (IOException e) {
-            logger.info("无机票测试集数据");
-            return new HashMap<>();
-        }
-        //得到测试集
-        return getTargetMap(keys);
-    }
-
-    //为了将训练集和测试集分开，读取csv中的训练集keys
-    public static Set<String> getTrainKeys() throws IOException {
-        Set<String> trainNumsSet = getNumsSet(
-                "D:\\programms\\java_projects\\version_control\\测试数据2.0\\train_dataset.txt");
-        return getKeys(trainNumsSet);
-    }
-
-    public static Set<String> getTestKeys() throws IOException {
-        Set<String> testNumsSet = getNumsSet(
-                "D:\\programms\\java_projects\\version_control\\测试数据2.0\\test_dataset.txt");
-        return getKeys(testNumsSet);
-    }
-
-    //得到机票唯一标识符key的集合keys
-    public static Set<String> getKeys(Set<String> numsSet) throws IOException {
-        Set<String> keys = new HashSet<>();
-        String csvFilePath = "D:\\programms\\java_projects\\version_control\\测试数据2.0\\ticket.csv";
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (!numsSet.contains(line.split(",")[0])) {
-                    continue;
-                }
-                int commaIndex = line.indexOf(',');
-                String result = line.substring(commaIndex + 1) + ",";
-                keys.add(result);
-            }
-        }
-        return keys;
-    }
-
-    //从一个给定的txt文件中得到csv文件中所有订单号（训练集或测试集）
-    public static Set<String> getNumsSet(String filePath) throws IOException {
-        Set<String> nums = new HashSet<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                nums.add(line);
-            }
-        }
-        return nums;
-    }
-
-    //得到结果集合（是上面两个方法直接套用的方法）
-    public static Map<String, List<List<String>>> getTargetMap(Set<String> keys) {
-        //返回的结果的map
-        Map<String, List<List<String>>> targetMap = new HashMap<>();
-        //遍历ticketMap
-        for (Map.Entry<String, List<List<String>>> entry : SharedAttributes.ticketMap.entrySet()) {
-            //得到key
-            String key = entry.getKey();
-            //得到ticketMap中属性列表的列表
-            List<List<String>> listOfAttributeList = entry.getValue();
-            for (List<String> attributeList : listOfAttributeList) {
-                // 得到机票的key（机票唯一标识符）
-                String itemKey = generateItemKeyFromAttributes(attributeList);
-                // 如果机票的key在keys中，则将这个属性列表加入到targetMap的对应的属性列表的列表中
-                if (keys.contains(itemKey)) {
-                    // 如果targetMap中没有这个key，则新建一个属性列表的列表,否则直接获取这个key对应的属性列表的列表
-                    List<List<String>> listOfAttributeListInDataSet = targetMap.getOrDefault(key, new ArrayList<>());
-                    // 将这个属性列表加入到属性列表的列表中
-                    listOfAttributeListInDataSet.add(attributeList);
-                    // 将这个属性列表的列表加入或更新到targetMap中
-                    targetMap.put(key, listOfAttributeListInDataSet);
-                }
-            }
-        }
-        return targetMap;
-    }
-
-    public static String generateItemKeyFromAttributes(List<String> attributes) {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < attributes.size() - 1; i++) {
-            stringBuilder.append(attributes.get(i).split(":")[2]).append(",");
-        }
-        return stringBuilder.toString();
     }
 }
