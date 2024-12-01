@@ -70,7 +70,7 @@ public class BackendBundleSystem {
      * @param sqlUtils 数据库操作对象
      * @param trainId 希望作为知识库的训练数据的id
      */
-    public BackendBundleSystem(int poolSize,SQLUtils sqlUtils,String trainId) {
+    public BackendBundleSystem(int poolSize,SQLUtils sqlUtils,Integer trainId) {
         this.poolSize = poolSize;
         this.sqlUtils = sqlUtils;
         executorService = Executors.newFixedThreadPool(poolSize);
@@ -89,7 +89,7 @@ public class BackendBundleSystem {
      * @param sqlUtils 数据库操作对象
      * @param trainId 训练数据的id
      */
-    public BackendBundleSystem(int poolSize,CSVFileIO fileIO,SQLUtils sqlUtils, String trainId) {
+    public BackendBundleSystem(int poolSize,CSVFileIO fileIO,SQLUtils sqlUtils, Integer trainId) {
         this.poolSize = poolSize;
         executorService = Executors.newFixedThreadPool(poolSize);
         this.sqlUtils = sqlUtils;
@@ -338,22 +338,22 @@ public class BackendBundleSystem {
      * @return List<RulesStorage>
      * @throws IOException IO异常
      */
-    private List<RulesStorage> initAllRulesStorage(String trainId) throws IOException {
+    private List<RulesStorage> initAllRulesStorage(Integer tid) throws IOException {
         List<RulesStorage> rulesStorages = new ArrayList<>();
         //跳过机票标号
         rulesStorages.add(null);
         //跳过酒店品类（没有使用）
         rulesStorages.add(null);
-        boolean autoSave = trainId!= null && trainId.isEmpty();
+        boolean autoSave = tid!= null;
         for(int type = 2; type < SharedAttributes.getFullNames().length; type++) {
             List<List<String>> rules;
-            if(sqlUtils != null && trainId!=null){
-                rules = getRulesFromDB(type, trainId);
+            if(sqlUtils != null && tid!=null){
+                rules = getRulesFromDB(type, tid);
                 if(rules==null || rules.isEmpty()){
-                    rules = getRulesFromCSVFile(type,trainId,autoSave);
+                    rules = getRulesFromCSVFile(type,tid,autoSave);
                 }
             }else{
-                rules = getRulesFromCSVFile(type,trainId,autoSave);
+                rules = getRulesFromCSVFile(type,tid,autoSave);
             }
             RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type,rules);
             rulesStorages.add(rulesStorage);
@@ -371,22 +371,22 @@ public class BackendBundleSystem {
         return itemTicketRules;
     }
 
-    public List<List<String>> getRulesFromCSVFile(int type,String trainId,boolean autoSave) throws IOException {
+    public List<List<String>> getRulesFromCSVFile(int type,int tid,boolean autoSave) throws IOException {
         List<List<String>> itemTicketRules = getRulesFromCSVFile(type);
         if(autoSave && sqlUtils!=null) {
             try {
-                sqlUtils.storeRules(type, itemTicketRules, trainId);
+                sqlUtils.storeRules(type, itemTicketRules, tid);
             } catch (Exception e) {
                 System.out.println("自动存储规则失败");
             }
         }
         return itemTicketRules;
     }
-    public List<List<String>> getRulesFromDB(int  type,String trainId) {
+    public List<List<String>> getRulesFromDB(int  type,int tid) {
         List<List<String>> itemTicketRules;
         try {
             //如果已经存在，则直接加载
-            itemTicketRules = sqlUtils.loadRules(type, trainId);
+            itemTicketRules = sqlUtils.loadRules(type, tid);
         }catch (Exception e) {
             return null;
         }

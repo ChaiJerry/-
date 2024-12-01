@@ -5,13 +5,13 @@ import org.jetbrains.annotations.*;
 import java.util.*;
 
 public class TrainRecord implements Comparable<TrainRecord>{
-    private int tid;
-    private String startTime;
-    private String endTime;
-    private String orderNumber;
-    private String comments;
-    private String minSupport;
-    private String minConfidence;
+    private final int tid;
+    private final String startTime;
+    private final String endTime;
+    private final String orderNumber;
+    private final String comments;
+    private final String minSupport;
+    private final String minConfidence;
     private final Map<String,String> trainingRecordMap;
     public TrainRecord(Map<String,String> trainingRecordMap){
         this.tid = Integer.parseInt(trainingRecordMap.get("tid"));

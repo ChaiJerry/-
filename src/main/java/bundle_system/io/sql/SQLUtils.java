@@ -173,27 +173,27 @@ public class SQLUtils {
 
     /**
      * 从数据库中读取所有的训练记录，并返回一个List<Map<String, String>>
-     * 其中的记录按照"train-1"的"train-"后面的数字的顺序降序排列
+     * 其中的记录按照tid降序排列
      *
      * @return 排好序的训练记录
      */
-    public List<TrainRecord> loadTrainRecords() {
+    public List<Map<String, String>> loadTrainRecordMaps() {
         try {
             Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM train_record ORDER BY CAST(SUBSTRING(train_id, 6) AS UNSIGNED INTEGER) DESC");
-            List<TrainRecord> records = new ArrayList<>();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM train_record ORDER BY tid DESC");
+            List<Map<String, String>> records = new ArrayList<>();
             while (rs.next()) {
                 Map<String, String> recordMap = new HashMap<>();
                 //这里用Map暂存是为了符合sonarlint的规则
                 int tid = rs.getInt("tid");
+                recordMap.put("train_id", tid + "");
                 recordMap.put("startTime", rs.getString("startTime"));
                 recordMap.put("endTime", rs.getString("endTime"));
                 recordMap.put("orderNumber", rs.getString("orderNumber"));
                 recordMap.put("comments", rs.getString("comments"));
                 recordMap.put("minSupport", rs.getString("minSupport"));
                 recordMap.put("minConfidence", rs.getString("minConfidence"));
-                TrainRecord record = new TrainRecord(recordMap,tid);
-                records.add(record);
+                records.add(recordMap);
             }
             return records;
         } catch (SQLException e) {
@@ -205,24 +205,56 @@ public class SQLUtils {
     /**
      * 将训练记录写入到数据库中
      *
-     * @param trainRecord 一条训练记录，包含了训练id，开始时间，结束时间，订单数量，评论，最小支持度和最小置信度
+     * @param trainRecord 一条训练记录，包含开始时间，结束时间，订单数量，评论，最小支持度和最小置信度
      */
-    public void insertTrainRecordToDB(TrainRecord trainRecord) {
-        Statement stmt;
-        try {
-            stmt = con.createStatement();
-            String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES ('"
-                    + trainRecord.getStartTime()+ "', '"
-                    + trainRecord.getEndTime()+ "', '"
-                    + trainRecord.getOrderNumber() + "', '"
-                    + trainRecord.getComments() + "', '"
-                    + trainRecord.getMinSupport()+ "', '"
-                    + trainRecord.getMinConfidence() + "')";
-            stmt.executeUpdate(sql);
+    public String insertTrainRecordToDB(TrainRecord trainRecord) {
+        // 准备插入语句
+        String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, trainRecord.getStartTime());
+            pstmt.setString(2, trainRecord.getEndTime());
+            pstmt.setString(3, trainRecord.getOrderNumber());
+            pstmt.setString(4, trainRecord.getComments());
+            pstmt.setString(5, trainRecord.getMinSupport());
+            pstmt.setString(6, trainRecord.getMinConfidence());
+
+            // 执行插入操作
+            int affectedRows = pstmt.executeUpdate();
+
+            // 检查受影响的行数
+            if (affectedRows == 0) {
+                throw new SQLException("Creating train record failed, no rows affected.");
+            }
+
+            // 获取生成的键
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1)+""; // 返回生成的 tid的字符串形式
+                } else {
+                    throw new SQLException("Creating train record failed, no ID obtained.");
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * 更新训练记录的结束时间，这里利用训练结束时间也顺便记录了训练状态，
+     * 当训练记录正常结束时，结束时间会被更新为当前时间，而当训练异常结束时，写入"error"，当没有结束时，结束时间会为null
+     * @param tid 训练记录id
+     * @param endTime 结束时间
+     * @throws SQLException SQL异常
+     */
+    public void updateTrainRecordEndTime(int tid, String endTime) throws SQLException {
+        String sql = "UPDATE train_record SET endTime = ? WHERE tid = ?";
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+            pstmt.setString(1, endTime);
+            pstmt.setInt(2, tid);
+            pstmt.executeUpdate();
+        }
+    }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //建表操作和删除表操作
@@ -234,12 +266,12 @@ public class SQLUtils {
         Statement stmt = con.createStatement();
         String sql = "CREATE TABLE IF NOT EXISTS train_record (" +
                 "tid INT AUTO_INCREMENT PRIMARY KEY, " +
-                "startTime VARCHAR(50), " +
-                "endTime VARCHAR(50), " +
-                "orderNumber INT, " +
-                "comments VARCHAR(100), " +
-                "minSupport DOUBLE, " +
-                "minConfidence DOUBLE "
+                "startTime VARCHAR(64), " +
+                "endTime VARCHAR(64), " +
+                "orderNumber VARCHAR(64), " +
+                "comments VARCHAR(256), " +
+                "minSupport VARCHAR(64), " +
+                "minConfidence VARCHAR(64) "
                 + ")";
         stmt.executeUpdate(sql);
     }
@@ -273,7 +305,7 @@ public class SQLUtils {
                     "ate VARCHAR(1024), " +
                     "cons VARCHAR(512), " +
                     "conf VARCHAR(256), " +
-                    "train_id VARCHAR(128)"
+                    "tid INT"
                     + ")";
             stmt.executeUpdate(sql);
         }
@@ -318,19 +350,24 @@ public class SQLUtils {
      *
      * @param type     品类序号
      * @param itemRule 规则
-     * @param train_id 训练编号
+     * @param tid 训练编号
      */
-    private void storeRule(int type, List<String> itemRule, String train_id) {
-        Statement stmt;
-        try {
-            stmt = con.createStatement();
+    private void storeRule(int type, List<String> itemRule, int tid) {
+        if (itemRule == null || itemRule.size() != 3) {
+            throw new IllegalArgumentException("itemRule must contain exactly three elements.");
+        }
 
-            String sql = "INSERT INTO " + getRuleTableName(type) + "(ate, cons, conf, train_id) VALUES ('" + itemRule.get(0) +
-                    "', '" + itemRule.get(1) + "', '"
-                    + itemRule.get(2) + "', '" + train_id + "')";
-            stmt.executeUpdate(sql);
+        String tableName = getRuleTableName(type);
+        String sql = "INSERT INTO " + tableName + "(ate, cons, conf, train_id) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+            pstmt.setString(1, itemRule.get(0));
+            pstmt.setString(2, itemRule.get(1));
+            pstmt.setString(3, itemRule.get(2));
+            pstmt.setInt(4, tid);
+            pstmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to store rule", e);
         }
     }
 
@@ -340,19 +377,19 @@ public class SQLUtils {
      *
      * @param type          品类序号
      * @param itemRulesList 规则列表
-     * @param train_id      训练编号
+     * @param tid      训练编号
      */
-    public void storeRules(int type, List<List<String>> itemRulesList, String train_id) {
+    public void storeRules(int type, List<List<String>> itemRulesList, int tid) {
         //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
         for (List<String> itemRule : itemRulesList) {
-            storeRule(type, itemRule, train_id);
+            storeRule(type, itemRule, tid);
         }
     }
 
-    public void storeRules(int type, List<List<String>> itemRulesList, String train_id,int limit) {
+    public void storeRules(int type, List<List<String>> itemRulesList, int tid,int limit) {
         //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
         for(int i=0;i<limit&&i<itemRulesList.size();i++) {
-            storeRule(type, itemRulesList.get(i), train_id);
+            storeRule(type, itemRulesList.get(i), tid);
         }
     }
 
@@ -360,13 +397,13 @@ public class SQLUtils {
      * 根据训练编号和品类加载出对应的规则
      *
      * @param type    品类序号
-     * @param trainId 训练编号
+     * @param tid 训练编号
      * @return 规则列表
      */
-    public List<List<String>> loadRules(int type, String trainId) {
+    public List<List<String>> loadRules(int type, int tid) {
         try {
             PreparedStatement ps = con.prepareStatement("select ate, cons, conf from " + getRuleTableName(type) + " where train_id=?");
-            ps.setString(1, trainId);
+            ps.setInt(1, tid);
             ResultSet rs = ps.executeQuery();
             List<List<String>> result = new ArrayList<>();
             while (rs.next()) {
@@ -394,55 +431,6 @@ public class SQLUtils {
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
-////sql直接查询规则表所需要的建表和操作方法
-//    public void createTable() throws SQLException {
-//        Statement stmt = con.createStatement();
-//        String sql = "CREATE TABLE IF NOT EXISTS rules (" +
-//                "rid INT AUTO_INCREMENT PRIMARY KEY, " +
-//                "a_MONTH VARCHAR(10), " +
-//                "a_FROM VARCHAR(10), " +
-//                "a_TO VARCHAR(10), " +
-//                "a_T_GRADE VARCHAR(10), " +
-//                "a_HAVE_CHILD VARCHAR(10), " +
-//                "a_PROMOTION_RATE VARCHAR(10), " +
-//                "a_T_FORMER VARCHAR(10), " +
-//                "consequence VARCHAR(30), " +
-//                "confidence DOUBLE, " +
-//                "train_number INT "
-//                + ")";
-//        stmt.executeUpdate(sql);
-//    }
-//
-//    public AssociationRuleConsResult searchRules(List<String> ates, int trainNumber) throws SQLException {
-//        Statement stmt = con.createStatement();
-//        String sql = "WITH FilteredRules AS (  " +
-//                "    SELECT " +
-//                "        consequence," +
-//                "        confidence," +
-//                "        train_number," +
-//                "        (  " +//计算满足条件的数量
-//                getConditionCount(ates) +
-//                "        ) AS condition_count " +
-//                "    FROM employees " +
-//                ") " +
-//                "SELECT *  " +
-//                "FROM FilteredRules  " +
-//                "ORDER BY condition_count DESC  " +
-//                "LIMIT 1;";//按满足条件的数量降序排序，并限制返回记录数量
-//        ResultSet rs = stmt.executeQuery(sql);
-//        while (rs.next()) {
-//            System.out.println(rs);
-//        }
-//        return null;
-//    }
-//     private String getConditionCount(List<String> ates) {
-//        StringBuilder sb = new StringBuilder();
-//        for (int i = 0; i < ates.size() - 1; i++) {
-//            sb.append("(a_").append(ateNames[i]).append(" = ").append("'").append(ates.get(i)).append("')").append("+");
-//        }
-//        sb.append("(a_").append(ateNames[ates.size() - 1]).append(" = ").append("'").append(ates.get(ates.size() - 1)).append("')");
-//        return sb.toString();
-//    }
 
     /**
      * 测试方法，这个方法用于测试数据库连接是否正常，它会尝试创建一个表并插入一条记录，然后查询该表并打印结果。
