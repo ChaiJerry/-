@@ -207,7 +207,7 @@ public class SQLUtils {
      *
      * @param trainRecord 一条训练记录，包含开始时间，结束时间，订单数量，评论，最小支持度和最小置信度
      */
-    public String insertTrainRecordToDB(TrainRecord trainRecord) {
+    public String insertTrainRecord(TrainRecord trainRecord) {
         // 准备插入语句
         String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -217,6 +217,51 @@ public class SQLUtils {
             pstmt.setString(4, trainRecord.getComments());
             pstmt.setString(5, trainRecord.getMinSupport());
             pstmt.setString(6, trainRecord.getMinConfidence());
+
+            // 执行插入操作
+            int affectedRows = pstmt.executeUpdate();
+
+            // 检查受影响的行数
+            if (affectedRows == 0) {
+                throw new SQLException("Creating train record failed, no rows affected.");
+            }
+
+            // 获取生成的键
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1)+""; // 返回生成的 tid的字符串形式
+                } else {
+                    throw new SQLException("Creating train record failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 将训练记录写入到数据库中
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param orderNumber 总订单数量
+     * @param comments 评论
+     * @param minSupport 最小支持度
+     * @param minConfidence 最小置信度
+     * @return tid的字符串形式
+     */
+    public String insertTrainRecord(String startTime, String endTime
+            , String orderNumber, String comments
+            , String minSupport, String minConfidence) {
+
+        // 准备插入语句
+        String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, startTime);
+            pstmt.setString(2, endTime);
+            pstmt.setString(3, orderNumber);
+            pstmt.setString(4, comments);
+            pstmt.setString(5, minSupport);
+            pstmt.setString(6, minConfidence);
 
             // 执行插入操作
             int affectedRows = pstmt.executeUpdate();
@@ -254,6 +299,16 @@ public class SQLUtils {
             pstmt.executeUpdate();
         }
     }
+
+    public void upDateTrainRecordOrderNumber(int tid, String orderNumber) throws SQLException {
+        String sql = "UPDATE train_record SET orderNumber = ? WHERE tid = ?";
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+            pstmt.setString(1, orderNumber);
+            pstmt.setInt(2, tid);
+            pstmt.executeUpdate();
+        }
+    }
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -358,7 +413,7 @@ public class SQLUtils {
         }
 
         String tableName = getRuleTableName(type);
-        String sql = "INSERT INTO " + tableName + "(ate, cons, conf, train_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO " + tableName + "(ate, cons, conf, tid) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setString(1, itemRule.get(0));
@@ -402,7 +457,7 @@ public class SQLUtils {
      */
     public List<List<String>> loadRules(int type, int tid) {
         try {
-            PreparedStatement ps = con.prepareStatement("select ate, cons, conf from " + getRuleTableName(type) + " where train_id=?");
+            PreparedStatement ps = con.prepareStatement("select ate, cons, conf from " + getRuleTableName(type) + " where tid=?");
             ps.setInt(1, tid);
             ResultSet rs = ps.executeQuery();
             List<List<String>> result = new ArrayList<>();
