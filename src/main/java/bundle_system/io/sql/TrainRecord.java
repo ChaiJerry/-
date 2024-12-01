@@ -87,8 +87,16 @@ public class TrainRecord implements Comparable<TrainRecord>{
         return minConfidence;
     }
 
-    public String toJson() {
-        return this.toString();
+    public Map<String,String> toJson() {
+        Map<String, String> map = new HashMap<>();
+        map.put("train_id", trainId);
+        map.put("startTime", startTime);
+        map.put("endTime", endTime);
+        map.put("orderNumber", orderNumber);
+        map.put("comments", comments);
+        map.put("minSupport", minSupport);
+        map.put("minConfidence", minConfidence);
+        return map;
     }
 
     @Override

@@ -53,10 +53,12 @@ public class CSVFileIO {
         // 座位相关数据csv文件路径
         csvPaths[SEAT] = pathS;
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
-        //测试用机票订单
-        SharedAttributes.testTicketsMap = read(PATH_TEST_T, TEST_TICKET);
-        //训练用机票订单
-        trainTicketsMap = read(PATH_TRAIN_T, TRAIN_TICKET);
+        try {
+            //测试用机票订单
+            SharedAttributes.testTicketsMap = read(PATH_TEST_T, TEST_TICKET);
+            //训练用机票订单
+            trainTicketsMap = read(PATH_TRAIN_T, TRAIN_TICKET);
+        }catch (Exception ignored){}
     }
 
     /**
