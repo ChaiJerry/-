@@ -1,5 +1,7 @@
 package bundle_system.io.sql;
 
+import java.util.*;
+
 public class TrainDataRecord {
 
     private int dataId;
@@ -17,12 +19,20 @@ public class TrainDataRecord {
         return  type+"_"+dataId;
     }
 
-    public String toJson(){
-        return "{" +
-                "\"data_id\": \""+this.getDataIdForFrontEnd()+"\"," +
-                "\"file_name\": \""+this.fileName +"\"," +
-                "\"upload_time\": \""+this.uploadTime +"\"" +
-                "}";
+    public Map<String,String> toJson(){
+        Map<String, String> map = new HashMap<>();
+        map.put("data_id", this.getDataIdForFrontEnd());
+        map.put("file_name", this.fileName);
+        map.put("upload_time", this.uploadTime);
+        return map;
+    }
+
+    public static List<Map<String,String>> getJsonList(List<TrainDataRecord> list){
+        List<Map<String, String>> jsons = new ArrayList<>();
+        for (TrainDataRecord trainDataRecord : list) {
+            jsons.add(trainDataRecord.toJson());
+        }
+        return jsons;
     }
 
     @Override

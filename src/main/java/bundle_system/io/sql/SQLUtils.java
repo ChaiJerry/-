@@ -16,6 +16,8 @@ public class SQLUtils {
 
     private Connection con;
 
+    public String[] TypeNames = new String[getFullNames().length];//全小写
+
     //将db.properties文件读取出来
     public SQLUtils() {
         try {
@@ -36,6 +38,12 @@ public class SQLUtils {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        //初始化TypeNames数组
+        for(int i = 0; i < getFullNames().length; ++i) {
+            //酒店由于实际生产中没有使用，所以这里直接跳过
+            if(i==HOTEL) continue;
+            TypeNames[i] = getFullNames()[i].toLowerCase();
+        }
     }
 
     public SQLUtils(String url, String username, String password) {
@@ -50,21 +58,17 @@ public class SQLUtils {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+
+        //初始化TypeNames数组
+        for(int i = 0; i < getFullNames().length; ++i) {
+            //酒店由于实际生产中没有使用，所以这里直接跳过
+            if(i==HOTEL) continue;
+            TypeNames[i] = getFullNames()[i].toLowerCase();
+        }
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
     //训练数据的文件表
-/*
-结构:记录文件信息的结构
-    {
-         "data_id": "ticket-1",
-         file_name: "ticket_data.csv",
-         "upload_time": "2024-08-17 15:10:50"
-         "type": "ticket"
-      }
- */
-
-
 
     /**
      * 获取训练数据表名称
@@ -72,7 +76,9 @@ public class SQLUtils {
      * @return String 训练数据表名称
      */
     public String getTrainDataTableName(int type){
-        return "train_data_" + getFullNames()[type];
+        //getFullNames()[type]返回的是种类名称，如"Insurance"
+        //由于数据库中都是小写，所以这里需要将种类名称转换为小写
+        return "train_data_" + getFullNames()[type].toLowerCase();
     }
     /**
      * 获取训练数据表名称
@@ -84,15 +90,15 @@ public class SQLUtils {
     }
 
     //插入训练数据记录
-    public String insertTrainDataRecord(String fileName, String uploadTime, String type) throws SQLException {
-        String sql = "INSERT INTO train_data_" + type + "(file_name, upload_time) VALUES (?, ?)";
+    public String insertTrainDataRecord(String fileName, String uploadTime, String typeName) throws SQLException {
+        String sql = "INSERT INTO " + getTrainDataTableName(typeName) + "(file_name, upload_time) VALUES (?, ?)";
         PreparedStatement stmt = con.prepareStatement(sql);
         stmt.setString(1, fileName);
         stmt.setString(2, uploadTime);
         stmt.executeUpdate();
         //通过文件名和上传时间，查询刚刚插入的记录的id
         //不使用查找最大id的原因是如果有两个文件同一时间上传，那么可能会查到错误的id
-        String sql2 = "SELECT did FROM train_data_" + type +
+        String sql2 = "SELECT did FROM " + getTrainDataTableName(typeName) +
                 " WHERE file_name=? AND upload_time=?";
         PreparedStatement stmt2 = con.prepareStatement(sql2);
         stmt2.setString(1, fileName);
@@ -100,7 +106,7 @@ public class SQLUtils {
         ResultSet rs = stmt2.executeQuery();
         if (rs.next()) {
             int id = rs.getInt("did");
-            return getTrainDataIdForFrontByIdAndTypeName(id,type);
+            return getTrainDataIdForFrontByIdAndTypeName(id,typeName);
         } else {
             return null;
         }
@@ -123,7 +129,7 @@ public class SQLUtils {
     /**
      * 获取一个表中所有训练数据记录
      */
-    public List<TrainDataRecord> getTrainDataRecords(String typeName) throws SQLException {
+    public List<TrainDataRecord> getTrainDataRecordsByTypeName(String typeName) throws SQLException {
         Statement stmt = con.createStatement();
         //得到按did降序排列的所有记录
         String sql = "SELECT * FROM " + getTrainDataTableName(typeName) + " ORDER BY did DESC";
@@ -396,7 +402,7 @@ public class SQLUtils {
      * @return 表名
      */
     private String getRuleTableName(int type) {
-        return  "rules_"+SharedAttributes.getFullNames()[type];
+        return  "rules_"+SharedAttributes.getFullNames()[type].toLowerCase();
     }
 
 
