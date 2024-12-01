@@ -2,7 +2,7 @@ package bundle_system.data_generating_system;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
+//import java.util.logging.*;
 
 import org.apache.spark.ml.fpm.FPGrowthModel;
 import org.apache.spark.sql.Dataset;
@@ -22,8 +22,8 @@ public class FPGrowth {
             .master("local[*]")
             .getOrCreate();
 
-    // 创建日志对象
-    private static final Logger logger = Logger.getLogger(FPGrowth.class.getName());
+//    // 创建日志对象
+//    private static final Logger logger = Logger.getLogger(FPGrowth.class.getName());
 
     private FPGrowth() {
     }
@@ -35,7 +35,7 @@ public class FPGrowth {
      * @return 返回训练好的FPGrowth模型
      */
     public static FPGrowthModel train(Dataset<Row> itemsDF) {
-        logger.info("正在使用FPGrowth算法训练模型");
+//        logger.info("正在使用FPGrowth算法训练模型");
         return new org.apache.spark.ml.fpm.FPGrowth()
                 .setItemsCol("items")//设置items列名
                 .setMinSupport(MIN_SUPPORT)//最小支持度
@@ -52,7 +52,7 @@ public class FPGrowth {
      * @return 返回训练好的FPGrowth模型
      */
     public static FPGrowthModel train(Dataset<Row> itemsDF, double minSupport, double minConfidence) {
-        logger.info("正在使用FPGrowth算法训练模型");
+//        logger.info("正在使用FPGrowth算法训练模型");
         return new org.apache.spark.ml.fpm.FPGrowth()
                 .setItemsCol("items")//设置items列名
                 .setMinSupport(minSupport)//最小支持度
@@ -103,7 +103,7 @@ public class FPGrowth {
         for (int i = 1; i < 6; i++) {
 
             // 准备数据
-            logger.info("正在准备数据");
+//            logger.info("正在准备数据");
             Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i, eva);
 
             // 使用FPGrowth算法训练模型
@@ -114,7 +114,7 @@ public class FPGrowth {
 
             // 可以选择显示频繁项集(freqItemSets.show();)
             if (MODE.equals("debug")) {
-                logger.info("显示频繁项集");
+//                logger.info("显示频繁项集");
                 //freqItemSets.show();
             }
 
@@ -128,7 +128,7 @@ public class FPGrowth {
             // 显示生成的关联规则并保存到csv
             Dataset<Row> rules = model.associationRules();
             if (MODE.equals("debug")) {
-                logger.info("显示关联规则");
+//                logger.info("显示关联规则");
                 //rules.show();
             }
 
@@ -141,8 +141,8 @@ public class FPGrowth {
             }
         }
 
-        // 停止SparkSession
-        logger.info("SparkSession停止");
+//        // 停止SparkSession
+//        logger.info("SparkSession停止");
         //停止MongoDB
         MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
     }
@@ -153,7 +153,7 @@ public class FPGrowth {
             //得到运行时间
             long startTime = System.currentTimeMillis();
             // 准备数据
-            logger.info("正在准备数据");
+//            logger.info("正在准备数据");
             Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
 
             // 使用FPGrowth算法训练模型
@@ -164,7 +164,7 @@ public class FPGrowth {
 
             // 可以选择显示频繁项集(freqItemSets.show();)
             if (MODE.equals("debug")) {
-                logger.info("显示频繁项集");
+//                logger.info("显示频繁项集");
                 //freqItemSets.show();
             }
 
@@ -178,7 +178,7 @@ public class FPGrowth {
             // 显示生成的关联规则并保存到csv
             Dataset<Row> rules = model.associationRules();
             if (MODE.equals("debug")) {
-                logger.info("显示关联规则");
+//                logger.info("显示关联规则");
                 //rules.show();
             }
 
@@ -193,8 +193,8 @@ public class FPGrowth {
             System.out.println(getFullNames()[i] + "," + MIN_CONFIDENCE + "," + (endTime - startTime) + "ms");
         }
 
-        // 停止SparkSession
-        logger.info("SparkSession停止");
+//        // 停止SparkSession
+//        logger.info("SparkSession停止");
         //停止MongoDB
         MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
     }
@@ -230,8 +230,8 @@ public class FPGrowth {
      * @return 返回定义好的特定数据模式
      */
     public static StructType getSchema() {
-        // 定义数据模式
-        logger.info("正在定义数据模式");
+//        // 定义数据模式
+//        logger.info("正在定义数据模式");
         return new StructType(new StructField[]{new StructField(
                 "items",
                 new ArrayType(DataTypes.StringType, true)
