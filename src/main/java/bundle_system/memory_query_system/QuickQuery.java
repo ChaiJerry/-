@@ -68,7 +68,7 @@ public class QuickQuery {
         long totalTime = 0;
         MongoCollection<Document> ordersCollection = getOrdersCollection(type);
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TEST_TICKET];
-        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(CSVFileIO.read(PATH_TEST_T, TEST_TICKET), ticketAttributesStorage);
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(fileIO.read(PATH_TEST_T, TEST_TICKET), ticketAttributesStorage);
         itemPackMap.clear();
         int total = 0;
         int round = 0;

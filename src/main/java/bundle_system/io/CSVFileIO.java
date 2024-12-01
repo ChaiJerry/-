@@ -15,8 +15,6 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class CSVFileIO {
 
-    //用于将订单号与不同品类的商品属性对应，若是内存不足可以考虑将TicketMap改为局部变量
-//    private static Map<String, List<List<String>>> ticketMap;
     //csv文件结果输出的目录路径
     private String resultDirPath;
     //csv文件读取的路径，数组长度为types.length，数组下标与types对应
@@ -31,7 +29,7 @@ public class CSVFileIO {
     }
 
     //订单数量
-    protected static int orderNumber;
+    protected int orderNumber;
 
     /**
      * 初始化CSVFileIO
@@ -56,9 +54,9 @@ public class CSVFileIO {
         csvPaths[SEAT] = pathS;
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
         //测试用机票订单
-        SharedAttributes.testTicketsMap = CSVFileIO.read(PATH_TEST_T, TEST_TICKET);
+        SharedAttributes.testTicketsMap = read(PATH_TEST_T, TEST_TICKET);
         //训练用机票订单
-        trainTicketsMap = CSVFileIO.read(PATH_TRAIN_T, TRAIN_TICKET);
+        trainTicketsMap = read(PATH_TRAIN_T, TRAIN_TICKET);
     }
 
     /**
@@ -88,7 +86,7 @@ public class CSVFileIO {
         csvPaths[SEAT] = pathS;
         //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
         //训练用机票订单
-        trainTicketsMap = CSVFileIO.read(csvPaths[TICKET], TRAIN_TICKET);
+        trainTicketsMap = read(csvPaths[TICKET], TRAIN_TICKET);
     }
 
     /**
@@ -105,7 +103,7 @@ public class CSVFileIO {
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], type);
+            attributeMap = read(csvPaths[type], type);
             MongoUtils.ordersMap2DB(attributeMap, type);
         } else {
             // 当读取的csv文件是Ticket时
@@ -122,7 +120,7 @@ public class CSVFileIO {
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], type);
+            attributeMap = read(csvPaths[type], type);
             // 创建数据集
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
@@ -160,7 +158,7 @@ public class CSVFileIO {
         Map<String, List<List<String>>> attributeMap;
         if (type != SharedAttributes.TICKET) {
             // 当读取的csv文件不是Ticket时，直接处理
-            attributeMap = CSVFileIO.read(csvPaths[type], type);
+            attributeMap = read(csvPaths[type], type);
             // 创建数据集
             List<Row> data = new ArrayList<>();
             //筛选出能和机票订单号匹配的订单数据
@@ -200,7 +198,7 @@ public class CSVFileIO {
         //订单与属性之间的映射map
         Map<String, List<List<String>>> attributeMap;
         // 读取商品类型，这里type不能为Ticket，因为一般不需要通过ticket推荐ticket自己
-        attributeMap = CSVFileIO.read(csvPaths[type], type);
+        attributeMap = read(csvPaths[type], type);
         //筛选出能和机票订单号匹配的订单数据
         // 遍历机票的订单号，只将已经有对应的机票订单号的订单数据添加到listOfAttributeList中
         for (Iterator<String> iterator = trainTicketsMap.keySet().iterator(); iterator.hasNext(); ) {
@@ -286,7 +284,7 @@ public class CSVFileIO {
     }
 
     public Map<String, List<List<String>>> read(int type) throws IOException {
-        return CSVFileIO.read(csvPaths[type], type);
+        return read(csvPaths[type], type);
     }
 
 
@@ -297,7 +295,7 @@ public class CSVFileIO {
      * @param type 商品类型代码
      * @return 返回订单号和订单对应的商品属性之间的键值对 Map<String, List<String>>
      */
-    public static Map<String, List<List<String>>> read(String path, int type) throws IOException {
+    public Map<String, List<List<String>>> read(String path, int type) throws IOException {
         // 创建HashMap，key为订单号，value为订单对应的属性键值对
         HashMap<String, List<List<String>>> map = new HashMap<>();
         // 第一参数：读取文件的路径 第二个参数：分隔符 第三个参数：字符集
