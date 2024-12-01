@@ -23,7 +23,7 @@ public class MainClass {
 //        QuickQuery quickQuery = new QuickQuery();
 //        quickQuery.test(SEAT);
         SQLUtils sqlUtils = new SQLUtils();
-        sqlUtils.createTrainRecordTable();
+        sqlUtils.renewTables();
 
 //        CSVFileIO csvFileIO = new CSVFileIO(PATH_T,null,PATH_M,PATH_B, PATH_I, PATH_S);
 //        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(8,csvFileIO);
