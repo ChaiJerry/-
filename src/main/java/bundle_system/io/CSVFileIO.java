@@ -305,8 +305,6 @@ public class CSVFileIO {
         // 读取表头
         csvReader.readHeaders();
         //通过type判断调用哪个方法
-        //将表头存入AttributeStorage之中，方便后续存入数据库
-        SharedAttributes.itemAttributesStorage[type] = new ItemAttributesStorage();
         switch (type) {
             case MEAL:
                 while (csvReader.readRecord()) {
@@ -356,6 +354,8 @@ public class CSVFileIO {
                 }
                 break;
             case TEST_TICKET:
+                //将表头存入AttributeStorage之中，方便后续存入数据库
+                SharedAttributes.itemAttributesStorage[type] = new ItemAttributesStorage();
                 //这是用于评估的测试数据类型，实际生产环境不需要 使用这个地方
                 //得到对应的属性头实例
                 ItemAttributesStorage attributesStorage = SharedAttributes.itemAttributesStorage[type];

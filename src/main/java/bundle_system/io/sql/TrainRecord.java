@@ -8,21 +8,25 @@ public class TrainRecord implements Comparable<TrainRecord>{
     private final int tid;
     private final String startTime;
     private final String endTime;
+
+    public TrainRecord(String startTime, String endTime
+            , String orderNumber, String comments, String minSupport
+            , String minConfidence, Map<String, String> trainingRecordMap) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.orderNumber = orderNumber;
+        this.comments = comments;
+        this.minSupport = minSupport;
+        this.minConfidence = minConfidence;
+        this.trainingRecordMap = trainingRecordMap;
+        this.tid = -1;
+    }
+
     private final String orderNumber;
     private final String comments;
     private final String minSupport;
     private final String minConfidence;
     private final Map<String,String> trainingRecordMap;
-    public TrainRecord(Map<String,String> trainingRecordMap){
-        this.tid = Integer.parseInt(trainingRecordMap.get("tid"));
-        this.startTime = trainingRecordMap.get("startTime");
-        this.endTime = trainingRecordMap.get("endTime");
-        this.orderNumber = trainingRecordMap.get("orderNumber");
-        this.comments = trainingRecordMap.get("comments");
-        this.minSupport = trainingRecordMap.get("minSupport");
-        this.minConfidence = trainingRecordMap.get("minConfidence");
-        this.trainingRecordMap = trainingRecordMap;
-    }
 
     public TrainRecord(Map<String,String> trainingRecordMap,int tid){
         this.startTime = trainingRecordMap.get("startTime");
