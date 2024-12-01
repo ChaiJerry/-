@@ -63,10 +63,10 @@ public class SQLUtils {
 /*
 结构:记录文件信息的结构
     {
-         "data_id": "flight-1",
-         file_name: "flight_data.csv",
+         "data_id": "ticket-1",
+         file_name: "ticket_data.csv",
          "upload_time": "2024-08-17 15:10:50"
-         "type": "flight"
+         "type": "ticket"
       }
  */
 
@@ -101,9 +101,6 @@ public class SQLUtils {
      * @return String 训练数据表名称
      */
     public String getTrainDataTableName(String typeName){
-        if(typeName.equals("flight")){
-            typeName = "Ticket";
-        }
         return "train_data_" + typeName;
     }
 
@@ -378,47 +375,47 @@ public class SQLUtils {
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
-//sql直接查询规则表所需要的建表和操作方法
-    public void createTable() throws SQLException {
-        Statement stmt = con.createStatement();
-        String sql = "CREATE TABLE IF NOT EXISTS rules (" +
-                "rid INT AUTO_INCREMENT PRIMARY KEY, " +
-                "a_MONTH VARCHAR(10), " +
-                "a_FROM VARCHAR(10), " +
-                "a_TO VARCHAR(10), " +
-                "a_T_GRADE VARCHAR(10), " +
-                "a_HAVE_CHILD VARCHAR(10), " +
-                "a_PROMOTION_RATE VARCHAR(10), " +
-                "a_T_FORMER VARCHAR(10), " +
-                "consequence VARCHAR(30), " +
-                "confidence DOUBLE, " +
-                "train_number INT "
-                + ")";
-        stmt.executeUpdate(sql);
-    }
-
-    public AssociationRuleConsResult searchRules(List<String> ates, int trainNumber) throws SQLException {
-        Statement stmt = con.createStatement();
-        String sql = "WITH FilteredRules AS (  " +
-                "    SELECT " +
-                "        consequence," +
-                "        confidence," +
-                "        train_number," +
-                "        (  " +//计算满足条件的数量
-                getConditionCount(ates) +
-                "        ) AS condition_count " +
-                "    FROM employees " +
-                ") " +
-                "SELECT *  " +
-                "FROM FilteredRules  " +
-                "ORDER BY condition_count DESC  " +
-                "LIMIT 1;";//按满足条件的数量降序排序，并限制返回记录数量
-        ResultSet rs = stmt.executeQuery(sql);
-        while (rs.next()) {
-            System.out.println(rs);
-        }
-        return null;
-    }
+////sql直接查询规则表所需要的建表和操作方法
+//    public void createTable() throws SQLException {
+//        Statement stmt = con.createStatement();
+//        String sql = "CREATE TABLE IF NOT EXISTS rules (" +
+//                "rid INT AUTO_INCREMENT PRIMARY KEY, " +
+//                "a_MONTH VARCHAR(10), " +
+//                "a_FROM VARCHAR(10), " +
+//                "a_TO VARCHAR(10), " +
+//                "a_T_GRADE VARCHAR(10), " +
+//                "a_HAVE_CHILD VARCHAR(10), " +
+//                "a_PROMOTION_RATE VARCHAR(10), " +
+//                "a_T_FORMER VARCHAR(10), " +
+//                "consequence VARCHAR(30), " +
+//                "confidence DOUBLE, " +
+//                "train_number INT "
+//                + ")";
+//        stmt.executeUpdate(sql);
+//    }
+//
+//    public AssociationRuleConsResult searchRules(List<String> ates, int trainNumber) throws SQLException {
+//        Statement stmt = con.createStatement();
+//        String sql = "WITH FilteredRules AS (  " +
+//                "    SELECT " +
+//                "        consequence," +
+//                "        confidence," +
+//                "        train_number," +
+//                "        (  " +//计算满足条件的数量
+//                getConditionCount(ates) +
+//                "        ) AS condition_count " +
+//                "    FROM employees " +
+//                ") " +
+//                "SELECT *  " +
+//                "FROM FilteredRules  " +
+//                "ORDER BY condition_count DESC  " +
+//                "LIMIT 1;";//按满足条件的数量降序排序，并限制返回记录数量
+//        ResultSet rs = stmt.executeQuery(sql);
+//        while (rs.next()) {
+//            System.out.println(rs);
+//        }
+//        return null;
+//    }
 
     public void test() throws SQLException {
         System.out.println("initialize");

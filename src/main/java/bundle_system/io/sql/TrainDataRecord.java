@@ -17,12 +17,11 @@ public class TrainDataRecord {
 
     @Override
     public String toString() {
-        String retType = (Objects.equals(type, "ticket") || Objects.equals(type, "Ticket"))?"ticket":type;
         return "{\n" +
                 "\"data_id\": \""+this.data_id+"\",\n" +
                 "\"file_name\": \""+this.file_name+"\",\n" +
                 "\"upload_time\": \""+this.upload_time+"\"\n" +
-                "\"type\": \""+retType+"\"\n" +
+                "\"type\": \""+type+"\"\n" +
                 "}";
     }
 }

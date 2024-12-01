@@ -70,7 +70,7 @@ public class QuerySystem {
     public static void evaluate(int eva) throws IOException {
         System.out.println();
         System.out.print(getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames().get(eva) + "测试集,");
-        evaluateTicketDataset(eva, CSVFileIO.read(PATH_TEST_T, TEST_TICKET));
+        evaluateTicketDataset(eva, fileIO.read(PATH_TEST_T, TEST_TICKET));
 //      System.out.println();
 //      System.out.print(getItemAttributesStorage()[TRAIN_TICKET].getAttributeNames().get(eva) + "训练集,");
 //        evaluateDataset(eva, CSVFileIO.read(PATH_TRAIN_T, "Train"));
@@ -524,7 +524,7 @@ public class QuerySystem {
             System.out.print(formattedNumber);
             for (int eva = 1; eva < 6; eva++) {
                 fpGrowthForEva(eva, minSupport, MIN_CONFIDENCE);
-                double f1 = evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, TEST_TICKET));
+                double f1 = evaluateSingleBundleItem(eva, fileIO.read(PATH_TEST_T, TEST_TICKET));
                 //保留两位小数
                 String formattedNumber2 = String.format("%.2f", f1);
                 System.out.print(formattedNumber2 + ",");
@@ -553,7 +553,7 @@ public class QuerySystem {
                 fpGrowthForEva(eva, minSupport, MIN_CONFIDENCE);
                 long start = System.currentTimeMillis();
                 for (int i = 0; i < 5; i++) {
-                    evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, TEST_TICKET));
+                    evaluateSingleBundleItem(eva, fileIO.read(PATH_TEST_T, TEST_TICKET));
                 }
                 long end = System.currentTimeMillis();
                 long time = (end - start) / 5;
@@ -606,7 +606,7 @@ public class QuerySystem {
             System.out.print(formattedNumber);
             for (int eva = 1; eva < 6; eva++) {
                 fpGrowthForEva(eva, minSupport, minConfidence);
-                double f1 = evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, TEST_TICKET));
+                double f1 = evaluateSingleBundleItem(eva, fileIO.read(PATH_TEST_T, TEST_TICKET));
                 //保留两位小数
                 String formattedNumber2 = String.format("%.2f", f1);
                 System.out.print(formattedNumber2 + ",");
@@ -660,7 +660,7 @@ public class QuerySystem {
                 fpGrowthForEva(eva, minSupport, minConfidence);
                 long start = System.currentTimeMillis();
                 for (int i = 0; i < 5; i++) {
-                    evaluateSingleBundleItem(eva, CSVFileIO.read(PATH_TEST_T, TEST_TICKET));
+                    evaluateSingleBundleItem(eva, fileIO.read(PATH_TEST_T, TEST_TICKET));
                 }
                 long end = System.currentTimeMillis();
                 long time = (end - start) / 5;
