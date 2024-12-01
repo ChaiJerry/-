@@ -19,6 +19,15 @@ public class TrainDataRecord {
         return  type+"_"+dataId;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getUploadTime() {
+        return uploadTime;
+    }
+
+
     public Map<String,String> toJson(){
         Map<String, String> map = new HashMap<>();
         map.put("data_id", this.getDataIdForFrontEnd());

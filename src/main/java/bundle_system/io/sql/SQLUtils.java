@@ -10,13 +10,13 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class SQLUtils {
 
-    private String url;//在配置文件中修改成自己的数据库
+    private  String url;//在配置文件中修改成自己的数据库
     private String username;
     private String password;
 
     private Connection con;
 
-    public String[] TypeNames = new String[getFullNames().length];//全小写
+    public final String[] typeNames = new String[getFullNames().length];//全小写
 
     //将db.properties文件读取出来
     public SQLUtils() {
@@ -39,10 +39,10 @@ public class SQLUtils {
             throw new RuntimeException(e);
         }
         //初始化TypeNames数组
-        for(int i = 0; i < getFullNames().length; ++i) {
+        for(int i = 0; i < getFullNames().length; i++) {
             //酒店由于实际生产中没有使用，所以这里直接跳过
             if(i==HOTEL) continue;
-            TypeNames[i] = getFullNames()[i].toLowerCase();
+            typeNames[i] = getFullNames()[i].toLowerCase();
         }
     }
 
@@ -63,7 +63,7 @@ public class SQLUtils {
         for(int i = 0; i < getFullNames().length; ++i) {
             //酒店由于实际生产中没有使用，所以这里直接跳过
             if(i==HOTEL) continue;
-            TypeNames[i] = getFullNames()[i].toLowerCase();
+            typeNames[i] = getFullNames()[i].toLowerCase();
         }
     }
 
@@ -170,17 +170,6 @@ public class SQLUtils {
 
 
 
-    /**
-     * 得到下一个训练id
-     * @return 训练id
-     */
-    public String getNextTrainId() {
-        List<TrainRecord> trainRecords = TrainRecord.sortById(loadTrainRecords());
-        if (trainRecords.isEmpty()) {
-            return "train-0";
-        }
-        return trainRecords.get(0).getNextTrainId();
-    }
 
     /**
      * 从数据库中读取所有的训练记录，并返回一个List<Map<String, String>>
@@ -196,14 +185,14 @@ public class SQLUtils {
             while (rs.next()) {
                 Map<String, String> recordMap = new HashMap<>();
                 //这里用Map暂存是为了符合sonarlint的规则
-                recordMap.put("train_id", rs.getString("train_id"));
+                int tid = rs.getInt("tid");
                 recordMap.put("startTime", rs.getString("startTime"));
                 recordMap.put("endTime", rs.getString("endTime"));
                 recordMap.put("orderNumber", rs.getString("orderNumber"));
                 recordMap.put("comments", rs.getString("comments"));
                 recordMap.put("minSupport", rs.getString("minSupport"));
                 recordMap.put("minConfidence", rs.getString("minConfidence"));
-                TrainRecord record = new TrainRecord(recordMap);
+                TrainRecord record = new TrainRecord(recordMap,tid);
                 records.add(record);
             }
             return records;
@@ -222,8 +211,7 @@ public class SQLUtils {
         Statement stmt;
         try {
             stmt = con.createStatement();
-            String sql = "INSERT INTO train_record(train_id, startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES ('"
-                    + trainRecord.getTrainId() + "', '"
+            String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES ('"
                     + trainRecord.getStartTime()+ "', '"
                     + trainRecord.getEndTime()+ "', '"
                     + trainRecord.getOrderNumber() + "', '"
@@ -246,7 +234,6 @@ public class SQLUtils {
         Statement stmt = con.createStatement();
         String sql = "CREATE TABLE IF NOT EXISTS train_record (" +
                 "tid INT AUTO_INCREMENT PRIMARY KEY, " +
-                "train_id VARCHAR(128), " +
                 "startTime VARCHAR(50), " +
                 "endTime VARCHAR(50), " +
                 "orderNumber INT, " +
