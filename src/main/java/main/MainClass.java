@@ -19,9 +19,11 @@ import java.sql.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class MainClass {
-    public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException {
-        QuickQuery quickQuery = new QuickQuery();
-        quickQuery.test(SEAT);
+    public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException, SQLException {
+//        QuickQuery quickQuery = new QuickQuery();
+//        quickQuery.test(SEAT);
+        SQLUtils sqlUtils = new SQLUtils();
+        sqlUtils.createTrainRecordTable();
 
 //        CSVFileIO csvFileIO = new CSVFileIO(PATH_T,null,PATH_M,PATH_B, PATH_I, PATH_S);
 //        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(8,csvFileIO);
