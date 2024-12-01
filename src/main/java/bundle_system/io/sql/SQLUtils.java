@@ -268,11 +268,23 @@ public class SQLUtils {
 
     public void dropTables() throws SQLException {
         Statement stmt = con.createStatement();
+        dropRulesTables(stmt);
+        dropTrainRecordTable(stmt);
+        dropTrainDataTables(stmt);
+    }
+
+    public void dropRulesTables(Statement stmt) throws SQLException {
         for (int i = MEAL; i <= SEAT; i++) {
             String sql = "DROP TABLE IF EXISTS " + getRuleTableName(i);
             stmt.executeUpdate(sql);
         }
+    }
+
+    public void dropTrainRecordTable(Statement stmt) throws SQLException {
         stmt.executeUpdate("DROP TABLE IF EXISTS train_record");
+    }
+
+    public void dropTrainDataTables(Statement stmt) throws SQLException {
         for (int i = TICKET; i <= SEAT; i++) {
             String sql = "DROP TABLE IF EXISTS " + getTrainDataTableName(i);
             stmt.executeUpdate(sql);
@@ -365,14 +377,6 @@ public class SQLUtils {
         return  "rules_"+SharedAttributes.getFullNames()[type];
     }
 
-    private String getConditionCount(List<String> ates) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < ates.size() - 1; i++) {
-            sb.append("(a_").append(ateNames[i]).append(" = ").append("'").append(ates.get(i)).append("')").append("+");
-        }
-        sb.append("(a_").append(ateNames[ates.size() - 1]).append(" = ").append("'").append(ates.get(ates.size() - 1)).append("')");
-        return sb.toString();
-    }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
 ////sql直接查询规则表所需要的建表和操作方法
@@ -415,6 +419,14 @@ public class SQLUtils {
 //            System.out.println(rs);
 //        }
 //        return null;
+//    }
+//     private String getConditionCount(List<String> ates) {
+//        StringBuilder sb = new StringBuilder();
+//        for (int i = 0; i < ates.size() - 1; i++) {
+//            sb.append("(a_").append(ateNames[i]).append(" = ").append("'").append(ates.get(i)).append("')").append("+");
+//        }
+//        sb.append("(a_").append(ateNames[ates.size() - 1]).append(" = ").append("'").append(ates.get(ates.size() - 1)).append("')");
+//        return sb.toString();
 //    }
 
     public void test() throws SQLException {
