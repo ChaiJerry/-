@@ -14,13 +14,7 @@ public class SQLUtils {
     private String username;
     private String password;
 
-    private final String[] ateNames = {"MONTH", "FROM", "TO", "T_GRADE", "HAVE_CHILD", "PROMOTION_RATE", "T_FORMER"};
-
-    public Connection getCon() {
-        return con;
-    }
-
-    public Connection con;
+    private Connection con;
 
     //将db.properties文件读取出来
     public SQLUtils() {
@@ -429,6 +423,9 @@ public class SQLUtils {
 //        return sb.toString();
 //    }
 
+    /**
+     * 测试方法，这个方法用于测试数据库连接是否正常，它会尝试创建一个表并插入一条记录，然后查询该表并打印结果。
+     */
     public void test() throws SQLException {
         System.out.println("initialize");
 
