@@ -64,22 +64,7 @@ public class SQLUtils {
       }
  */
 
-    /**
-     * 创建训练数据表
-     */
-    public void createTrainDataTables() throws SQLException {
-        Statement stmt = con.createStatement();
-        String sql;
-        for (int i = TICKET; i <= SEAT; i++) {
-            if(i==HOTEL) continue;
-            sql = "CREATE TABLE IF NOT EXISTS "+getTrainDataTableName(i) + " (" +
-                    "did INT AUTO_INCREMENT PRIMARY KEY, " +
-                    "file_name VARCHAR(512), " +
-                    "upload_time VARCHAR(256) "
-                    + ")";
-            stmt.executeUpdate(sql);
-        }
-    }
+
 
     /**
      * 获取训练数据表名称
@@ -99,15 +84,33 @@ public class SQLUtils {
     }
 
     //插入训练数据记录
-    public void insertTrainDataRecord(String fileName, String uploadTime, String type) throws SQLException {
+    public String insertTrainDataRecord(String fileName, String uploadTime, String type) throws SQLException {
         String sql = "INSERT INTO train_data_" + type + "(file_name, upload_time) VALUES (?, ?)";
         PreparedStatement stmt = con.prepareStatement(sql);
         stmt.setString(1, fileName);
         stmt.setString(2, uploadTime);
         stmt.executeUpdate();
+        //通过文件名和上传时间，查询刚刚插入的记录的id
+        //不使用查找最大id的原因是如果有两个文件同一时间上传，那么可能会查到错误的id
+        String sql2 = "SELECT did FROM train_data_" + type +
+                " WHERE file_name=? AND upload_time=?";
+        PreparedStatement stmt2 = con.prepareStatement(sql2);
+        stmt2.setString(1, fileName);
+        stmt2.setString(2, uploadTime);
+        ResultSet rs = stmt2.executeQuery();
+        if (rs.next()) {
+            int id = rs.getInt("did");
+            return getTrainDataIdForFrontByIdAndTypeName(id,type);
+        } else {
+            return null;
+        }
     }
 
-    //插入训练数据记录
+    public String getTrainDataIdForFrontByIdAndTypeName(int id,String typeName){
+        return typeName+ "-" + id;
+    }
+
+    //插入训练数据记录SQ
     public void insertTrainDataRecord(String fileName, String uploadTime, int type) throws SQLException {
         String sql = "INSERT INTO "+ getTrainDataTableName(type) +
                 "(file_name, upload_time) VALUES (?, ?)";
@@ -135,8 +138,14 @@ public class SQLUtils {
         return trainDataRecords;
     }
 
+    /**
+     * 根据训练数据id获取训练数据记录
+     * @param did 训练数据id（训练数据的编号）
+     * @param typeName 种类名称
+     * @return TrainDataRecord
+     * @throws SQLException SQL异常
+     */
     public TrainDataRecord getTrainDataRecordByDid(int did,String typeName) throws SQLException {
-        Statement stmt = con.createStatement();
         String sql = "SELECT * FROM " + getTrainDataTableName(typeName) + " WHERE did=?";
         PreparedStatement pStmt = con.prepareStatement(sql);
         pStmt.setInt(1, did);
@@ -153,30 +162,14 @@ public class SQLUtils {
 ////////////////////////////////////////////////////////////////////////////////////////////
 //训练记录表操作
 
-    /**
-     * 创建训练记录表
-     */
-    public void createTrainRecordTable() throws SQLException {
-        Statement stmt = con.createStatement();
-        String sql = "CREATE TABLE IF NOT EXISTS train_record (" +
-                "tid INT AUTO_INCREMENT PRIMARY KEY, " +
-                "train_id VARCHAR(128), " +
-                "startTime VARCHAR(50), " +
-                "endTime VARCHAR(50), " +
-                "orderNumber INT, " +
-                "comments VARCHAR(100), " +
-                "minSupport DOUBLE, " +
-                "minConfidence DOUBLE "
-                + ")";
-        stmt.executeUpdate(sql);
-    }
+
 
     /**
      * 得到下一个训练id
      * @return 训练id
      */
     public String getNextTrainId() {
-        List<TrainRecord> trainRecords = TrainRecord.sortByTrainId(loadTrainRecords());
+        List<TrainRecord> trainRecords = TrainRecord.sortById(loadTrainRecords());
         if (trainRecords.isEmpty()) {
             return "train-0";
         }
@@ -219,17 +212,18 @@ public class SQLUtils {
      *
      * @param trainRecord 一条训练记录，包含了训练id，开始时间，结束时间，订单数量，评论，最小支持度和最小置信度
      */
-    public void insertTrainRecordToDB(Map<String, Object> trainRecord) {
+    public void insertTrainRecordToDB(TrainRecord trainRecord) {
         Statement stmt;
         try {
             stmt = con.createStatement();
-            String sql = "INSERT INTO train_record(train_id, startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES ('" + trainRecord.get("train_id") +
-                    "', '" + trainRecord.get("startTime") + "', '"
-                    + trainRecord.get("endTime") + "', '"
-                    + trainRecord.get("orderNumber") + "', '"
-                    + trainRecord.get("comments") + "', '"
-                    + trainRecord.get("minSupport") + "', '"
-                    + trainRecord.get("minConfidence") + "')";
+            String sql = "INSERT INTO train_record(train_id, startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES ('"
+                    + trainRecord.getTrainId() + "', '"
+                    + trainRecord.getStartTime()+ "', '"
+                    + trainRecord.getEndTime()+ "', '"
+                    + trainRecord.getOrderNumber() + "', '"
+                    + trainRecord.getComments() + "', '"
+                    + trainRecord.getMinSupport()+ "', '"
+                    + trainRecord.getMinConfidence() + "')";
             stmt.executeUpdate(sql);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -239,6 +233,40 @@ public class SQLUtils {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //建表操作和删除表操作
 
+    /**
+     * 创建训练记录表
+     */
+    public void createTrainRecordTable() throws SQLException {
+        Statement stmt = con.createStatement();
+        String sql = "CREATE TABLE IF NOT EXISTS train_record (" +
+                "tid INT AUTO_INCREMENT PRIMARY KEY, " +
+                "train_id VARCHAR(128), " +
+                "startTime VARCHAR(50), " +
+                "endTime VARCHAR(50), " +
+                "orderNumber INT, " +
+                "comments VARCHAR(100), " +
+                "minSupport DOUBLE, " +
+                "minConfidence DOUBLE "
+                + ")";
+        stmt.executeUpdate(sql);
+    }
+
+    /**
+     * 创建训练数据表
+     */
+    public void createTrainDataTables() throws SQLException {
+        Statement stmt = con.createStatement();
+        String sql;
+        for (int i = TICKET; i <= SEAT; i++) {
+            if(i==HOTEL) continue;
+            sql = "CREATE TABLE IF NOT EXISTS "+getTrainDataTableName(i) + " (" +
+                    "did INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "file_name VARCHAR(512), " +
+                    "upload_time VARCHAR(256) "
+                    + ")";
+            stmt.executeUpdate(sql);
+        }
+    }
     /**
      * 创建所有的规则表，包括了MEAL，BAGGAGE,INSURANCE,SEAT几个品类
      * ，同时也创建了对应的训练记录表

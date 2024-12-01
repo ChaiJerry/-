@@ -6,7 +6,7 @@ import bundle_system.memory_query_system.*;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
+//import java.util.logging.*;
 
 public class SharedAttributes {
 
@@ -155,7 +155,7 @@ public class SharedAttributes {
 
     static {
         CSVFileIO tmpFileIO;
-        Logger logger = Logger.getLogger(SharedAttributes.class.getName());
+        //Logger logger = Logger.getLogger(SharedAttributes.class.getName());
         // 创建Properties对象
         Properties properties = new Properties();
         // 读取配置文件
@@ -163,7 +163,7 @@ public class SharedAttributes {
             InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream("System.properties");
             properties.load(stream);
         } catch (IOException e) {
-            logger.info("加载配置文件失败");
+            //logger.info("加载配置文件失败");
         }
         // 获取配置文件中的属性
         // 获取csv文件结果输出目录，若是不以csv文件的格式输出，则该属性可以为null
@@ -200,7 +200,7 @@ public class SharedAttributes {
             tmpFileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
         } catch (IOException e) {
             tmpFileIO = null;
-            logger.info("创建CSVFileIO对象失败");
+            //logger.info("创建CSVFileIO对象失败");
         }
         fileIO = tmpFileIO;
         targetItemFieldNames = new ArrayList<>();

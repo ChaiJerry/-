@@ -9,7 +9,7 @@ import org.apache.spark.sql.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
-import java.util.logging.*;
+//import java.util.logging.*;
 
 import org.bson.*;
 
@@ -32,7 +32,7 @@ public class MongoUtils {
     private static final String PASSWORD;
     private static final String USER;
     private static final String DB_SOURCE;
-    private static final Logger logger = Logger.getLogger(MongoUtils.class.getName());
+//    private static final Logger logger = Logger.getLogger(MongoUtils.class.getName());
 
     //得到最近的训练编号
     public static int getLatestTrainingNumber() {
@@ -55,7 +55,8 @@ public class MongoUtils {
             InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream("MongoDB.properties");
             properties.load(stream);
         } catch (IOException e) {
-            logger.info("读取配置文件失败！" + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            //logger.info("读取配置文件失败！" + e.getClass().getName() + ": " + e.getMessage());
         }
         HOST = properties.getProperty("host");
         ORDERS_DB_NAME = properties.getProperty("OrdersDbname");
@@ -103,17 +104,17 @@ public class MongoUtils {
                     //获取训练编号
                     int number = Integer.parseInt(doc.get(TRAINING_NUMBER_FIELD_NAME).toString()) + 1;
                     nextTrainingNumber = Integer.toString(number);
-                    String info = "自动获取训练编号：" + number;
-                    logger.info(info);
+//                    String info = "自动获取训练编号：" + number;
+//                    logger.info(info);
                 } else {
                     //否则自动获取1
-                    logger.info("自动获取训练编号：1");
-                    nextTrainingNumber = "1";
+//                    logger.info("自动获取训练编号：1");
+//                    nextTrainingNumber = "1";
                 }
             }
-            logger.info("MongoDB连接成功！");
+          //  logger.info("MongoDB连接成功！");
         } catch (Exception e) {
-            logger.info("MongoDB连接失败！" + e.getClass().getName() + ": " + e.getMessage());
+          //  logger.info("MongoDB连接失败！" + e.getClass().getName() + ": " + e.getMessage());
         }
     }
 

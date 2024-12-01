@@ -9,7 +9,7 @@ import bundle_system.io.*;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
+//import java.util.logging.*;
 
 import static bundle_system.data_generating_system.FPGrowth.*;
 import static bundle_system.data_processer.DataConverter.*;
@@ -25,11 +25,11 @@ public class QuerySystem {
     //itemPackMap用于存储所有商品的唯一标识码和其对应的ItemPack结构体
     private static Map<String, ItemPack> itemPackMap = new HashMap<>();
 
-    private static final Logger logger;
-
-    static {
-        logger = Logger.getLogger(QuerySystem.class.getName());
-    }
+//    private static final Logger logger;
+//
+//    static {
+//        logger = Logger.getLogger(QuerySystem.class.getName());
+//    }
 
     public static List<List<String>> getTicketAttributeValuesList(CSVFileIO fileIO, int type) throws IOException {
         Map<String, List<List<String>>> stringListMap = fileIO.read(type);
@@ -300,8 +300,8 @@ public class QuerySystem {
             double averageRecallRate = evaluator.getAverageRecallRate();
             String accuracyInfo = "averageAccuracy: " + averageAccuracy;
             String recallInfo = "averageRecallRate: " + averageRecallRate;
-            logger.info(accuracyInfo);
-            logger.info(recallInfo);
+//            logger.info(accuracyInfo);
+//            logger.info(recallInfo);
         }
     }
 

@@ -6,7 +6,7 @@ import org.apache.spark.sql.*;
 import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
-import java.util.logging.*;
+//import java.util.logging.*;
 
 import static bundle_system.data_processer.DataConverter.*;
 import static bundle_system.data_processer.DataParser.*;
@@ -21,7 +21,7 @@ public class CSVFileIO {
     private final String[] csvPaths = new String[FULL_NAMES.length + 2];
     protected Map<String, List<List<String>>> trainTicketsMap;
     // 初始化日志记录器
-    private static final Logger logger = Logger.getLogger(CSVFileIO.class.getName());
+//    private static final Logger logger = Logger.getLogger(CSVFileIO.class.getName());
 
     //得到订单数量
     public int getOrderNumber() {
@@ -140,7 +140,7 @@ public class CSVFileIO {
                 }
             }
             // 创建DataFrame，并指定模式，将List<Row>数据转换为Dataset<Row>
-            logger.info("正在创建DataFrame");
+//            logger.info("正在创建DataFrame");
             return getDataFrame(data);
         } else {
             // 当读取的csv文件是Ticket时
@@ -178,7 +178,7 @@ public class CSVFileIO {
                 }
             }
             // 创建DataFrame，并指定模式，将List<Row>数据转换为Dataset<Row>
-            logger.info("正在创建DataFrame");
+           // logger.info("正在创建DataFrame");
             return getDataFrame(data);
         } else {
             // 当读取的csv文件是Ticket时
@@ -251,7 +251,7 @@ public class CSVFileIO {
                 csvWriter.writeRecord(columns);
             }
         } catch (Exception e) {
-            logger.info("freItemSet2CSV error");
+            //logger.info("freItemSet2CSV error");
         } finally {
             csvWriter.close();
         }
