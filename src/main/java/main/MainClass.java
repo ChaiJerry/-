@@ -2,12 +2,9 @@ package main;
 
 import bundle_service_for_backend.*;
 import bundle_system.io.sql.*;
-import bundle_system.memory_query_system.*;
 import bundle_system.api.*;
 import bundle_system.io.*;
-import bundle_system.data_generating_system.*;
-import bundle_system.db_query_system.*;
-import bundle_system.data_processer.*;
+import bundle_system.memory_query_system.*;
 import org.xml.sax.*;
 
 import javax.xml.parsers.*;
@@ -15,17 +12,28 @@ import javax.xml.transform.*;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.sql.*;
+import java.util.*;
 
 import static bundle_system.io.SharedAttributes.*;
 
 public class MainClass {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException, SQLException {
-        QuickQuery quickQuery = new QuickQuery();
-        quickQuery.test(SEAT);
+//        QuickQuery quickQuery = new QuickQuery();
+//        quickQuery.test(SEAT);
 //        SQLUtils sqlUtils = new SQLUtils();
-//        sqlUtils.renewTables();
-
+////        sqlUtils.renewTables();
+//
 //        CSVFileIO csvFileIO = new CSVFileIO(PATH_T,null,PATH_M,PATH_B, PATH_I, PATH_S);
+//        List<List<String>> rules = new ArrayList<>();
+//        List<List<String>> listOfAttributeList = csvFileIO.singleTypeCsv2ListOfAttributeList(MEAL);
+//        API.associationRulesMining(listOfAttributeList
+//                , false, true
+//                , null, rules, 0.08, 0);
+//        for (List<String> rule : rules) {
+//            System.out.println("rule: " + rule);
+//        }
+//
+//        sqlUtils.insertRules(MEAL,rules,1);
 //        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(8,csvFileIO);
 //        backendBundleSystem.test3();
 

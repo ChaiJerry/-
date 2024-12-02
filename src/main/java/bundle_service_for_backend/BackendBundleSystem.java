@@ -19,7 +19,6 @@ import java.util.concurrent.*;
 
 import static bundle_system.api.API.*;
 import static bundle_system.io.SharedAttributes.*;
-import static bundle_system.memory_query_system.QuickQuery.*;
 
 public class BackendBundleSystem {
 
@@ -345,9 +344,12 @@ public class BackendBundleSystem {
         //跳过酒店品类（没有使用）
         rulesStorages.add(null);
         boolean autoSave = tid!= null;
+        if(tid==null){
+            tid=-1;
+        }
         for(int type = 2; type < SharedAttributes.getFullNames().length; type++) {
             List<List<String>> rules;
-            if(sqlUtils != null && tid!=null){
+            if(sqlUtils != null){
                 rules = getRulesFromDB(type, tid);
                 if(rules==null || rules.isEmpty()){
                     rules = getRulesFromCSVFile(type,tid,autoSave);
@@ -375,7 +377,7 @@ public class BackendBundleSystem {
         List<List<String>> itemTicketRules = getRulesFromCSVFile(type);
         if(autoSave && sqlUtils!=null) {
             try {
-                sqlUtils.storeRules(type, itemTicketRules, tid);
+                sqlUtils.insertRules(type, itemTicketRules, tid);
             } catch (Exception e) {
                 System.out.println("自动存储规则失败");
             }

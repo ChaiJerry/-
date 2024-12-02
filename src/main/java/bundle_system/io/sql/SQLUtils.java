@@ -177,7 +177,7 @@ public class SQLUtils {
      *
      * @return 排好序的训练记录
      */
-    public List<Map<String, String>> loadTrainRecordMaps() {
+    public List<Map<String, String>> getTrainRecordMaps() {
         try {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT * FROM train_record ORDER BY tid DESC");
@@ -187,19 +187,62 @@ public class SQLUtils {
                 //这里用Map暂存是为了符合sonarlint的规则
                 int tid = rs.getInt("tid");
                 recordMap.put("train_id", tid + "");
-                recordMap.put("startTime", rs.getString("startTime"));
-                recordMap.put("endTime", rs.getString("endTime"));
-                recordMap.put("orderNumber", rs.getString("orderNumber"));
-                recordMap.put("comments", rs.getString("comments"));
-                recordMap.put("minSupport", rs.getString("minSupport"));
-                recordMap.put("minConfidence", rs.getString("minConfidence"));
+                trainRecordQueryResToMap(rs, recordMap);
                 records.add(recordMap);
             }
             return records;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    /**
+     * 根据tid获取训练记录
+     * @param tid 训练记录id
+     * @return 训练记录的map
+     */
+    public Map<String, String> getTrainRecordMapByTid(int tid) throws SQLException {
+        String sql = "SELECT * FROM train_record WHERE tid=?";
+        PreparedStatement pstmt = con.prepareStatement(sql);
+        pstmt.setInt(1, tid);
+        ResultSet rs = pstmt.executeQuery();
+        if (rs.next()) {
+            Map<String, String> recordMap = new HashMap<>();
+            //这里用Map暂存是为了符合sonarlint的规则
+            recordMap.put("train_id", tid + "");
+            trainRecordQueryResToMap(rs, recordMap);
+            return recordMap;
+        } else {
+            return null;
+        }
+    }
+
+    public String getTrainStatusByTid(int tid) throws SQLException {
+        String sql = "SELECT endTime FROM train_record WHERE tid=?";
+        PreparedStatement pstmt = con.prepareStatement(sql);
+        pstmt.setInt(1, tid);
+        ResultSet rs = pstmt.executeQuery();
+        if (rs.next()) {
+            String endTime = rs.getString("endTime");
+            if (endTime == null || endTime.isEmpty()) {
+                return "processing";
+            }else if (endTime.equals("error")){
+                return "error handling";
+            }else{
+                return "processing completed";
+            }
+        } else {
+            return "error handling";
+        }
+    }
+
+    private void trainRecordQueryResToMap(ResultSet rs, Map<String, String> recordMap) throws SQLException {
+        recordMap.put("startTime", rs.getString("startTime"));
+        recordMap.put("endTime", rs.getString("endTime"));
+        recordMap.put("orderNumber", rs.getString("orderNumber"));
+        recordMap.put("comments", rs.getString("comments"));
+        recordMap.put("minSupport", rs.getString("minSupport"));
+        recordMap.put("minConfidence", rs.getString("minConfidence"));
     }
 
     /**
@@ -226,13 +269,16 @@ public class SQLUtils {
                 throw new SQLException("Creating train record failed, no rows affected.");
             }
 
-            // 获取生成的键
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1)+""; // 返回生成的 tid的字符串形式
-                } else {
-                    throw new SQLException("Creating train record failed, no ID obtained.");
-                }
+            // 找到刚刚插入的记录的tid
+            // 为什么不用getGeneratedKeys()， 原因是当清楚过过表后generatedKeys()会有可能返回过时的tid
+            // 因此直接用sql语句查询，并按照tid降序排列，取第一个（正常情况下，不用降序，得到的tid也应该是唯一的）
+            sql = "SELECT tid FROM train_record WHERE startTime=? AND endTime=? ORDER BY tid DESC LIMIT 1";
+            PreparedStatement preparedStatement = con.prepareStatement(sql);
+            preparedStatement.setString(1, trainRecord.getStartTime());
+            preparedStatement.setString(2, trainRecord.getEndTime());
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) + "";
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -419,7 +465,7 @@ public class SQLUtils {
             pstmt.setString(1, itemRule.get(0));
             pstmt.setString(2, itemRule.get(1));
             pstmt.setString(3, itemRule.get(2));
-            pstmt.setInt(4, tid);
+            pstmt.setInt(4, 30);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to store rule", e);
@@ -434,14 +480,14 @@ public class SQLUtils {
      * @param itemRulesList 规则列表
      * @param tid      训练编号
      */
-    public void storeRules(int type, List<List<String>> itemRulesList, int tid) {
+    public void insertRules(int type, List<List<String>> itemRulesList, int tid) {
         //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
         for (List<String> itemRule : itemRulesList) {
             storeRule(type, itemRule, tid);
         }
     }
 
-    public void storeRules(int type, List<List<String>> itemRulesList, int tid,int limit) {
+    public void insertRules(int type, List<List<String>> itemRulesList, int tid, int limit) {
         //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
         for(int i=0;i<limit&&i<itemRulesList.size();i++) {
             storeRule(type, itemRulesList.get(i), tid);
