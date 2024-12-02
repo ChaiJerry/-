@@ -269,18 +269,13 @@ public class SQLUtils {
                 throw new SQLException("Creating train record failed, no rows affected.");
             }
 
-            // 找到刚刚插入的记录的tid
-            // 为什么不用getGeneratedKeys()， 原因是当清楚过过表后generatedKeys()会有可能返回过时的tid
-            // 因此直接用sql语句查询，并按照tid降序排列，取第一个（正常情况下，不用降序，得到的tid也应该是唯一的）
-            sql = "SELECT tid FROM train_record WHERE startTime=? AND endTime=? ORDER BY tid DESC LIMIT 1";
-            PreparedStatement preparedStatement = con.prepareStatement(sql);
-            preparedStatement.setString(1, trainRecord.getStartTime());
-            preparedStatement.setString(2, trainRecord.getEndTime());
-            ResultSet rs = preparedStatement.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) + "";
-            }else{
-                throw new RuntimeException("插入的数据无效");
+            // 获取生成的键
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1)+""; // 返回生成的 tid的字符串形式
+                } else {
+                    throw new SQLException("Creating train record failed, no ID obtained.");
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
