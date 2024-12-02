@@ -10,9 +10,9 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class SQLUtils {
 
-    private  String url;//在配置文件中修改成自己的数据库
-    private String username;
-    private String password;
+    private  String url ="";//在配置文件中修改成自己的数据库
+    private String username = "";
+    private String password = "";
 
     private Connection con;
 
@@ -23,9 +23,9 @@ public class SQLUtils {
         try {
             Properties properties = new Properties();
             properties.load(SQLUtils.class.getClassLoader().getResourceAsStream("sql.properties"));
-            url = properties.getProperty("url");
-            username = properties.getProperty("username");
-            password = properties.getProperty("password");
+//            url = properties.getProperty("url");
+//            username = properties.getProperty("username");
+//            password = properties.getProperty("password");
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
             } catch (ClassNotFoundException e) {
