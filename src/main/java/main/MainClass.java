@@ -18,8 +18,8 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class MainClass {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException, SQLException {
-//        QuickQuery quickQuery = new QuickQuery();
-//        quickQuery.test(SEAT);
+        QuickQuery quickQuery = new QuickQuery();
+        quickQuery.test1(INSURANCE);
 //        SQLUtils sqlUtils = new SQLUtils();
 ////        sqlUtils.renewTables();
 //

@@ -128,6 +128,52 @@ public class QuickQuery {
         rulesStorage.shutdown();
     }
 
+
+    public void test1(int type) throws IOException {
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //训练阶段
+        RulesStorage rulesStorage = initRulesStorageByTypeForQuickQueryTest(type);
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //测试阶段
+        //获取ordersCollection，用于查询订单
+        //获取现在时间以测得测试用时
+        long totalTime = 0;
+        MongoCollection<Document> ordersCollection = getOrdersCollection(type);
+        ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TEST_TICKET];
+        Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(fileIO.read(PATH_TEST_T, TEST_TICKET), ticketAttributesStorage);
+        for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
+            //得到orderNum（订单号）
+            String orderNum = iterator.next();
+            List<String> correctTargetItems = getTargetItemFromOrderNum(orderNum, type, ordersCollection);
+            if (correctTargetItems.isEmpty()) {
+                continue;
+            }
+            //根据orderNum，查询ticketOrderNumAttributeMap中对应的属性值列表的列表
+            List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
+            //遍历listOfTicketAttributeList（属性值列表的列表）
+            for (List<String> attributeValues : listOfTicketAttributeList) {
+                long startTime = System.nanoTime();
+                Map<String, AttrValueConfidencePriority> singleAttributeQuery = rulesStorage
+                        .queryItemAttributesAndConfidence(ticketAttributesStorage
+                                .generateOrderedAttributeListFromAttributeValueListForEva(attributeValues));
+                long endTime = System.nanoTime();
+                totalTime += endTime - startTime;
+                Map<String, String> commendedAttributes = convertVCPToAttributes(singleAttributeQuery);
+                //通过singleAttributeQuery得到的打包属性列表，查询ordersCollection中订单存在的打包商品
+                Set<List<String>> nameAndPriceList = itemsQuery(commendedAttributes, ordersCollection, type);
+                for(List<String> nameAndPrice : nameAndPriceList) {
+                    System.out.print("name: " + nameAndPrice.get(0) + ",");
+                    System.out.println("price: " + nameAndPrice.get(1));
+                }
+                System.out.println("-------------------------------");
+            }
+        }
+        
+        //输出时间
+        System.out.println((totalTime)/1000000 + "ms");
+        rulesStorage.shutdown();
+    }
+
     private static Map<String,String> convertVCPToAttributes(Map<String, AttrValueConfidencePriority> vcpMap) {
         Map<String,String> map = new HashMap<>();
         for (String s : vcpMap.keySet()) {

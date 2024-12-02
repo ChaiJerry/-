@@ -223,7 +223,7 @@ public class QuerySystem {
         Evaluator evaluator = new Evaluator(itemPackMap);
         double averageAccuracy = evaluator.getAverageAccuracy();
         double averageRecallRate = evaluator.getAverageRecallRate();
-        System.out.print("total"+ total);
+        System.out.print("total" + total);
 
         String accuracyInfo = "" + averageAccuracy;
         String recallInfo = "" + averageRecallRate;
@@ -459,9 +459,9 @@ public class QuerySystem {
         return "";
     }
 
-    public static List<String> itemsQuery(Map<String, String> itemAttributeMap
+    public static Set<List<String>> itemsQuery(Map<String, String> itemAttributeMap
             , MongoCollection<Document> ordersCollection, int type) {
-        List<String> itemNameAndPrices = new ArrayList<>();
+        Set<List<String>> itemNameAndPrices = new HashSet<>();
         //根据itemAttributeMap中的属性，查询ordersCollection中对应的订单
         Queue<BasicItemSearchUnit> bfsQueue = new LinkedList<>();
         Set<Integer> haveVisited = new HashSet<>();
@@ -473,43 +473,21 @@ public class QuerySystem {
 
         bfsQueue.add(root);
         while (!bfsQueue.isEmpty()) {
-            Document item = bfsQueue.poll().search();
-            if (item != null && !item.isEmpty()) {
-                itemNameAndPrices.add(getItemNameAndPriceFromDocument(item, type));
-                if(itemNameAndPrices.size() == 5) {
+            List<Document> items = bfsQueue.poll().searchWithoutQuickReturn();
+            if (itemNameAndPrices.size() >= 5) {
+                break;
+            }
+            for (Document item : items) {
+                if (itemNameAndPrices.size() >= 5) {
                     break;
+                }
+                if (item != null && !item.isEmpty()) {
+                    itemNameAndPrices.add(getItemNameAndPriceFromDocument(item, type));
                 }
             }
         }
         return itemNameAndPrices;
     }
-
-    public static List<String> itemsQueryWithLog(Map<String, AttrValueConfidencePriority> itemAttributeConfMap
-            , MongoCollection<Document> ordersCollection, int type) {
-        List<String> itemNameAndPrices = new ArrayList<>();
-        //根据itemAttributeMap中的属性，查询ordersCollection中对应的订单
-        Queue<AdvancedItemSearchUnit> bfsQueue = new LinkedList<>();
-        Set<Integer> haveVisited = new HashSet<>();
-        List<Map.Entry<String, AttrValueConfidencePriority>> attributeList
-                = attributeConfMap2List(itemAttributeConfMap, type);
-        //开始bfs搜索，设定根节点，并加入队列
-        AdvancedItemSearchUnit root = new AdvancedItemSearchUnit(attributeList
-                , ordersCollection, type, bfsQueue, haveVisited);
-        haveVisited.add(listToBits(attributeList));
-
-        bfsQueue.add(root);
-        while (!bfsQueue.isEmpty()) {
-            Document item = bfsQueue.poll().search();
-            if (item != null && !item.isEmpty()) {
-                itemNameAndPrices.add(getItemNameAndPriceFromDocument(item, type));
-                if(itemNameAndPrices.size() == 5) {
-                    break;
-                }
-            }
-        }
-        return itemNameAndPrices;
-    }
-
 
     /**
      * 测试置信度和f1关系的函数
@@ -600,7 +578,7 @@ public class QuerySystem {
         MongoUtils.deleteOrdersCollectionContent();
         double[] weights = {0, (double) 1 / 3, (double) 1 / 9
                 , (double) 1 / 9, (double) 1 / 3, (double) 1 / 9};
-        for (double minSupport = 0.02; minSupport <= 1; minSupport += (minSupport>=0.1?0.1:(0.02))){
+        for (double minSupport = 0.02; minSupport <= 1; minSupport += (minSupport >= 0.1 ? 0.1 : (0.02))) {
             double average = 0;
             String formattedNumber = String.format("%.2f,", minSupport);
             System.out.print(formattedNumber);
@@ -651,7 +629,7 @@ public class QuerySystem {
         MongoUtils.deleteOrdersCollectionContent();
         double[] weights = {0, (double) 1 / 3, (double) 1 / 9
                 , (double) 1 / 9, (double) 1 / 3, (double) 1 / 9};
-        for (double minSupport = 0.02; minSupport <= 1; minSupport += (minSupport>=0.1?0.1:(0.02))){
+        for (double minSupport = 0.02; minSupport <= 1; minSupport += (minSupport >= 0.1 ? 0.1 : (0.02))) {
             double average = 0;
             //MIN_CONFIDENCE保留一位小数
             String formattedNumber = String.format("%.2f,", minSupport);

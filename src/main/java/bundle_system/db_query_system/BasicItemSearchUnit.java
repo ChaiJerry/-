@@ -73,4 +73,38 @@ public class BasicItemSearchUnit {
         return new Document();
     }
 
+    public List<Document> searchWithoutQuickReturn() {
+        List<Document> result = new ArrayList<>();
+        List<Bson> bsonList = new ArrayList<>();
+        //从头到尾遍历List<Map.Entry<String, String>> itemAttributes的每个键值对，将键值对添加到bsonList中
+        for (Map.Entry<String, String> entry : itemAttributes) {
+            if (entry != null) {
+                bsonList.add(Filters.eq(ATTRIBUTES_FIELD + entry.getKey(), entry.getValue()));
+            }
+        }
+        FindIterable<Document> search;
+        if (bsonList.isEmpty()) {
+            search = collection.find();
+        } else {
+            search = collection.find(Filters.and(bsonList));
+        }
+
+        //运用状态压缩的技巧，将已经访问过的节点状态压缩到整数中
+        int status = listToBits(itemAttributes);
+        for (int i = 0; i < itemAttributes.size(); i++) {
+            int nextStatus = setBitPos2zero(status, i);
+            if (itemAttributes.get(i) == null || haveVisited.contains(nextStatus)) {
+                continue;
+            }
+            haveVisited.add(nextStatus);
+            List<Map.Entry<String, String>> temp = new ArrayList<>(itemAttributes);
+            temp.set(i, null);
+            bfsQueue.add(new BasicItemSearchUnit(temp, collection, type, bfsQueue, haveVisited));
+        }
+        MongoCursor<Document> iterator = search.iterator();
+        while(iterator.hasNext()){
+            result.add(iterator.next());
+        }
+        return result;
+    }
 }
