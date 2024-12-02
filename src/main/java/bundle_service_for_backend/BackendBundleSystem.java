@@ -44,7 +44,8 @@ public class BackendBundleSystem {
 
     private final int poolSize; // 线程池的大小
     private final ExecutorService executorService;
-    private List<RulesStorage> rulesStorages;
+
+    private final List<RulesStorage> rulesStorages;
     private final SQLUtils sqlUtils;
     private final CSVFileIO fileIO;
 
@@ -397,6 +398,10 @@ public class BackendBundleSystem {
 
 
 
+
+    public List<RulesStorage> getRulesStorages() {
+        return rulesStorages;
+    }
 
 
 

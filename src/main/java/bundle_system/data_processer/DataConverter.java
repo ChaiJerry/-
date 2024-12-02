@@ -200,17 +200,37 @@ public class DataConverter {
         return sb.toString();
     }
 
-    public static String getItemNameAndPriceFromDocument(Document document,int type) {
+    public static List<String> getItemNameAndPriceFromDocument(Document document, int type) {
+        List<String> result = new ArrayList<>();
         List<String> targetItemNames = getTargetItemNames(type);
-        StringBuilder sb = new StringBuilder();
+        StringBuilder nameSb = new StringBuilder();
         for (String itemName : targetItemNames) {
             if(document.get(ATTRIBUTES_FIELD_NAME) != null){
-                sb.append(((Document)document.get(ATTRIBUTES_FIELD_NAME))
+                nameSb.append(((Document)document.get(ATTRIBUTES_FIELD_NAME))
                         .getString(itemName)).append(";");
             }
         }
-        return sb.toString();
+        result.add(nameSb.toString());
+        result.add(getPriceFromDocument(document,type));
+        return result;
     }
+
+    private static String getPriceFromDocument(Document document, int type) {
+       Document document1 = ((Document) document.get(ATTRIBUTES_FIELD_NAME));
+       if(type==MEAL){
+           return priceGrade2price(document1.getString("PM_PRICE"),4);
+       }else if(type == BAGGAGE){
+           return priceGrade2price(document1.getString("PAYMENTAMOUNT"),200);
+       }else if(type == INSURANCE){
+           return document1.getString("INSUR_AMOUNT");
+       }else {
+           return "0";
+       }
+    }
+    private static String priceGrade2price(String priceGrade,int grade){
+        return Integer.parseInt(priceGrade) * grade+"";
+    }
+
 
     public static Dataset<Row> listOfAttributeList2Dataset (List<List<String>> attributeLists){
         List<Row> data = new ArrayList<>();

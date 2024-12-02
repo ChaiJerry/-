@@ -40,8 +40,6 @@ public class SQLUtils {
         }
         //初始化TypeNames数组
         for(int i = 0; i < getFullNames().length; i++) {
-            //酒店由于实际生产中没有使用，所以这里直接跳过
-            if(i==HOTEL) continue;
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
     }
