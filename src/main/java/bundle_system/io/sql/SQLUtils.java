@@ -279,6 +279,8 @@ public class SQLUtils {
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1) + "";
+            }else{
+                throw new RuntimeException("插入的数据无效");
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
