@@ -450,7 +450,7 @@ public class SQLUtils {
      * @param itemRule 规则
      * @param tid 训练编号
      */
-    private void storeRule(int type, List<String> itemRule, int tid) {
+    private void insertRule(int type, List<String> itemRule, int tid) {
         if (itemRule == null || itemRule.size() != 3) {
             throw new IllegalArgumentException("itemRule must contain exactly three elements.");
         }
@@ -462,7 +462,7 @@ public class SQLUtils {
             pstmt.setString(1, itemRule.get(0));
             pstmt.setString(2, itemRule.get(1));
             pstmt.setString(3, itemRule.get(2));
-            pstmt.setInt(4, 30);
+            pstmt.setInt(4, tid);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to store rule", e);
@@ -480,14 +480,14 @@ public class SQLUtils {
     public void insertRules(int type, List<List<String>> itemRulesList, int tid) {
         //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
         for (List<String> itemRule : itemRulesList) {
-            storeRule(type, itemRule, tid);
+            insertRule(type, itemRule, tid);
         }
     }
 
     public void insertRules(int type, List<List<String>> itemRulesList, int tid, int limit) {
         //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
         for(int i=0;i<limit&&i<itemRulesList.size();i++) {
-            storeRule(type, itemRulesList.get(i), tid);
+            insertRule(type, itemRulesList.get(i), tid);
         }
     }
 
