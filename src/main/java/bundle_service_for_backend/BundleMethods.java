@@ -16,7 +16,7 @@ public class BundleMethods {
      * @param fatherElement 父节点
      * @param doc           最终返回到Document，这里用来创造节点
      */
-    public static Element testBundleMeal(Map<String, BundleItem> ticketInfo
+    public static Element bundleMeal(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
             , RulesStorage rulesStorage, Element fatherElement, Document doc) {
         Element ancillary = doc.createElement("Ancillary");
@@ -51,7 +51,7 @@ public class BundleMethods {
      * @param fatherElement fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
      * @param doc           输出的Document
      */
-    public static Element testBundleBaggage(Map<String, BundleItem> ticketInfo
+    public static Element bundleBaggage(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
             , RulesStorage rulesStorage, Element fatherElement, Document doc) {
         Element ancillary = doc.createElement("Ancillary");
@@ -86,7 +86,7 @@ public class BundleMethods {
      * @param fatherElement fatherElement节点，大多数时候为null，主要是为了选座和餐食在一个父节点下设计的
      * @param doc           输出的Document
      */
-    public static Element testBundleSeat(Map<String, BundleItem> ticketInfo
+    public static Element bundleSeat(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
             , RulesStorage rulesStorage, Element fatherElement, Document doc) {
         Map<String, Map<String, AttrValueConfidencePriority>> segAttributesmap = new HashMap<>();

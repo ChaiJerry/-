@@ -45,7 +45,7 @@ public class QueryTask implements Callable<Void> {
             if (sets.get(i).contains(queryId)) {
                 queryValue++;
             }else if(!nullSets.get(i).contains(queryId)){
-                return null;//TODO 检查合理性
+                return null;
             }
         }
         AssociationRuleConsResult associationRuleConsResult = rulesMap.get(queryId);

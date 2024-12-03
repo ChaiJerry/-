@@ -30,10 +30,10 @@ public class BackendBundleSystem {
     static {
         sortBundleItemMethods.add(null);
         sortBundleItemMethods.add(null);
-        sortBundleItemMethods.add(BundleMethods::testBundleMeal);
-        sortBundleItemMethods.add(BundleMethods::testBundleBaggage);
+        sortBundleItemMethods.add(BundleMethods::bundleMeal);
+        sortBundleItemMethods.add(BundleMethods::bundleBaggage);
         sortBundleItemMethods.add(BundleMethods::testBundleInsurance);
-        sortBundleItemMethods.add(BundleMethods::testBundleSeat);
+        sortBundleItemMethods.add(BundleMethods::bundleSeat);
 
         try {
             dBuilder = dbFactory.newDocumentBuilder();
@@ -248,7 +248,7 @@ public class BackendBundleSystem {
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的AncillaryProducts
-        Element ancillaryProducts = BundleMethods.testBundleMeal(segTicketMap
+        Element ancillaryProducts = BundleMethods.bundleMeal(segTicketMap
                 , bundleItems, rulesStorages.get(MEAL), null, doc);
 
         // 处理行李
@@ -266,7 +266,7 @@ public class BackendBundleSystem {
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);
         // 得到选座返回的ancillary1
-        Element ancillary1 = BundleMethods.testBundleSeat(segTicketMap, bundleItems
+        Element ancillary1 = BundleMethods.bundleSeat(segTicketMap, bundleItems
                 , rulesStorages.get(SEAT), ancillaryProducts, doc);
 
         comboWith.appendChild(insurance);

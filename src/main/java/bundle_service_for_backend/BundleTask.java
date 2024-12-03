@@ -2,11 +2,9 @@ package bundle_service_for_backend;
 
 import bundle_service_for_backend.xml_parser.*;
 import bundle_system.memory_query_system.*;
-import com.github.luben.zstd.*;
 import org.w3c.dom.*;
 
 import javax.xml.xpath.*;
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -37,7 +35,7 @@ public class BundleTask implements Callable<Void> {
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的AncillaryProducts
-        Element ancillaryProducts = BundleMethods.testBundleMeal(segTicketMap
+        Element ancillaryProducts = BundleMethods.bundleMeal(segTicketMap
                 , bundleItems, rulesStorages.get(MEAL), null, doc);
 
         // 处理行李
@@ -55,7 +53,7 @@ public class BundleTask implements Callable<Void> {
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);
         // 得到选座返回的ancillary1
-        Element ancillary1 = BundleMethods.testBundleSeat(segTicketMap, bundleItems
+        Element ancillary1 = BundleMethods.bundleSeat(segTicketMap, bundleItems
                 , rulesStorages.get(SEAT), ancillaryProducts, doc);
 
         // 将返回的ancillaryProducts、insurance、ancillary0、ancillary1添加到comboWith中
