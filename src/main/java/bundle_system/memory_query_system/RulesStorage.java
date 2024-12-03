@@ -186,14 +186,12 @@ public class RulesStorage {
         List<Set<Integer>> ruleIdSets = new ArrayList<>();
         //用于储存属性值为null的对应规则编号集合的列表
         List<Set<Integer>> nullRuleIdSets = new ArrayList<>();
-        List<String> ateAttributesValeList = new ArrayList<>();//用于作为lruPool的key
         //用于储存查到的所有规则编号的集合
         Set<Integer> AllRuleIds = new HashSet<>();
         for (Map.Entry<String,String> ateAttribute : ateAttributes.entrySet()) {
             //得到属性名以及属性值对应的规则集合，如果属性名不存在，则返回空集合
             String attributeName = ateAttribute.getKey();
             String attributeValue = ateAttribute.getValue();
-            ateAttributesValeList.add(attributeValue);
             Set<Integer> integers = atttributeMap.get(attributeName).getOrDefault(attributeValue, new HashSet<>());
             // 当确定好顺序后，关联规则前件的属性属性值为null的id集合(nullRuleIdSets)按理来说可以直接得到
             // 但是为了保险起见还是每次都得到一个新的

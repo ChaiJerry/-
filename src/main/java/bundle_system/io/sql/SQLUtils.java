@@ -23,9 +23,9 @@ public class SQLUtils {
         try {
             Properties properties = new Properties();
             properties.load(SQLUtils.class.getClassLoader().getResourceAsStream("sql.properties"));
-//            url = properties.getProperty("url");
-//            username = properties.getProperty("username");
-//            password = properties.getProperty("password");
+            url = properties.getProperty("url");
+            username = properties.getProperty("username");
+            password = properties.getProperty("password");
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
             } catch (ClassNotFoundException e) {
@@ -33,10 +33,7 @@ public class SQLUtils {
             }
             con = DriverManager.getConnection(url, username, password);
             createTablesForMemQueryIfNotExist();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (IOException | SQLException ignored) {
         }
         //初始化TypeNames数组
         for(int i = 0; i < getFullNames().length; i++) {
