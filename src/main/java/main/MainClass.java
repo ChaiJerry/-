@@ -18,10 +18,10 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class MainClass {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException, SQLException {
-//        QuickQuery quickQuery = new QuickQuery();
-//        quickQuery.test1(INSURANCE);
-        SQLUtils sqlUtils = new SQLUtils();
-       sqlUtils.renewTables();
+        QuickQuery quickQuery = new QuickQuery();
+        quickQuery.test(INSURANCE);
+//        SQLUtils sqlUtils = new SQLUtils();
+//       sqlUtils.renewTables();
 //
 //        CSVFileIO csvFileIO = new CSVFileIO(PATH_T,null,PATH_M,PATH_B, PATH_I, PATH_S);
 //        List<List<String>> rules = new ArrayList<>();

@@ -34,7 +34,7 @@ public class QueryTask implements Callable<Void> {
         for(int i=MEAL; i<=SEAT; i++){
             boolean isEmpty = false;
             for(BundleItem item : segTicketMap.values()) {
-                if (rulesStorages.get(i).queryItemAttributesAndConfidence(item.getAttributes()).isEmpty()) {
+                if (rulesStorages.get(i).queryItemAttributes(item.getAttributes()).isEmpty()) {
                     isEmpty = true;
                 }
             }
