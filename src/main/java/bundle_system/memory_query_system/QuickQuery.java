@@ -34,6 +34,7 @@ public class QuickQuery {
                 , true, itemTicketFreqItemSets, itemTicketRules
                 , 0.08, 0);
         return initRulesStorageByType(type, itemTicketRules);
+
 //        try {
 //            //如果已经存在，则直接加载
 //            itemTicketRules = sqlUtils.loadRules(type, "test");
