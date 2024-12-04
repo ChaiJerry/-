@@ -27,7 +27,7 @@ public class QuickQuery {
         List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
         List<List<String>> itemTicketRules = new ArrayList<>();
         printProgressBar(33, info);
-        SQLUtils sqlUtils = new SQLUtils();
+        //SQLUtils sqlUtils = new SQLUtils();
         //测算训练用时
         long startTime1 = System.nanoTime();
         associationRulesMining(listOfAttributeList, false
