@@ -1,7 +1,7 @@
 package bundle_service_for_backend;
 
 import bundle_service_for_backend.xml_parser.*;
-import bundle_service_for_backend.xml_parser.XMLReader;
+import bundle_service_for_backend.xml_parser.XMLIO;
 import bundle_system.io.*;
 import bundle_system.io.sql.*;
 import bundle_system.memory_query_system.*;
@@ -27,7 +27,14 @@ public class BackendBundleSystem {
     static DocumentBuilder dBuilder;
     static List<SortBundleItemMethod> sortBundleItemMethods = new ArrayList<>();
 
+    static XMLIO xmlIO;
+
     static {
+        try {
+            xmlIO = new XMLIO();
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        }
         sortBundleItemMethods.add(null);
         sortBundleItemMethods.add(null);
         sortBundleItemMethods.add(BundleMethods::bundleMeal);
@@ -120,6 +127,18 @@ public class BackendBundleSystem {
 
     }
 
+    public String submitBundleTaskInStr(String xmlStr) throws Exception {
+        Document doc = xmlIO.stringToDocument(xmlStr);
+        // 提交查询任务到线程池
+        Future<?> future = executorService.submit(new BundleTask(doc,rulesStorages));
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return xmlIO.documentToString(doc);
+    }
+
     public Document submitBundleTask(Document doc) {
         // 提交查询任务到线程池
         Future<?> future = executorService.submit(new BundleTask(doc,rulesStorages));
@@ -129,6 +148,18 @@ public class BackendBundleSystem {
             e.printStackTrace();
         }
         return doc;
+    }
+
+    public String submitQueryTaskInStr(String xmlStr) throws Exception {
+        Document doc = xmlIO.stringToDocument(xmlStr);
+        // 提交查询任务到线程池
+        Future<?> future = executorService.submit(new QueryTask(doc,rulesStorages));
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return xmlIO.documentToString(doc);
     }
 
     public Document submitQueryTask(Document doc) {
@@ -164,12 +195,12 @@ public class BackendBundleSystem {
      */
     public void test3(int num) throws ParserConfigurationException, IOException, SAXException {
         //模拟输入Document
-        XMLReader xmlReader = new XMLReader();
+        XMLIO XMLIO = new XMLIO();
         long sum = 0;
         List<Document> docs = new ArrayList<>();
         System.out.println("正在模拟输入文档，数量：" + num);
         for (int i = 0; i < num; i++) {
-            Document doc = xmlReader.read();
+            Document doc = XMLIO.read();
             docs.add(doc);
         }
         System.out.println("文档输入完成，开始打包");
@@ -186,14 +217,14 @@ public class BackendBundleSystem {
      */
     public void test3() throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
         //模拟输入Document
-        XMLReader xmlReader = new XMLReader();
+        XMLIO XMLIO = new XMLIO();
         long start = System.nanoTime();
         Document doc;
-        doc = xmlReader.read();
+        doc = XMLIO.read();
         submitBundleTask(doc);
         saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test2.xml");
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
-        doc = xmlReader.read();
+        doc = XMLIO.read();
         submitQueryTask(doc);
         saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test1.xml");
         shutdownAll();
