@@ -32,13 +32,18 @@ public class QueryTask implements Callable<Void> {
         Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
 
         for(int i=MEAL; i<=SEAT; i++){
-            boolean isEmpty = false;
+            boolean haveEmptyAttribute = false;
             for(BundleItem item : segTicketMap.values()) {
-                if (rulesStorages.get(i).queryItemAttributes(item.getAttributes()).isEmpty()) {
-                    isEmpty = true;
+                for(AttrValueConfidencePriority attrValueConfidencePriority
+                        : rulesStorages.get(i).queryItemAttributes(item.getAttributes()).values()){
+                    if(attrValueConfidencePriority.getConfidence() <0){
+                        haveEmptyAttribute = true;
+                        break;
+                    }
                 }
+                if(haveEmptyAttribute) break;
             }
-            if (!isEmpty) {
+            if (!haveEmptyAttribute) {
                 Element ancillary = doc.createElement("Ancillary");
                 ancillary.setAttribute("type",SharedAttributes.getFullNames()[i]);
                 comboWith.appendChild(ancillary);

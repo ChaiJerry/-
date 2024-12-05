@@ -4,7 +4,7 @@ import java.util.*;
 
 public class AttrValueConfidencePriority {
     private String attributeValue = "";
-    private double confidence = 0.0;
+    private double confidence = -1;
     private int priority = 0;
     public AttrValueConfidencePriority() {
     }

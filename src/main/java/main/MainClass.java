@@ -22,7 +22,7 @@ public class MainClass {
 //        QuickQuery quickQuery = new QuickQuery();
 //        quickQuery.test(INSURANCE);
         SQLUtils sqlUtils = new SQLUtils();
-       sqlUtils.renewRulesTables();
+//       sqlUtils.renewRulesTables();
 //
 //        CSVFileIO csvFileIO = new CSVFileIO(PATH_T,null,PATH_M,PATH_B, PATH_I, PATH_S);
 //        List<List<String>> rules = new ArrayList<>();
@@ -35,8 +35,8 @@ public class MainClass {
 //        }
 //
 //        sqlUtils.insertRules(MEAL,rules,1);
-//        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(8,csvFileIO);
-//        backendBundleSystem.test3();
+        BackendBundleSystem backendBundleSystem = new BackendBundleSystem(8,sqlUtils,4);
+        backendBundleSystem.test3();
 
 //        sqlUtils.renewTables();
 //        sqlUtils.insertTrainDataRecord("1.csv","2023...",MEAL);
