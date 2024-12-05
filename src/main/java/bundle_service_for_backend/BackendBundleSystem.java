@@ -65,7 +65,7 @@ public class BackendBundleSystem {
         sqlUtils = new SQLUtils();
         fileIO = SharedAttributes.fileIO;
         try {
-            rulesStorages = initAllRulesStorage(null);
+            rulesStorages = autoInitAllRulesStorage(null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -73,16 +73,17 @@ public class BackendBundleSystem {
 
     /**
      * 当想要从数据库中读取训练然后保存到对应的数据库中就用这个构造函数
+     *
      * @param poolSize 线程池的大小
      * @param sqlUtils 数据库操作对象
-     * @param trainId 希望作为知识库的训练数据的id
+     * @param trainId  希望作为知识库的训练数据的id
      */
-    public BackendBundleSystem(int poolSize,SQLUtils sqlUtils,Integer trainId) {
+    public BackendBundleSystem(int poolSize, SQLUtils sqlUtils, Integer trainId) {
         this.poolSize = poolSize;
         this.sqlUtils = sqlUtils;
         executorService = Executors.newFixedThreadPool(poolSize);
         try {
-            rulesStorages = initAllRulesStorage(trainId);
+            rulesStorages = autoInitAllRulesStorage(trainId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -91,18 +92,19 @@ public class BackendBundleSystem {
 
     /**
      * 当想要若是数据库中没有读到数据时就从csv文件中读取训练然后保存到对应的数据库中就用这个构造函数
+     *
      * @param poolSize 线程池的大小
-     * @param fileIO csv文件操作对象
+     * @param fileIO   csv文件操作对象
      * @param sqlUtils 数据库操作对象
-     * @param trainId 训练数据的id
+     * @param trainId  训练数据的id
      */
-    public BackendBundleSystem(int poolSize,CSVFileIO fileIO,SQLUtils sqlUtils, Integer trainId) {
+    public BackendBundleSystem(int poolSize, CSVFileIO fileIO, SQLUtils sqlUtils, Integer trainId) {
         this.poolSize = poolSize;
         executorService = Executors.newFixedThreadPool(poolSize);
         this.sqlUtils = sqlUtils;
         this.fileIO = fileIO;
         try {
-            rulesStorages = initAllRulesStorage(trainId);
+            rulesStorages = initAllRulesStorageFromDB(trainId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -111,16 +113,17 @@ public class BackendBundleSystem {
 
     /**
      * 当想要直接csv文件中训练然后加载到内存就用这个构造函数
+     *
      * @param poolSize 线程池的大小
-     * @param fileIO csv文件操作对象
+     * @param fileIO   csv文件操作对象
      */
-    public BackendBundleSystem(int poolSize,CSVFileIO fileIO) {
+    public BackendBundleSystem(int poolSize, CSVFileIO fileIO) {
         this.sqlUtils = null;
         this.fileIO = fileIO;
         this.poolSize = poolSize;
         executorService = Executors.newFixedThreadPool(poolSize);
         try {
-            rulesStorages = initAllRulesStorage(null);
+            rulesStorages = autoInitAllRulesStorage(null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -130,7 +133,7 @@ public class BackendBundleSystem {
     public String submitBundleTaskInStr(String xmlStr) throws Exception {
         Document doc = xmlIO.stringToDocument(xmlStr);
         // 提交查询任务到线程池
-        Future<?> future = executorService.submit(new BundleTask(doc,rulesStorages));
+        Future<?> future = executorService.submit(new BundleTask(doc, rulesStorages));
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -141,7 +144,7 @@ public class BackendBundleSystem {
 
     public Document submitBundleTask(Document doc) {
         // 提交查询任务到线程池
-        Future<?> future = executorService.submit(new BundleTask(doc,rulesStorages));
+        Future<?> future = executorService.submit(new BundleTask(doc, rulesStorages));
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -153,7 +156,7 @@ public class BackendBundleSystem {
     public String submitQueryTaskInStr(String xmlStr) throws Exception {
         Document doc = xmlIO.stringToDocument(xmlStr);
         // 提交查询任务到线程池
-        Future<?> future = executorService.submit(new QueryTask(doc,rulesStorages));
+        Future<?> future = executorService.submit(new QueryTask(doc, rulesStorages));
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -164,7 +167,7 @@ public class BackendBundleSystem {
 
     public Document submitQueryTask(Document doc) {
         // 提交查询任务到线程池
-        Future<?> future = executorService.submit(new QueryTask(doc,rulesStorages));
+        Future<?> future = executorService.submit(new QueryTask(doc, rulesStorages));
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -177,7 +180,7 @@ public class BackendBundleSystem {
         // 提交查询任务到线程池
         List<Future<?>> futures = new ArrayList<>();
         for (Document doc : docs) {
-            futures.add(executorService.submit(new BundleTask(doc,rulesStorages)));
+            futures.add(executorService.submit(new BundleTask(doc, rulesStorages)));
         }
         try {
             for (Future<?> future : futures) {
@@ -222,21 +225,20 @@ public class BackendBundleSystem {
         Document doc;
         doc = XMLIO.read();
         submitBundleTask(doc);
-        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test2.xml");
+        saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test2.xml");
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
         doc = XMLIO.read();
         submitQueryTask(doc);
-        saveDocument(doc,"D:\\programms\\java_projects\\version_control\\output\\test1.xml");
+        saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test1.xml");
         shutdownAll();
     }
-
 
     /**
      * 将Document保存到文件
      *
      * @param doc 希望保存的Document
      */
-    public static void saveDocument(Document doc,String filePath) throws TransformerException {
+    public static void saveDocument(Document doc, String filePath) throws TransformerException {
         // 将Document转换并保存到文件
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
@@ -354,6 +356,7 @@ public class BackendBundleSystem {
     /**
      * 给附加产品排序的方法，但这个更高级一点，当遇到数值类型字符串时
      * 会解析后使用负指数取数值之间的差值来排序
+     *
      * @param map            推荐的附加产品属性键值对
      * @param bundleItemList 附加产品键列表
      */
@@ -366,48 +369,70 @@ public class BackendBundleSystem {
 
     /**
      * 初始化打包系统实例中所有规则存储的方法
+     *
      * @return List<RulesStorage>
      * @throws IOException IO异常
      */
-    private List<RulesStorage> initAllRulesStorage(Integer tid) throws IOException {
+    private List<RulesStorage> autoInitAllRulesStorage(Integer tid) throws IOException {
         List<RulesStorage> rulesStorages = new ArrayList<>();
         //跳过机票标号
         rulesStorages.add(null);
         //跳过酒店品类（没有使用）
         rulesStorages.add(null);
-        boolean autoSave = tid!= null;
-        if(tid==null){
-            tid=-1;
+        boolean autoSave = tid != null;
+        if (tid == null) {
+            tid = -1;
         }
-        for(int type = 2; type < SharedAttributes.getFullNames().length; type++) {
+        for (int type = 2; type < SharedAttributes.getFullNames().length; type++) {
             List<List<String>> rules;
-            if(sqlUtils != null){
+            if (sqlUtils != null) {
                 rules = getRulesFromDB(type, tid);
-                if(rules==null || rules.isEmpty()){
-                    rules = getRulesFromCSVFile(type,tid,autoSave);
+                if (rules == null || rules.isEmpty()) {
+                    rules = getRulesFromCSVFile(type, tid, autoSave);
                 }
-            }else{
-                rules = getRulesFromCSVFile(type,tid,autoSave);
+            } else {
+                rules = getRulesFromCSVFile(type, tid, autoSave);
             }
-            RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type,rules);
+            RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type, rules);
             rulesStorages.add(rulesStorage);
         }
         return rulesStorages;
     }
 
-    private List<List<String>> getRulesFromCSVFile(int  type) throws IOException {
+    /**
+     * 初始化打包系统实例中所有规则存储的方法（完全从数据库中获取规则）
+     *
+     * @return List<RulesStorage>
+     * @throws IOException IO异常
+     */
+    private List<RulesStorage> initAllRulesStorageFromDB(Integer tid) throws IOException {
+        List<RulesStorage> rulesStorages = new ArrayList<>();
+        //跳过机票标号
+        rulesStorages.add(null);
+        //跳过酒店品类（没有使用）
+        rulesStorages.add(null);
+        for (int type = 2; type < SharedAttributes.getFullNames().length; type++) {
+            List<List<String>> rules;
+            rules = getRulesFromDB(type, tid);
+            RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type, rules);
+            rulesStorages.add(rulesStorage);
+        }
+        return rulesStorages;
+    }
+
+    private List<List<String>> getRulesFromCSVFile(int type) throws IOException {
         List<List<String>> itemTicketRules = new ArrayList<>();
         //否则，进行训练
         List<List<String>> listOfAttributeList = fileIO.singleTypeCsv2ListOfAttributeList(type);
         associationRulesMining(listOfAttributeList, false
-                    , true, null, itemTicketRules
-                    , 0.08, 0);
+                , true, null, itemTicketRules
+                , 0.08, 0);
         return itemTicketRules;
     }
 
-    public List<List<String>> getRulesFromCSVFile(int type,int tid,boolean autoSave) throws IOException {
+    public List<List<String>> getRulesFromCSVFile(int type, int tid, boolean autoSave) throws IOException {
         List<List<String>> itemTicketRules = getRulesFromCSVFile(type);
-        if(autoSave && sqlUtils!=null) {
+        if (autoSave && sqlUtils != null) {
             try {
                 sqlUtils.insertRules(type, itemTicketRules, tid);
             } catch (Exception e) {
@@ -416,25 +441,21 @@ public class BackendBundleSystem {
         }
         return itemTicketRules;
     }
-    public List<List<String>> getRulesFromDB(int  type,int tid) {
+
+    public List<List<String>> getRulesFromDB(int type, int tid) {
         List<List<String>> itemTicketRules;
         try {
             //如果已经存在，则直接加载
             itemTicketRules = sqlUtils.loadRules(type, tid);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return null;
         }
         return itemTicketRules;
     }
 
-
-
-
     public List<RulesStorage> getRulesStorages() {
         return rulesStorages;
     }
-
-
 
     /**
      * 将一个节点从一个文档安全迁移到另一个文档。

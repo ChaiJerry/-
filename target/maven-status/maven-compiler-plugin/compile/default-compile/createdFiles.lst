@@ -16,6 +16,7 @@ bundle_system\db_query_system\FrequentItemSetsQueryResults.class
 bundle_system\memory_query_system\QueryTask.class
 bundle_system\api\API.class
 bundle_system\data_processer\xmlPaser.class
+bundle_service_for_backend\xml_parser\XMLIO.class
 bundle_system\db_query_system\AdvancedItemSearchUnit.class
 train_service_for_backend\BackendTrainSystem.class
 bundle_service_for_backend\xml_parser\ParseMethod.class
@@ -37,7 +38,6 @@ bundle_system\memory_query_system\QuickQuery.class
 bundle_system\db_query_system\QuerySystem.class
 bundle_service_for_backend\xml_parser\BundleItem.class
 bundle_system\data_processer\DataConverter.class
-bundle_service_for_backend\xml_parser\XMLReader.class
 bundle_system\db_query_system\AssociationRulesQueryResults.class
 bundle_service_for_backend\BundleTask.class
 bundle_system\io\sql\TrainDataRecord.class

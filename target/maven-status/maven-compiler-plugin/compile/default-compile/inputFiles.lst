@@ -1,6 +1,5 @@
 D:\programms\java_projects\version_control\src\main\java\bundle_service_for_backend\BackendBundleSystem.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\io\sql\TrainRecord.java
-D:\programms\java_projects\version_control\src\main\java\bundle_service_for_backend\xml_parser\XMLReader.java
 D:\programms\java_projects\version_control\src\main\java\bundle_service_for_backend\BundleTask.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\db_query_system\QuerySystem.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\db_query_system\FrequentItemSetsQueryResults.java
@@ -11,6 +10,7 @@ D:\programms\java_projects\version_control\src\main\java\bundle_system\db_query_
 D:\programms\java_projects\version_control\src\main\java\bundle_system\db_query_system\AssociationRulesQueryResults.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\io\MongoUtils.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\memory_query_system\AttrValueConfidencePriority.java
+D:\programms\java_projects\version_control\src\main\java\bundle_service_for_backend\xml_parser\XMLIO.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\db_query_system\AdvancedItemSearchUnit.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\memory_query_system\lru_pool\LRUUnit.java
 D:\programms\java_projects\version_control\src\main\java\bundle_system\data_processer\xmlPaser.java

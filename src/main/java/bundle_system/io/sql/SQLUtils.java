@@ -435,6 +435,11 @@ public class SQLUtils {
         dropTables();
         createTablesForMemQueryIfNotExist();
     }
+
+    public void renewRulesTables() throws SQLException {
+        dropRulesTables(con.createStatement());
+        createTablesForMemQueryIfNotExist();
+    }
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /**

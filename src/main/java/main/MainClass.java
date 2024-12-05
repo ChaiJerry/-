@@ -5,6 +5,7 @@ import bundle_system.io.sql.*;
 import bundle_system.api.*;
 import bundle_system.io.*;
 import bundle_system.memory_query_system.*;
+import bundle_system.db_query_system.*;
 import org.xml.sax.*;
 
 import javax.xml.parsers.*;
@@ -18,10 +19,10 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class MainClass {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, TransformerException, SQLException {
-        QuickQuery quickQuery = new QuickQuery();
-        quickQuery.test(INSURANCE);
-//        SQLUtils sqlUtils = new SQLUtils();
-//       sqlUtils.renewTables();
+//        QuickQuery quickQuery = new QuickQuery();
+//        quickQuery.test(INSURANCE);
+        SQLUtils sqlUtils = new SQLUtils();
+       sqlUtils.renewRulesTables();
 //
 //        CSVFileIO csvFileIO = new CSVFileIO(PATH_T,null,PATH_M,PATH_B, PATH_I, PATH_S);
 //        List<List<String>> rules = new ArrayList<>();
