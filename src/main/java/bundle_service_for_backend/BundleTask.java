@@ -31,7 +31,7 @@ public class BundleTask implements Callable<Void> {
         //新建返回的Document部分
         //解析xml文件部分
         List<ParseMethod> parseMethods = xmlParser.getParseMethods();
-        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
+        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSourceForRS(root);
         // 处理餐食
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的AncillaryProducts

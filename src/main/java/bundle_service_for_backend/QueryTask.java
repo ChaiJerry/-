@@ -9,7 +9,6 @@ import javax.xml.xpath.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static bundle_service_for_backend.BackendBundleSystem.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class QueryTask implements Callable<Void> {
@@ -29,7 +28,7 @@ public class QueryTask implements Callable<Void> {
         Element root = doc.getDocumentElement();
         Element comboWith = doc.createElement("ComboWith");
         root.appendChild(comboWith);
-        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSource(root);
+        Map<String, BundleItem> segTicketMap = xmlParser.parseComboSourceForRQ(root);
 
         for(int i=MEAL; i<=SEAT; i++){
             boolean haveEmptyAttribute = false;

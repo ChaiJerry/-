@@ -203,7 +203,7 @@ public class BackendBundleSystem {
         List<Document> docs = new ArrayList<>();
         System.out.println("正在模拟输入文档，数量：" + num);
         for (int i = 0; i < num; i++) {
-            Document doc = XMLIO.read();
+            Document doc = XMLIO.readTest2();
             docs.add(doc);
         }
         System.out.println("文档输入完成，开始打包");
@@ -223,11 +223,11 @@ public class BackendBundleSystem {
         XMLIO XMLIO = new XMLIO();
         long start = System.nanoTime();
         Document doc;
-        doc = XMLIO.read();
+        doc = XMLIO.readTest2();
         submitBundleTask(doc);
         saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test2.xml");
         System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
-        doc = XMLIO.read();
+        doc = XMLIO.readTest1();
         submitQueryTask(doc);
         saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test1.xml");
         shutdownAll();

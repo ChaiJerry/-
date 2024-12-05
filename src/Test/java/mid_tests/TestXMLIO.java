@@ -14,7 +14,7 @@ public class TestXMLIO {
     public void test(){
         try {
             XMLIO XMLIO = new XMLIO();
-            XMLIO.read();
+            XMLIO.readTest2();
         } catch (IOException | ParserConfigurationException | SAXException e) {
             System.out.println(e.getMessage());
             assertFalse(false);

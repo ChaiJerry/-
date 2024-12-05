@@ -29,19 +29,17 @@ public class XMLParser {
     }
 
     /**
-     * 解析XML文件，得到comboSource
+     * 解析RS的XML，得到comboSource
      *
      * @param root XML文件的根节点
      * @return comboSource中的航班属性
      */
-    public Map<String, BundleItem> parseComboSource(Element root) throws XPathExpressionException {
+    public Map<String, BundleItem> parseComboSourceForRS(Element root) throws XPathExpressionException {
         // 创建一个HashMap来存储解析后的结果,key为航段，value为存储航班属性的item
         // 可以用List<BundleItem>而不是直接用BundleItem是和后面的方法统一格式，这样可以方便后续的多线程优化
         Map<String, BundleItem> comboSourceMap = new HashMap<>();
-        long startTime = System.currentTimeMillis();
-
-        String ODXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItinerary/OriginDestinationOptions/OriginDestinationOption";
-        NodeList OriginDestinationOption = (NodeList) xpath.evaluate(ODXpath, root, XPathConstants.NODESET);
+        String odXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItinerary/OriginDestinationOptions/OriginDestinationOption";
+        NodeList OriginDestinationOption = (NodeList) xpath.evaluate(odXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < OriginDestinationOption.getLength(); i++) {
             // 得到RPH
             Element originDestinationOption = (Element) OriginDestinationOption.item(i);
@@ -111,9 +109,94 @@ public class XMLParser {
                 break;
             }
         }
+        return comboSourceMap;
+    }
+
+    /**
+     * 解析RS的XML，得到comboSource
+     *
+     * @param root XML文件的根节点
+     * @return comboSource中的航班属性
+     */
+    public Map<String, BundleItem> parseComboSourceForRQ(Element root) throws XPathExpressionException {
+        // 创建一个HashMap来存储解析后的结果,key为航段，value为存储航班属性的item
+        // 可以用List<BundleItem>而不是直接用BundleItem是和后面的方法统一格式，这样可以方便后续的多线程优化
+        Map<String, BundleItem> comboSourceMap = new HashMap<>();
+        String odXpath = "/OJ_ComboSearchRQ/ComboSource/PricedItinerary/AirItinerary/OriginDestinationOptions/OriginDestinationOption";
+        NodeList OriginDestinationOption = (NodeList) xpath.evaluate(odXpath, root, XPathConstants.NODESET);
+        for (int i = 0; i < OriginDestinationOption.getLength(); i++) {
+            // 得到RPH
+            Element originDestinationOption = (Element) OriginDestinationOption.item(i);
+            String rph = originDestinationOption.getAttribute("RPH");
+            // 创建BundleItem对象
+            BundleItem bundleItem = new BundleItem(rph);
+            // 将bundleItem添加到map中
+            comboSourceMap.put(rph, bundleItem);
+            // 得到出发时间
+            Element flightSegment = getElementByRelativePath(originDestinationOption, "ticketSegment");
+            String month = flightSegment.getAttribute("ArrivalDateTime").split("-")[1];
+            bundleItem.addAttributeNameValuePair("MONTH", month);
+            // 得到出发地和目的地
+            Element departureAirport = getElementByRelativePath(flightSegment, "DepartureAirport");
+            String departureLocationCode = departureAirport.getAttribute("LocationCode");
+            // 添加到bundleItem中（为了和训练中的属性名称一致，这里用FROM和TO）
+            bundleItem.addAttributeNameValuePair("FROM", departureLocationCode);
+            Element arrivalAirport = getElementByRelativePath(flightSegment, "ArrivalAirport");
+            String arrivalLocationCode = arrivalAirport.getAttribute("LocationCode");
+            bundleItem.addAttributeNameValuePair("TO", arrivalLocationCode);
+        }
+        //如果要极优化，可以储存之前访问过的节点，然后用相对路径来访问
+        String AirItineraryPricingInfoXpath = "/OJ_ComboSearchRQ/ComboSource/PricedItinerary/AirItineraryPricingInfo";
+        NodeList airItineraryPricingInfos = (NodeList) xpath.evaluate(AirItineraryPricingInfoXpath, root, XPathConstants.NODESET);
+        for (int i = 0; i < airItineraryPricingInfos.getLength(); i++) {
+            Element airItineraryPricingInfo = (Element) airItineraryPricingInfos.item(i);
+            // 判断其子节点是否为空，若非空则开始解析，否则跳过
+            if (airItineraryPricingInfo.hasChildNodes()) {
+                // 得到旅客类型
+                String passengerTypeQuantityXpath = "PTC_FareBreakdowns/PTC_FareBreakdown/PassengerTypeQuantity";
+                Element typeElement = (Element) xpath.evaluate(passengerTypeQuantityXpath, airItineraryPricingInfo, XPathConstants.NODE);
+                String isChild = typeElement.getAttribute("Code").equals("ADT") ? "0" : "1";
+                for (BundleItem bundleItem : comboSourceMap.values()) {
+                    // 加入旅客类型属性，可以为字符串0或1以匹配训练数据
+                    bundleItem.addAttributeNameValuePair("HAVE_CHILD", isChild);
+                }
+                // 得到价格
+                String fareInfoXpath = "FareInfos/FareInfo";
+                NodeList fareInfoElement = (NodeList) xpath.evaluate(fareInfoXpath, airItineraryPricingInfo, XPathConstants.NODESET);
+                for (int j = 0; j < fareInfoElement.getLength(); j++) {
+                    Element fareInfo = (Element) fareInfoElement.item(j);
+                    // 得到航段RPH
+                    String flightSegmentRPH = fareInfo.getAttribute("ticketSegmentRPH");
+                    BundleItem bundleItem = comboSourceMap.get(flightSegmentRPH);
+                    if (bundleItem == null) {
+                        throw new RuntimeException("ComboSource中前后航段信息不匹配！");
+                    }
+
+                    // 得到舱位等级
+                    Element fareReference = getElementByRelativePath(fareInfo, "FareReference");
+                    String grade = ticketGrade2Specific(fareReference.getAttribute("CabinCode"));
+                    bundleItem.addAttributeNameValuePair("T_GRADE", grade);
+
+                    // 得到折扣
+                    Element info = getElementByRelativePath(fareInfo, "FareInfo");
+                    String discount = info.getAttribute("DisCount");
+                    String promotionRateGrade = (((int) (100 - Double.parseDouble(discount) * 100 + LITTLE_DOUBLE)) / 10) + "";
+
+                    bundleItem.addAttributeNameValuePair("PROMOTION_RATE", promotionRateGrade);
+
+                    // 得到折扣前价格
+                    Element fare = getElementByRelativePath(info, "Fare");
+                    String baseCabinClassAmount = fare.getAttribute("BaseCabinClassAmount");
+                    Integer priceGrade = DataParser.floatStr2Attribute(baseCabinClassAmount, 1000);
+                    bundleItem.addAttributeNameValuePair("T_FORMER", priceGrade + "");
+                }
+                break;
+            }
+        }
         //System.out.println("时间（ms）："+(System.currentTimeMillis() - startTime));
         return comboSourceMap;
     }
+
 
     /**
      * 解析XML文件，得到保险信息
