@@ -83,7 +83,7 @@ public class BackendBundleSystem {
         this.sqlUtils = sqlUtils;
         executorService = Executors.newFixedThreadPool(poolSize);
         try {
-            rulesStorages = autoInitAllRulesStorage(trainId);
+            rulesStorages = initAllRulesStorageFromDB(trainId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -104,7 +104,7 @@ public class BackendBundleSystem {
         this.sqlUtils = sqlUtils;
         this.fileIO = fileIO;
         try {
-            rulesStorages = initAllRulesStorageFromDB(trainId);
+            rulesStorages = autoInitAllRulesStorage(trainId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
