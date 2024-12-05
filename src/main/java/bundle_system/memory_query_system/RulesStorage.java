@@ -192,12 +192,17 @@ public class RulesStorage {
             //得到属性名以及属性值对应的规则集合，如果属性名不存在，则返回空集合
             String attributeName = ateAttribute.getKey();
             String attributeValue = ateAttribute.getValue();
-            Set<Integer> integers = atttributeMap.get(attributeName).getOrDefault(attributeValue, new HashSet<>());
+            Map<String, Set<Integer>> attriValueRuleIdSetsMap = atttributeMap.get(attributeName);
+            if (attriValueRuleIdSetsMap == null) {
+                attriValueRuleIdSetsMap = new HashMap<>();
+                atttributeMap.put(attributeName, attriValueRuleIdSetsMap);
+            }
+            Set<Integer> ruleIds = attriValueRuleIdSetsMap.getOrDefault(attributeValue, new HashSet<>());
             // 当确定好顺序后，关联规则前件的属性属性值为null的id集合(nullRuleIdSets)按理来说可以直接得到
             // 但是为了保险起见还是每次都得到一个新的
-            nullRuleIdSets.add(atttributeMap.get(attributeName).getOrDefault(null, new HashSet<>()));
-            ruleIdSets.add(integers);
-            AllRuleIds.addAll(integers);
+            nullRuleIdSets.add(attriValueRuleIdSetsMap.getOrDefault(null, new HashSet<>()));
+            ruleIdSets.add(ruleIds);
+            AllRuleIds.addAll(ruleIds);
         }
         // map中前面是属性名，后面是属性值和置信度
         HashMap<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
