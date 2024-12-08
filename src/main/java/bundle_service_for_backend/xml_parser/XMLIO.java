@@ -30,7 +30,7 @@ public class XMLIO {
     }
     public Document readTest1() throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilder builder = factory.newDocumentBuilder();
-        File file = new File("C:\\Users\\mille\\Desktop\\同步\\民航项目文档类\\打包接口请求响应设计样例\\打包接口请求响应设计样例\\接口1-可打包附加产品类型查询\\0.可打包附加产品类型查询请求.OJ_ComboSearchRQ.xml");
+        File file = new File("C:\\Users\\mille\\Desktop\\同步\\民航项目文档类\\打包接口请求响应设计样例\\打包接口请求响应设计样例\\打包接口请求响应设计样例\\接口1-可打包附加产品类型查询\\0.可打包附加产品类型查询请求.OJ_ComboSearchRQ.xml");
         return builder.parse(file);
     }
     public Document read(String path) throws ParserConfigurationException, IOException, SAXException {

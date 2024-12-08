@@ -133,7 +133,7 @@ public class XMLParser {
             // 将bundleItem添加到map中
             comboSourceMap.put(rph, bundleItem);
             // 得到出发时间
-            Element flightSegment = getElementByRelativePath(originDestinationOption, "ticketSegment");
+            Element flightSegment = getElementByRelativePath(originDestinationOption, "FlightSegment");
             String month = flightSegment.getAttribute("ArrivalDateTime").split("-")[1];
             bundleItem.addAttributeNameValuePair("MONTH", month);
             // 得到出发地和目的地
@@ -166,7 +166,7 @@ public class XMLParser {
                 for (int j = 0; j < fareInfoElement.getLength(); j++) {
                     Element fareInfo = (Element) fareInfoElement.item(j);
                     // 得到航段RPH
-                    String flightSegmentRPH = fareInfo.getAttribute("ticketSegmentRPH");
+                    String flightSegmentRPH = fareInfo.getAttribute("FlightSegmentRPH");
                     BundleItem bundleItem = comboSourceMap.get(flightSegmentRPH);
                     if (bundleItem == null) {
                         throw new RuntimeException("ComboSource中前后航段信息不匹配！");
