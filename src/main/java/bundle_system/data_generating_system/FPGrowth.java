@@ -15,12 +15,17 @@ import static bundle_system.data_processer.DataConverter.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class FPGrowth {
-    private static final SparkSession spark = SparkSession // 创建SparkSession对象
-            .builder()
-            .appName("Civil-aviation-recommended-subject")
-            //设置本地运行以及线程数量最大值（local含义为本地运行，*表示线程数量尽可能多）
-            .master("local[*]")
-            .getOrCreate();
+    private static final SparkSession spark ;
+    static {
+        System.out.println("正在初始化SparkSession");
+        spark = SparkSession // 创建SparkSession对象
+                .builder()
+                .appName("Civil-aviation-recommended-subject")
+                //设置本地运行以及线程数量最大值（local含义为本地运行，*表示线程数量尽可能多）
+                .master("local[*]")
+                .getOrCreate();
+        System.out.println("SparkSession初始化完成");
+    }
 
 //    // 创建日志对象
 //    private static final Logger logger = Logger.getLogger(FPGrowth.class.getName());
@@ -75,14 +80,13 @@ public class FPGrowth {
             , boolean outPutFrequentItems, boolean outPutRules
             , List<List<String>> frqItemSetsList, List<List<String>> rulesList
             , double minSupport, double minConfidence) {
+        System.out.println("启动单品类数据挖掘，输入原数据非空="+(!itemTicketAttributes.isEmpty()));
         // 创建数据集
+        System.out.println("正在将原数据格式转换为df格式的数据集");
         Dataset<Row> sourceData = listOfAttributeList2Dataset(itemTicketAttributes);
         //从sourceData中训练模型
-        // 测量训练时间
-        long start = System.currentTimeMillis();
+        System.out.println("开始训练模型");
         FPGrowthModel model = train(sourceData, minSupport, minConfidence);
-        long end = System.currentTimeMillis();
-        //System.out.println("模型训练时间(ms)：" + (end - start));
         // 从两个boolean参数中判断是否挖掘频繁项集和关联规则并输出
         if (outPutFrequentItems) {
             // 得到频繁项集
@@ -91,6 +95,7 @@ public class FPGrowth {
             dataset2FRList(freqItemSets, frqItemSetsList);
         }
         if (outPutRules) {
+            System.out.println("开始挖掘关联规则");
             //  得到关联规则
             Dataset<Row> rules = model.associationRules();
             //  将关联规则转换为List<List<String>>

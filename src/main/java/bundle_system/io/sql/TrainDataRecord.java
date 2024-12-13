@@ -16,7 +16,7 @@ public class TrainDataRecord {
     }
 
     private String getDataIdForFrontEnd() {
-        return  type+"_"+dataId;
+        return  type+"-"+dataId;
     }
 
     public String getFileName() {
