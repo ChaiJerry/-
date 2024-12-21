@@ -16,36 +16,27 @@ import javax.xml.xpath.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
 
 import static bundle_system.api.API.*;
-import static bundle_system.io.SharedAttributes.*;
+
 
 public class BackendBundleSystem {
 
     // 创建DocumentBuilderFactory和DocumentBuilder
     static DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     static DocumentBuilder dBuilder;
-    static List<SortBundleItemMethod> sortBundleItemMethods = new ArrayList<>();
 
     static XMLIO xmlIO;
+    static Logger logger = Logger.getLogger("BackendBundleSystem");
 
     static {
         try {
             xmlIO = new XMLIO();
-        } catch (ParserConfigurationException e) {
-            throw new RuntimeException(e);
-        }
-        sortBundleItemMethods.add(null);
-        sortBundleItemMethods.add(null);
-        sortBundleItemMethods.add(BundleMethods::bundleMeal);
-        sortBundleItemMethods.add(BundleMethods::bundleBaggage);
-        sortBundleItemMethods.add(BundleMethods::testBundleInsurance);
-        sortBundleItemMethods.add(BundleMethods::bundleSeat);
-
-        try {
             dBuilder = dbFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            throw new RuntimeException(e);
+            logger.info("初始化DocumentBuilder失败");
+            logger.info(e.getMessage());
         }
     }
 
@@ -59,16 +50,12 @@ public class BackendBundleSystem {
     /**
      * 请勿使用默认构造函数，请使用带参数的构造函数，这只是用来测试的
      */
-    public BackendBundleSystem() {
+    public BackendBundleSystem() throws IOException {
         this.poolSize = 8;
         executorService = Executors.newFixedThreadPool(poolSize);
         sqlUtils = new SQLUtils();
         fileIO = SharedAttributes.fileIO;
-        try {
-            rulesStorages = autoInitAllRulesStorage(null);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        rulesStorages = initAllRulesStorageForTests(null);
     }
 
     /**
@@ -82,74 +69,29 @@ public class BackendBundleSystem {
         this.poolSize = poolSize;
         this.sqlUtils = sqlUtils;
         executorService = Executors.newFixedThreadPool(poolSize);
-        try {
-            rulesStorages = initAllRulesStorageFromDB(trainId);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        rulesStorages = initAllRulesStorageFromDB(trainId);
+
         fileIO = null;
     }
 
     /**
-     * 当想要若是数据库中没有读到数据时就从csv文件中读取训练然后保存到对应的数据库中就用这个构造函数
-     *
-     * @param poolSize 线程池的大小
-     * @param fileIO   csv文件操作对象
-     * @param sqlUtils 数据库操作对象
-     * @param trainId  训练数据的id
+     * 从字符串中读取xml文件，然后提交打包任务到线程池的方法
+     * @param xmlStr 查询的xml字符串
+     * @return 结果xml字符串
      */
-    public BackendBundleSystem(int poolSize, CSVFileIO fileIO, SQLUtils sqlUtils, Integer trainId) {
-        this.poolSize = poolSize;
-        executorService = Executors.newFixedThreadPool(poolSize);
-        this.sqlUtils = sqlUtils;
-        this.fileIO = fileIO;
-        try {
-            rulesStorages = autoInitAllRulesStorage(trainId);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    /**
-     * 当想要直接csv文件中训练然后加载到内存就用这个构造函数
-     *
-     * @param poolSize 线程池的大小
-     * @param fileIO   csv文件操作对象
-     */
-    public BackendBundleSystem(int poolSize, CSVFileIO fileIO) {
-        this.sqlUtils = null;
-        this.fileIO = fileIO;
-        this.poolSize = poolSize;
-        executorService = Executors.newFixedThreadPool(poolSize);
-        try {
-            rulesStorages = autoInitAllRulesStorage(null);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
     public String submitBundleTaskInStr(String xmlStr) throws Exception {
         Document doc = xmlIO.stringToDocument(xmlStr);
         // 提交查询任务到线程池
         Future<?> future = executorService.submit(new BundleTask(doc, rulesStorages));
-        try {
-            future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+        future.get();
         return xmlIO.documentToString(doc);
     }
 
-    public Document submitBundleTask(Document doc) {
+    public Document submitBundleTask(Document doc) throws ExecutionException, InterruptedException {
         // 提交查询任务到线程池
         Future<?> future = executorService.submit(new BundleTask(doc, rulesStorages));
-        try {
-            future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+        future.get();
         return doc;
     }
 
@@ -157,38 +99,28 @@ public class BackendBundleSystem {
         Document doc = xmlIO.stringToDocument(xmlStr);
         // 提交查询任务到线程池
         Future<?> future = executorService.submit(new QueryTask(doc, rulesStorages));
-        try {
-            future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+        future.get();
         return xmlIO.documentToString(doc);
     }
 
-    public Document submitQueryTask(Document doc) {
+    public Document submitQueryTask(Document doc) throws ExecutionException, InterruptedException {
         // 提交查询任务到线程池
         Future<?> future = executorService.submit(new QueryTask(doc, rulesStorages));
-        try {
-            future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+        future.get();
         return doc;
     }
 
-    public void submitBundleTasks(List<Document> docs) {
+    public void submitBundleTasks(List<Document> docs) throws ExecutionException, InterruptedException {
         // 提交查询任务到线程池
         List<Future<?>> futures = new ArrayList<>();
         for (Document doc : docs) {
             futures.add(executorService.submit(new BundleTask(doc, rulesStorages)));
         }
-        try {
-            for (Future<?> future : futures) {
-                future.get();
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+
+        for (Future<?> future : futures) {
+            future.get();
         }
+
     }
 
     /**
@@ -196,68 +128,62 @@ public class BackendBundleSystem {
      *
      * @param num 测试次数
      */
-    public void test3(int num) throws ParserConfigurationException, IOException, SAXException {
+    public void test(int num) throws ParserConfigurationException, IOException, SAXException, ExecutionException, InterruptedException {
         //模拟输入Document
-        XMLIO XMLIO = new XMLIO();
+        XMLIO xmlio = new XMLIO();
         long sum = 0;
         List<Document> docs = new ArrayList<>();
-        System.out.println("正在模拟输入文档，数量：" + num);
+        String msg0 = "正在模拟输入文档，数量：" + num;
+        logger.info(msg0);
         for (int i = 0; i < num; i++) {
-            Document doc = XMLIO.readTest2();
+            Document doc = xmlio.readTest2();
             docs.add(doc);
         }
-        System.out.println("文档输入完成，开始打包");
+        logger.info("文档输入完成，开始打包");
         long start = System.nanoTime();
         submitBundleTasks(docs);
         long end = System.nanoTime();
         sum += end - start;
-        System.out.println("完成，平均耗时time(ms):" + (sum) / 1000000 / num);
+        String msg1 = "完成，平均耗时time(ms):" + (sum) / 1000000 / num;
+        logger.info(msg1);
         shutdownAll();
     }
 
     /**
      * 测试多线程，会对于原来的doc修改，最后保存
      */
-    public void test3() throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException {
+    public void test() throws ParserConfigurationException, IOException, SAXException, XPathExpressionException, TransformerException, ExecutionException, InterruptedException {
         //模拟输入Document
-        XMLIO XMLIO = new XMLIO();
+        XMLIO xmlio = new XMLIO();
         long start = System.nanoTime();
         Document doc;
-        doc = XMLIO.readTest2();
+        doc = xmlio.readTest2();
         submitBundleTask(doc);
         saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test2.xml");
-        System.out.println("time(ms):" + ((double) (System.nanoTime() - start)) / 1000000);
-        doc = XMLIO.readTest1();
+        String testMsg = "time(ms):" + ((double) (System.nanoTime() - start)) / 1000000;
+        logger.info(testMsg);
+        doc = xmlio.readTest1();
         submitQueryTask(doc);
         saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test1.xml");
         shutdownAll();
     }
 
     /**
-     * 将Document保存到文件
+     * 将Document保存到文件（用于测试）
      *
      * @param doc 希望保存的Document
      */
     public static void saveDocument(Document doc, String filePath) throws TransformerException {
         // 将Document转换并保存到文件
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        TransformerFactory transformerFactory = TransformerFactory.newDefaultInstance();
         Transformer transformer = transformerFactory.newTransformer();
         DOMSource source = new DOMSource(doc);
         StreamResult result = new StreamResult(new File(filePath));
         transformer.transform(source, result);
-        System.out.println("XML文件已成功保存到: " + filePath);
+        String msg = "XML文件已成功保存到: " + filePath;
+        logger.info(msg);
     }
 
-    /**
-     * 将Document保存到文件
-     *
-     * @param doc 希望保存的Document
-     */
-    public static void saveDocument(Document doc) throws TransformerException {
-        // 指定文件路径
-        String filePath = "D:\\programms\\java_projects\\version_control\\output\\test.xml";  // 替换为你想要保存的路径
-        saveDocument(doc, filePath);
-    }
 
     /**
      * 获取返回的Document模板（用于非破坏性操作）
@@ -273,38 +199,6 @@ public class BackendBundleSystem {
         Element comboWith = doc.createElement("ComboWith");
         rootElement.appendChild(comboWith);
         return comboWith;
-    }
-
-    private static void bundleAllItem(List<ParseMethod> parseMethods, Element root
-            , Map<String, BundleItem> segTicketMap, List<RulesStorage> rulesStorages
-            , Element comboWith, Document doc) throws XPathExpressionException {
-        // 处理餐食
-        Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
-        // 得到选座/餐食返回的AncillaryProducts
-        Element ancillaryProducts = BundleMethods.bundleMeal(segTicketMap
-                , bundleItems, rulesStorages.get(MEAL), null, doc);
-
-        // 处理行李
-        bundleItems = parseMethods.get(BAGGAGE).execute(root);
-        // 得到行李返回的ancillary0
-        Element ancillary0 = sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
-                , rulesStorages.get(BAGGAGE), null, doc);
-
-        // 处理保险
-        bundleItems = parseMethods.get(INSURANCE).execute(root);
-        // 得到保险返回的insurance
-        Element insurance = sortBundleItemMethods.get(INSURANCE).execute(segTicketMap, bundleItems
-                , rulesStorages.get(INSURANCE), null, doc);
-
-        // 处理选座
-        bundleItems = parseMethods.get(SEAT).execute(root);
-        // 得到选座返回的ancillary1
-        Element ancillary1 = BundleMethods.bundleSeat(segTicketMap, bundleItems
-                , rulesStorages.get(SEAT), ancillaryProducts, doc);
-
-        comboWith.appendChild(insurance);
-        comboWith.appendChild(ancillary0);
-        comboWith.appendChild(ancillary1);
     }
 
     public static Element buildSeatElement(BundleItem bundleItem, Document doc) {
@@ -368,17 +262,17 @@ public class BackendBundleSystem {
     }
 
     /**
-     * 初始化打包系统实例中所有规则存储的方法
+     * 初始化打包系统实例中所有规则存储的方法（测试方法）
      *
      * @return List<RulesStorage>
      * @throws IOException IO异常
      */
-    private List<RulesStorage> autoInitAllRulesStorage(Integer tid) throws IOException {
-        List<RulesStorage> rulesStorages = new ArrayList<>();
+    private List<RulesStorage> initAllRulesStorageForTests(Integer tid) throws IOException {
+        List<RulesStorage> rulesStoragesForTests = new ArrayList<>();
         //跳过机票标号
-        rulesStorages.add(null);
+        rulesStoragesForTests.add(null);
         //跳过酒店品类（没有使用）
-        rulesStorages.add(null);
+        rulesStoragesForTests.add(null);
         boolean autoSave = tid != null;
         if (tid == null) {
             tid = -1;
@@ -387,37 +281,36 @@ public class BackendBundleSystem {
             List<List<String>> rules;
             if (sqlUtils != null) {
                 rules = getRulesFromDB(type, tid);
-                if (rules == null || rules.isEmpty()) {
+                if (rules.isEmpty()) {
                     rules = getRulesFromCSVFile(type, tid, autoSave);
                 }
             } else {
                 rules = getRulesFromCSVFile(type, tid, autoSave);
             }
             RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type, rules);
-            rulesStorages.add(rulesStorage);
+            rulesStoragesForTests.add(rulesStorage);
         }
-        return rulesStorages;
+        return rulesStoragesForTests;
     }
 
     /**
      * 初始化打包系统实例中所有规则存储的方法（完全从数据库中获取规则）
      *
      * @return List<RulesStorage>
-     * @throws IOException IO异常
      */
-    private List<RulesStorage> initAllRulesStorageFromDB(Integer tid) throws IOException {
-        List<RulesStorage> rulesStorages = new ArrayList<>();
+    private List<RulesStorage> initAllRulesStorageFromDB(Integer tid) {
+        List<RulesStorage> rulesStoragesFromDB = new ArrayList<>();
         //跳过机票标号
-        rulesStorages.add(null);
+        rulesStoragesFromDB.add(null);
         //跳过酒店品类（没有使用）
-        rulesStorages.add(null);
+        rulesStoragesFromDB.add(null);
         for (int type = 2; type < SharedAttributes.getFullNames().length; type++) {
             List<List<String>> rules;
             rules = getRulesFromDB(type, tid);
             RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type, rules);
-            rulesStorages.add(rulesStorage);
+            rulesStoragesFromDB.add(rulesStorage);
         }
-        return rulesStorages;
+        return rulesStoragesFromDB;
     }
 
     private List<List<String>> getRulesFromCSVFile(int type) throws IOException {
@@ -436,7 +329,7 @@ public class BackendBundleSystem {
             try {
                 sqlUtils.insertRules(type, itemTicketRules, tid);
             } catch (Exception e) {
-                System.out.println("自动存储规则失败");
+                logger.info("自动存储规则失败");
             }
         }
         return itemTicketRules;
@@ -448,7 +341,7 @@ public class BackendBundleSystem {
             //如果已经存在，则直接加载
             itemTicketRules = sqlUtils.loadRules(type, tid);
         } catch (Exception e) {
-            return null;
+            return new ArrayList<>();
         }
         return itemTicketRules;
     }

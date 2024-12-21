@@ -8,7 +8,6 @@ import javax.xml.xpath.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static bundle_service_for_backend.BackendBundleSystem.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class BundleTask implements Callable<Void> {
@@ -36,19 +35,19 @@ public class BundleTask implements Callable<Void> {
         Map<String, List<BundleItem>> bundleItems = parseMethods.get(MEAL).execute(root);
         // 得到选座/餐食返回的AncillaryProducts
         Element ancillaryProducts = BundleMethods.bundleMeal(segTicketMap
-                , bundleItems, rulesStorages.get(MEAL), null, doc);
+                , bundleItems, rulesStorages.get(MEAL), doc);
 
         // 处理行李
         bundleItems = parseMethods.get(BAGGAGE).execute(root);
         // 得到行李返回的ancillary0
-        Element ancillary0 = sortBundleItemMethods.get(BAGGAGE).execute(segTicketMap, bundleItems
-                , rulesStorages.get(BAGGAGE), null ,doc);
+        Element ancillary0 = BundleMethods.bundleBaggage(segTicketMap, bundleItems
+                , rulesStorages.get(BAGGAGE), doc);
 
         // 处理保险
         bundleItems = parseMethods.get(INSURANCE).execute(root);
         // 得到保险返回的insurance
-        Element insurance = sortBundleItemMethods.get(INSURANCE).execute(segTicketMap, bundleItems
-                , rulesStorages.get(INSURANCE), null ,doc);
+        Element insurance = BundleMethods.bundleInsurance(segTicketMap, bundleItems
+                , rulesStorages.get(INSURANCE), doc);
 
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);

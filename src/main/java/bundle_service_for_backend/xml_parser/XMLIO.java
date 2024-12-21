@@ -34,13 +34,12 @@ public class XMLIO {
         return builder.parse(file);
     }
     public Document read(String path) throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         File file = new File(path);
         return builder.parse(file);
     }
 
-    public Document stringToDocument(String xmlSource) throws Exception {
+    public Document stringToDocument(String xmlSource) throws ParserConfigurationException, IOException, SAXException {
         // 使用factory创建一个新的DocumentBuilder实例
         DocumentBuilder builder = factory.newDocumentBuilder();
         // 将字符串转换为输入源
@@ -50,7 +49,7 @@ public class XMLIO {
     }
 
 
-    public String documentToString(Document doc) throws Exception {
+    public String documentToString(Document doc) throws TransformerException {
         Transformer transformer = tf.newTransformer();
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         StringWriter writer = new StringWriter();

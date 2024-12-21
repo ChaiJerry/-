@@ -44,8 +44,6 @@ public class MongoUtils {
     //训练的起始时间和结束时间
     private static String startTime;
 
-    private static boolean isClosed = false;
-
     /*
      * 读取配置文件
      */
@@ -313,42 +311,6 @@ public class MongoUtils {
         }
     }
 
-    public static void frequentItemSets2db(Dataset<Row> itemSets, int type, int eva) {
-        MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("f_" + SharedAttributes.FULL_NAMES[type]);
-        for (Row r : itemSets.collectAsList()) {
-            //写入数据库的doc
-            Document doc = new Document();
-            //初始化ticketAttributes和goodAttributes用于存储频繁项集
-            List<String> ticketAttributes = new ArrayList<>();
-            List<String> goodAttributes = new ArrayList<>();
-            //得到频繁项集
-            for (Object s : r.getList(0)) {
-                String temp = s.toString();
-                //如果频繁项集是机票类型的属性，则加入ticketAttributes
-                if (isTicketType(temp)) {
-                    ticketAttributes.add(temp);
-                } else {
-                    //否则加入goodAttributes
-                    goodAttributes.add(temp);
-                }
-            }
-            //如果ticketAttributes或goodAttributes为空则无意义，跳过
-            if (ticketAttributes.isEmpty() || goodAttributes.isEmpty()) {
-                continue;
-            }
-            //将ticketAttributes添加到doc
-            doc.append(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME, SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET].getFrequentItemSetsDocument(ticketAttributes));
-            //将goodAttributes添加到doc
-            doc.append("itemAttributes", SharedAttributes.itemAttributesStorage[type].getFrequentItemSetsDocument(goodAttributes));
-            //添加训练编号
-            doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(nextTrainingNumber));
-            //添加频次
-            doc.append("freq", Integer.parseInt(r.get(1).toString()));
-            //加入数据库
-            collection.insertOne(doc);
-        }
-    }
-
     /*
      * 关闭MongoDB连接
      */
@@ -378,67 +340,5 @@ public class MongoUtils {
         nextTrainingNumber = (Integer.parseInt(nextTrainingNumber) + 1) + "";
 
     }
-
-    public static void rulesAndFreqInDB2csv() {
-        int latestTrainingNumber = getLatestTrainingNumber();
-        for (int i = 1; i < 6; i++) {
-            rulesInDB2csv(i, latestTrainingNumber);
-            frequentItemSetsInDB2csv(i, latestTrainingNumber);
-        }
-    }
-
-    private static void frequentItemSetsInDB2csv(int i, int latestTrainingNumber) {
-        MongoCollection<Document> frequentItemSetsCollection = getFrequentItemSetsCollection(i);
-        FindIterable<Document> documents = frequentItemSetsCollection.find(Filters.eq(TRAINING_NUMBER_FIELD_NAME, nextTrainingNumber));
-        for (Document doc : documents) {
-            Document ticketAttributes = (Document) doc.get("ticketAttributes");
-            Document itemAttributes = (Document) doc.get("itemAttributes");
-            String trainingNumber = doc.getString(TRAINING_NUMBER_FIELD_NAME);
-            String freq = doc.getString("Freq");
-        }
-    }
-
-    private static void rulesInDB2csv(int i, int latestTrainingNumber) {
-
-    }
-
-//    public static void test() {
-//        //MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
-//        MongoDatabase database = mongoClient.getDatabase("yourDatabase");
-//        MongoCollection<Document> collection = database.getCollection("users");
-//
-//        // 构造聚合管道
-//        Bson[] pipeline = new Bson[]{
-//                // 第一个阶段：添加满足条件的计数
-//                new Document("$addFields", new Document("matchCount",
-//                        new Document("$add", Arrays.asList(
-//                                new Document("$cond", Arrays.asList(
-//                                        new Document("$gt", Arrays.asList("$age", 30)), 1, 0
-//                                )),
-//                                new Document("$cond", Arrays.asList(
-//                                        new Document("$eq", Arrays.asList("$city", "New York")), 1, 0
-//                                )),
-//                                new Document("$cond", Arrays.asList(
-//                                        new Document("$in", Arrays.asList("$hobbies", "reading")), 1, 0
-//                                ))
-//                        ))
-//                )),
-//                // 第二个阶段：按matchCount降序排序
-//                new Document("$sort", new Document("matchCount", -1)),
-//                // 第三个阶段：只取第一个结果
-//                new Document("$limit", 1)
-//        };
-//        Bson and = Filters.and(pipeline);
-//
-//        // 执行聚合查询
-//        AggregateIterable<Document> result = collection.aggregate(and);
-//
-//        // 处理结果
-//        for (Document doc : result) {
-//            System.out.println(doc.toJson());
-//        }
-//
-//        mongoClient.close();
-//    }
 
 }

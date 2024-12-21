@@ -1,7 +1,7 @@
 package bundle_system.memory_query_system;
 
 import bundle_system.io.*;
-import bundle_system.memory_query_system.lru_pool.*;
+
 
 import java.io.*;
 import java.util.*;
@@ -125,69 +125,13 @@ public class RulesStorage {
         }
     }
 
-
-    /**
-     * 根据机票属性查询规则后件的方法
-     *
-     * @param ateAttributes 机票的属性键值对（作为关联规则前件，key为属性名，value为属性值）
-     * @return 商品属性键值对
-     */
-    public Map<String, AttrValueConfidencePriority> queryItemAttributes1(Map<String, String> ateAttributes) {
-            //用于储存查到的对应规则编号集合的列表
-            List<Set<Integer>> ruleIdSets = new ArrayList<>();
-            //用于储存属性值为null的对应规则编号集合的列表
-            List<Set<Integer>> nullRuleIdSets = new ArrayList<>();
-            List<String> ateAttributesValeList = new ArrayList<>();//用于作为lruPool的key
-            //用于储存查到的所有规则编号的集合
-            Set<Integer> AllRuleIds = new HashSet<>();
-            for (Map.Entry<String,String> ateAttribute : ateAttributes.entrySet()) {
-                //得到属性名以及属性值对应的规则集合，如果属性名不存在，则返回空集合
-                String attributeName = ateAttribute.getKey();
-                String attributeValue = ateAttribute.getValue();
-                ateAttributesValeList.add(attributeValue);
-                Set<Integer> integers = atttributeMap.get(attributeName).getOrDefault(attributeValue, new HashSet<>());
-                // 当确定好顺序后，关联规则前件的属性属性值为null的id集合(nullRuleIdSets)按理来说可以直接得到
-                // 但是为了保险起见还是每次都得到一个新的
-                nullRuleIdSets.add(atttributeMap.get(attributeName).getOrDefault(null, new HashSet<>()));
-                ruleIdSets.add(integers);
-                AllRuleIds.addAll(integers);
-            }
-            // map中前面是属性名，后面是属性值和置信度
-            HashMap<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
-            // 提交查询任务到线程池
-            List<Future<?>> futures = new ArrayList<>();
-            for (int ruleId : AllRuleIds) {
-                futures.add(executorService.submit(new QueryTask(ruleId, ruleIdSets, attributeNameVCPMap, rulesMap,nullRuleIdSets)));
-            }
-
-//            //在lruPool中查询存储的机票属性对应的商品属性
-//            Map<String, AttrValueConfidencePriority> attrInLRUPoolQueryRes = null;//lruPool.tryGet(ateAttributesValeList);
-//            if (attrInLRUPoolQueryRes != null) {
-//                //System.out.println("lru命中，查询到缓存");
-//                return attrInLRUPoolQueryRes;
-//            }
-
-            // 等待并获取查询结果
-            for (Future<?> future : futures) {
-                try {
-                    future.get(); // 这会阻塞直到结果可用
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-            }
-
-//            // 将查询结果添加到lruPool中
-//            lruPool.add(ateAttributesValeList, attributeNameVCPMap);
-            return attributeNameVCPMap;
-    }
-
     public Map<String, AttrValueConfidencePriority> queryItemAttributes(Map<String, String> ateAttributes) {
         //用于储存查到的对应规则编号集合的列表
         List<Set<Integer>> ruleIdSets = new ArrayList<>();
         //用于储存属性值为null的对应规则编号集合的列表
         List<Set<Integer>> nullRuleIdSets = new ArrayList<>();
         //用于储存查到的所有规则编号的集合
-        Set<Integer> AllRuleIds = new HashSet<>();
+        Set<Integer> allRuleIds = new HashSet<>();
         for (Map.Entry<String,String> ateAttribute : ateAttributes.entrySet()) {
             //得到属性名以及属性值对应的规则集合，如果属性名不存在，则返回空集合
             String attributeName = ateAttribute.getKey();
@@ -202,11 +146,11 @@ public class RulesStorage {
             // 但是为了保险起见还是每次都得到一个新的
             nullRuleIdSets.add(attriValueRuleIdSetsMap.getOrDefault(null, new HashSet<>()));
             ruleIdSets.add(ruleIds);
-            AllRuleIds.addAll(ruleIds);
+            allRuleIds.addAll(ruleIds);
         }
         // map中前面是属性名，后面是属性值和置信度
-        HashMap<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
-        for (int ruleId : AllRuleIds) {
+        Map<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
+        for (int ruleId : allRuleIds) {
             int queryValue = 0;// 满足查询条件的数量
             boolean qualified = true;
             for (int i = 0; i < ruleIdSets.size(); i++) {
@@ -256,7 +200,7 @@ public class RulesStorage {
             AllRuleIds.addAll(integers);
         }
         // map中前面是属性名，后面是属性值和置信度
-        HashMap<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
+        Map<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
         // 提交查询任务到线程池
         List<Future<?>> futures = new ArrayList<>();
         for (int ruleId : AllRuleIds) {

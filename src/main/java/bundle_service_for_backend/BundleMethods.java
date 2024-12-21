@@ -7,18 +7,19 @@ import org.w3c.dom.*;
 import java.util.*;
 
 public class BundleMethods {
+    private BundleMethods() {
+    }
     /**
-     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
+     * 套餐打包方法
      *
      * @param ticketInfo    机票航段 商品键值对
      * @param bundleItems   附加产品所属航段 附加产品键值对
      * @param rulesStorage  附加产品规则存储
-     * @param fatherElement 父节点
      * @param doc           最终返回到Document，这里用来创造节点
      */
     public static Element bundleMeal(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
+            , RulesStorage rulesStorage, Document doc) {
         Element ancillary = doc.createElement("Ancillary");
         Element boundProducts = doc.createElement("BoundProducts");
         Element ancillaryProducts = doc.createElement("AncillaryProducts");
@@ -43,17 +44,16 @@ public class BundleMethods {
     }
 
     /**
-     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
+     * 行李打包方法
      *
      * @param ticketInfo    机票航段 商品键值对
      * @param bundleItems   附加产品所属航段 附加产品键值对
      * @param rulesStorage  附加产品规则存储
-     * @param fatherElement fatherElement节点，大多数时候为null，主要是为了作为和餐食在一个父节点下设计的
      * @param doc           输出的Document
      */
     public static Element bundleBaggage(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
+            , RulesStorage rulesStorage, Document doc) {
         Element ancillary = doc.createElement("Ancillary");
         Element baggage = doc.createElement("Baggage");
         ancillary.appendChild(baggage);
@@ -78,7 +78,7 @@ public class BundleMethods {
     }
 
     /**
-     * 套餐/行李打包方法（测试版本），因为这两个比较像，所以合并了
+     * 选座打包方法
      *
      * @param ticketInfo    机票航段 商品键值对
      * @param bundleItems   附加产品所属航段 附加产品键值对，这里的键为 航段号|subtype
@@ -139,19 +139,24 @@ public class BundleMethods {
     }
 
     /**
-     * 保险打包方法（测试版本）
+     * 保险打包方法
      *
      * @param ticketInfo   机票航段 商品键值对
      * @param bundleItems  保险所属航段 保险键值对
      * @param rulesStorage 保险规则存储
      * @return 返回打包后排序好的结果对应Insurance节点
      */
-    public static Element testBundleInsurance(Map<String, BundleItem> ticketInfo
+    public static Element bundleInsurance(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
-            , RulesStorage rulesStorage, Element fatherElement, Document doc) {
+            , RulesStorage rulesStorage, Document doc) {
         Element insurance = doc.createElement("Insurance");
         //遍历ticketInfo，得到其中的机票属性
+        boolean isFirstEntry = true;
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
+            if (!isFirstEntry) {
+                break; // 如果不是第一次进入循环，则退出（这是处于保险会覆盖所有航段的特性决定的）
+            }
+            isFirstEntry = false;
             //根据机票属性查询附加产品规则，得到附加产品属性
             Map<String, AttrValueConfidencePriority> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
             //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
@@ -163,7 +168,6 @@ public class BundleMethods {
                 //将排序好的附加产品添加到节点中
                 insurance.appendChild(bundleItem.getElement());
             }
-            break;
         }
         return insurance;
     }

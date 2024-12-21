@@ -169,10 +169,10 @@ public class DataConverter {
         return num & ~(1 << bitPos);
     }
 
-    public static List<Map.Entry<String, String>> map2List(Map<String, String> map, int type) {
+    public static List<Map.Entry<String, String>> map2List(Map<String, String> map) {
         return new ArrayList<>(map.entrySet());
     }
-    public static List<Map.Entry<String, AttrValueConfidencePriority>> attributeConfMap2List(Map<String, AttrValueConfidencePriority> map, int type) {
+    public static List<Map.Entry<String, AttrValueConfidencePriority>> attributeConfMap2List(Map<String, AttrValueConfidencePriority> map) {
         return new ArrayList<>(map.entrySet());
     }
 

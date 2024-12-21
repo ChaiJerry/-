@@ -6,11 +6,9 @@ import org.w3c.dom.*;
 
 import java.util.*;
 
-import static java.lang.Math.*;
-
 public class BundleItem implements Comparable<BundleItem> {
 
-    private final String FlightSegmentRPH;
+    private final String flightSegmentRPH;
     private Element element;
     private final Map<String, String> attributes = new HashMap<>();
     // priority优先级，默认为0，是double的原因是方便以后根据置信度拓展排序优先度计算
@@ -31,15 +29,16 @@ public class BundleItem implements Comparable<BundleItem> {
      * @param recommendAttributes 推荐的属性
      */
     public void setPriority(Map<String, AttrValueConfidencePriority> recommendAttributes) {
-        for (String key : recommendAttributes.keySet()) {
+        for (Map.Entry<String, AttrValueConfidencePriority> entry : recommendAttributes.entrySet()) {
+            String key = entry.getKey();
             if (attributes.containsKey(key)) {
                 // 实际的属性值
                 String value = attributes.get(key);
                 // 推荐属性值
-                AttrValueConfidencePriority attrValueConfidencePriority = recommendAttributes.get(key);
+                AttrValueConfidencePriority attrValueConfidencePriority = entry.getValue();
                 String recommendValue = attrValueConfidencePriority.getAttributeValue();
                 if (value.equalsIgnoreCase(recommendValue)) {
-                    //优先级加上置信度
+                    // 优先级加上置信度
                     priority += attrValueConfidencePriority.getConfidence();
                 }
             }
@@ -52,20 +51,21 @@ public class BundleItem implements Comparable<BundleItem> {
      * @param recommendAttributes 推荐的属性
      */
     public void setPriorityWithNumParse(Map<String, AttrValueConfidencePriority> recommendAttributes) {
-        for (String key : recommendAttributes.keySet()) {
+        for (Map.Entry<String, AttrValueConfidencePriority> entry : recommendAttributes.entrySet()) {
+            String key = entry.getKey();
             if (attributes.containsKey(key)) {
                 // 实际的属性值
                 String value = attributes.get(key);
                 // 推荐属性值
-                AttrValueConfidencePriority attrValueConfidencePriority = recommendAttributes.get(key);
+                AttrValueConfidencePriority attrValueConfidencePriority = entry.getValue();
                 String recommendValue = attrValueConfidencePriority.getAttributeValue();
                 if (value.equalsIgnoreCase(recommendValue)) {
-                    //优先级加上置信度
+                    // 优先级加上置信度
                     priority += attrValueConfidencePriority.getConfidence();
-                }else if (isNum(value) && isNum(recommendValue)) {
-                    //判断不相等的情况，判断是否为浮点数或整数
-                    //优先级加上二者之差的绝对值的负指数
-                    priority += attrValueConfidencePriority.getConfidence()*exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
+                } else if (isNum(value) && isNum(recommendValue)) {
+                    // 判断不相等的情况，判断是否为浮点数或整数
+                    // 优先级加上二者之差的绝对值的负指数
+                    priority += attrValueConfidencePriority.getConfidence() * Math.exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
                 }
             }
         }
@@ -84,16 +84,16 @@ public class BundleItem implements Comparable<BundleItem> {
     }
 
     public BundleItem(String rph) {
-        this.FlightSegmentRPH = rph;
+        this.flightSegmentRPH = rph;
     }
 
     public BundleItem(String rph, Node node) {
-        this.FlightSegmentRPH = rph;
+        this.flightSegmentRPH = rph;
         this.element = (Element) node;
     }
 
     public String getFlightSegmentRPH() {
-        return FlightSegmentRPH;
+        return flightSegmentRPH;
     }
 
     /**

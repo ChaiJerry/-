@@ -6,13 +6,10 @@ import bundle_system.memory_query_system.*;
 
 import java.io.*;
 import java.util.*;
-//import java.util.logging.*;
+import java.util.logging.*;
 
 public class SharedAttributes {
-
-    public static final String NEW_ATT= "PAYMENTAMOUNT";
-    public static final String TICKET_ATTRIBUTES_FIELD_NAME = "ticketAttributes";
-
+    public static final Logger logger = Logger.getLogger("BundleSystem");
     private SharedAttributes() {
     }
     //之后若是要添加新的品类，则在此处添加一个名字，并注册到FULL_NAMES中
@@ -31,8 +28,8 @@ public class SharedAttributes {
     public static final int TRAIN_TICKET = 6 ;//值为FULL_NAMES.length + 1
     //测试订单的品类编号
     public static final int TEST_TICKET = 7 ; //值为FULL_NAMES.length + 2
-    //缩写的商品品类，与下面的商品品类全称对应,最后一个是为了评估临时增加的
 
+    public static final String TICKET_ATTRIBUTES_FIELD_NAME = "ticketAttributes";
     //用于添加到属性中的品类标识
     //机票标识
     public static final String T_SIGN = "Ticket:";
@@ -48,40 +45,30 @@ public class SharedAttributes {
     public static final String S_SIGN = "Seat:";
     //若是之后要添加新的品类，则在注册标识
 
-    //用于存储每个品类下的商品属性，用于快速查找，之后要是添加新的属性或者品类，则在此处添加
-    public static final String[] TICKET_ATTRIBUTES = {"MONTH", "FROM", "TO" , "T_GRADE","HAVE_CHILD","PROMOTION_RATE","T_FORMER"};
-    public static final String[] HOTEL_ATTRIBUTES = {"AIR_REAL_MONEY", "PRODUCTTYPE", "PRODUCT_NAME", "HOTEL_NAME"};
-    public static final String[] MEAL_ATTRIBUTES = {"MEAL_CODE", "PM_PRICE"};
-    public static final String[] BAGGAGE_ATTRIBUTES = {"PAYMENTAMOUNT","BAGGAGE_SPECIFICATION"};
-    public static final String[] INSURANCE_ATTRIBUTES =  {"INSUR_AMOUNT","INSUR_PRO_NAME", "INSURANCE_COMPANYCODE"};
-    public static final String[] SEAT_ATTRIBUTES = {"SEAT_NO"};
     //之后要是添加新的品类，则在此处添加，并注册到itemAttributeNames中
     private final static List<String[]> itemAttributeNames = new ArrayList<>();
     static {
-        itemAttributeNames.add(TICKET_ATTRIBUTES);
-        itemAttributeNames.add(HOTEL_ATTRIBUTES);
-        itemAttributeNames.add(MEAL_ATTRIBUTES);
-        itemAttributeNames.add(BAGGAGE_ATTRIBUTES);
-        itemAttributeNames.add(INSURANCE_ATTRIBUTES);
-        itemAttributeNames.add(SEAT_ATTRIBUTES);
+        itemAttributeNames.add(ConstItemAttributes.TICKET_ATTRIBUTES);
+        itemAttributeNames.add(ConstItemAttributes.HOTEL_ATTRIBUTES);
+        itemAttributeNames.add(ConstItemAttributes.MEAL_ATTRIBUTES);
+        itemAttributeNames.add(ConstItemAttributes.BAGGAGE_ATTRIBUTES);
+        itemAttributeNames.add(ConstItemAttributes.INSURANCE_ATTRIBUTES);
+        itemAttributeNames.add(ConstItemAttributes.SEAT_ATTRIBUTES);
         //用于训练测试的属性，这里和普通机票属性存储一样
-        itemAttributeNames.add(TICKET_ATTRIBUTES);
+        itemAttributeNames.add(ConstItemAttributes.TICKET_ATTRIBUTES);
         //之后要是添加新的品类，则在此处添加
-
-
-
     }
     public static Map<String,String> getTicketAttributesTemplate() {
         Map<String, String> attributes = new HashMap<>();
-        for (String ticketAttribute : TICKET_ATTRIBUTES) {
+        for (String ticketAttribute : ConstItemAttributes.TICKET_ATTRIBUTES) {
             attributes.put(ticketAttribute, null);
         }
         return attributes;
     }
 
 
-    public static HashMap<String, AttrValueConfidencePriority> getAttributesMap(int type) {
-        HashMap<String, AttrValueConfidencePriority> attributesMap = new HashMap<>();
+    public static Map<String, AttrValueConfidencePriority> getAttributesMap(int type) {
+        Map<String, AttrValueConfidencePriority> attributesMap = new HashMap<>();
         for(String attributeName : itemAttributeNames.get(type)) {
            attributesMap.put(attributeName, new AttrValueConfidencePriority());
         }
@@ -90,8 +77,8 @@ public class SharedAttributes {
 
 
 
-    protected static final int[] attributeNumForEachType = {0,HOTEL_ATTRIBUTES.length,MEAL_ATTRIBUTES.length,BAGGAGE_ATTRIBUTES.length,
-            INSURANCE_ATTRIBUTES.length,SEAT_ATTRIBUTES.length};
+    protected static final int[] attributeNumForEachType = {0, ConstItemAttributes.HOTEL_ATTRIBUTES.length, ConstItemAttributes.MEAL_ATTRIBUTES.length, ConstItemAttributes.BAGGAGE_ATTRIBUTES.length,
+            ConstItemAttributes.INSURANCE_ATTRIBUTES.length, ConstItemAttributes.SEAT_ATTRIBUTES.length};
 
     public static int[] getAttributeNumForEachType() {
         return attributeNumForEachType;
@@ -155,15 +142,15 @@ public class SharedAttributes {
 
     static {
         CSVFileIO tmpFileIO;
-        //Logger logger = Logger.getLogger(SharedAttributes.class.getName());
+
         // 创建Properties对象
         Properties properties = new Properties();
         // 读取配置文件
         try {
-            InputStream stream = MongoUtils.class.getClassLoader().getResourceAsStream("System.properties");
+            InputStream stream = SharedAttributes.class.getClassLoader().getResourceAsStream("System.properties");
             properties.load(stream);
         } catch (IOException e) {
-            //logger.info("加载配置文件失败");
+            logger.info("加载配置文件失败");
         }
         // 获取配置文件中的属性
         // 获取csv文件结果输出目录，若是不以csv文件的格式输出，则该属性可以为null
@@ -205,19 +192,19 @@ public class SharedAttributes {
         fileIO = tmpFileIO;
         targetItemFieldNames = new ArrayList<>();
         targetItemFieldNames.add(new ArrayList<>());
-        targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + "HOTEL_NAME", ATTRIBUTES_FIELD + "PRODUCT_NAME"));
-        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + "MEAL_CODE"));
-        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + "BAGGAGE_SPECIFICATION"));
-        targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + "INSUR_PRO_NAME", ATTRIBUTES_FIELD + "INSURANCE_COMPANYCODE"));
-        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + "SEAT_NO"));
+        targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + ConstItemAttributes.HOTEL_NAME, ATTRIBUTES_FIELD + ConstItemAttributes.PRODUCT_NAME));
+        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + ConstItemAttributes.MEAL_CODE));
+        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + ConstItemAttributes.BAGGAGE_SPECIFICATION));
+        targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + ConstItemAttributes.INSUR_PRO_NAME, ATTRIBUTES_FIELD + ConstItemAttributes.INSURANCE_COMPANYCODE));
+        targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + ConstItemAttributes.SEAT_NO));
 
         targetItemNames = new ArrayList<>();
         targetItemNames.add(new ArrayList<>());
-        targetItemNames.add(Arrays.asList("HOTEL_NAME", "PRODUCT_NAME"));
-        targetItemNames.add(List.of( "MEAL_CODE"));
-        targetItemNames.add(List.of("BAGGAGE_SPECIFICATION"));
-        targetItemNames.add(Arrays.asList("INSUR_PRO_NAME","INSURANCE_COMPANYCODE"));
-        targetItemNames.add(List.of("SEAT_NO"));
+        targetItemNames.add(Arrays.asList(ConstItemAttributes.HOTEL_NAME, ConstItemAttributes.PRODUCT_NAME));
+        targetItemNames.add(List.of(ConstItemAttributes.MEAL_CODE));
+        targetItemNames.add(List.of(ConstItemAttributes.BAGGAGE_SPECIFICATION));
+        targetItemNames.add(Arrays.asList(ConstItemAttributes.INSUR_PRO_NAME, ConstItemAttributes.INSURANCE_COMPANYCODE));
+        targetItemNames.add(List.of(ConstItemAttributes.SEAT_NO));
 
         //初始化属性储存的结构体
         for(int i = HOTEL;i < TEST_TICKET;i++) {

@@ -7,5 +7,5 @@ import java.util.*;
 
 @FunctionalInterface
 public interface ParseMethod {
-    public Map<String, List<BundleItem>> execute(Element root) throws XPathExpressionException;
+    Map<String, List<BundleItem>> execute(Element root) throws XPathExpressionException;
 }

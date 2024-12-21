@@ -1,5 +1,6 @@
 package bundle_service_for_backend.xml_parser;
 
+import bundle_service_for_backend.*;
 import bundle_system.data_processer.*;
 import org.w3c.dom.*;
 
@@ -34,48 +35,42 @@ public class XMLParser {
      * @param root XML文件的根节点
      * @return comboSource中的航班属性
      */
-    public Map<String, BundleItem> parseComboSourceForRS(Element root) throws XPathExpressionException {
+    public Map<String, BundleItem> parseComboSourceForRS(Element root) throws XPathExpressionException, BundleException {
         // 创建一个HashMap来存储解析后的结果,key为航段，value为存储航班属性的item
         // 可以用List<BundleItem>而不是直接用BundleItem是和后面的方法统一格式，这样可以方便后续的多线程优化
         Map<String, BundleItem> comboSourceMap = new HashMap<>();
         String odXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItinerary/OriginDestinationOptions/OriginDestinationOption";
-        NodeList OriginDestinationOption = (NodeList) xpath.evaluate(odXpath, root, XPathConstants.NODESET);
-        for (int i = 0; i < OriginDestinationOption.getLength(); i++) {
+        NodeList originDestinationOptions = (NodeList) xpath.evaluate(odXpath, root, XPathConstants.NODESET);
+        for (int i = 0; i < originDestinationOptions.getLength(); i++) {
             // 得到RPH
-            Element originDestinationOption = (Element) OriginDestinationOption.item(i);
-            String rph = originDestinationOption.getAttribute("RPH");
+            Element originDestinationOption = (Element) originDestinationOptions.item(i);
+            String rph = originDestinationOption.getAttribute(RPH);
             // 创建BundleItem对象
             BundleItem bundleItem = new BundleItem(rph);
             // 将bundleItem添加到map中
             comboSourceMap.put(rph, bundleItem);
             // 得到出发时间
             Element flightSegment = getElementByRelativePath(originDestinationOption, "FlightSegment");
-            String month = flightSegment.getAttribute("ArrivalDateTime").split("-")[1];
-            bundleItem.addAttributeNameValuePair("MONTH", month);
+            String month = flightSegment.getAttribute(ARRIVAL_DATE_TIME).split("-")[1];
+            bundleItem.addAttributeNameValuePair(MONTH, month);
             // 得到出发地和目的地
             Element departureAirport = getElementByRelativePath(flightSegment, "DepartureAirport");
-            String departureLocationCode = departureAirport.getAttribute("LocationCode");
+            String departureLocationCode = departureAirport.getAttribute(LOCATION_CODE);
             // 添加到bundleItem中（为了和训练中的属性名称一致，这里用FROM和TO）
             bundleItem.addAttributeNameValuePair("FROM", departureLocationCode);
             Element arrivalAirport = getElementByRelativePath(flightSegment, "ArrivalAirport");
-            String arrivalLocationCode = arrivalAirport.getAttribute("LocationCode");
+            String arrivalLocationCode = arrivalAirport.getAttribute(LOCATION_CODE);
             bundleItem.addAttributeNameValuePair("TO", arrivalLocationCode);
         }
-        //如果要极优化，可以储存之前访问过的节点，然后用相对路径来访问
-        String AirItineraryPricingInfoXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItineraryPricingInfo";
-        NodeList airItineraryPricingInfos = (NodeList) xpath.evaluate(AirItineraryPricingInfoXpath, root, XPathConstants.NODESET);
+        String airItineraryPricingInfoXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItineraryPricingInfo";
+        NodeList airItineraryPricingInfos = (NodeList) xpath.evaluate(airItineraryPricingInfoXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < airItineraryPricingInfos.getLength(); i++) {
             Element airItineraryPricingInfo = (Element) airItineraryPricingInfos.item(i);
             // 判断其子节点是否为空，若非空则开始解析，否则跳过
             if (airItineraryPricingInfo.hasChildNodes()) {
                 // 得到旅客类型
                 String passengerTypeQuantityXpath = "PTC_FareBreakdowns/PTC_FareBreakdown/PassengerTypeQuantity";
-                Element typeElement = (Element) xpath.evaluate(passengerTypeQuantityXpath, airItineraryPricingInfo, XPathConstants.NODE);
-                String isChild = typeElement.getAttribute("Code").equals("ADT") ? "0" : "1";
-                for (BundleItem bundleItem : comboSourceMap.values()) {
-                    // 加入旅客类型属性，可以为字符串0或1以匹配训练数据
-                    bundleItem.addAttributeNameValuePair("HAVE_CHILD", isChild);
-                }
+                addPassengerType(passengerTypeQuantityXpath, airItineraryPricingInfo, comboSourceMap);
                 // 得到价格
                 String fareInfoXpath = "FareInfos/FareInfo";
                 NodeList fareInfoElement = (NodeList) xpath.evaluate(fareInfoXpath, airItineraryPricingInfo, XPathConstants.NODESET);
@@ -85,7 +80,7 @@ public class XMLParser {
                     String flightSegmentRPH = fareInfo.getAttribute("FlightSegmentRPH");
                     BundleItem bundleItem = comboSourceMap.get(flightSegmentRPH);
                     if (bundleItem == null) {
-                        throw new RuntimeException("ComboSource中前后航段信息不匹配！");
+                        throw new BundleException("ComboSource中前后航段信息不匹配！");
                     }
 
                     // 得到舱位等级
@@ -112,54 +107,58 @@ public class XMLParser {
         return comboSourceMap;
     }
 
+    private void addPassengerType(String passengerTypeQuantityXpath, Element airItineraryPricingInfo, Map<String, BundleItem> comboSourceMap) throws XPathExpressionException {
+        Element typeElement = (Element) xpath.evaluate(passengerTypeQuantityXpath, airItineraryPricingInfo, XPathConstants.NODE);
+        String isChild = typeElement.getAttribute("Code").equals("ADT") ? "0" : "1";
+        for (BundleItem bundleItem : comboSourceMap.values()) {
+            // 加入旅客类型属性，可以为字符串0或1以匹配训练数据
+            bundleItem.addAttributeNameValuePair("HAVE_CHILD", isChild);
+        }
+    }
+
     /**
      * 解析RS的XML，得到comboSource
      *
      * @param root XML文件的根节点
      * @return comboSource中的航班属性
      */
-    public Map<String, BundleItem> parseComboSourceForRQ(Element root) throws XPathExpressionException {
+    public Map<String, BundleItem> parseComboSourceForRQ(Element root) throws XPathExpressionException, BundleException {
         // 创建一个HashMap来存储解析后的结果,key为航段，value为存储航班属性的item
         // 可以用List<BundleItem>而不是直接用BundleItem是和后面的方法统一格式，这样可以方便后续的多线程优化
         Map<String, BundleItem> comboSourceMap = new HashMap<>();
         String odXpath = "/OJ_ComboSearchRQ/ComboSource/PricedItinerary/AirItinerary/OriginDestinationOptions/OriginDestinationOption";
-        NodeList OriginDestinationOption = (NodeList) xpath.evaluate(odXpath, root, XPathConstants.NODESET);
-        for (int i = 0; i < OriginDestinationOption.getLength(); i++) {
+        NodeList originDestinationOptions = (NodeList) xpath.evaluate(odXpath, root, XPathConstants.NODESET);
+        for (int i = 0; i < originDestinationOptions.getLength(); i++) {
             // 得到RPH
-            Element originDestinationOption = (Element) OriginDestinationOption.item(i);
-            String rph = originDestinationOption.getAttribute("RPH");
+            Element originDestinationOption = (Element) originDestinationOptions.item(i);
+            String rph = originDestinationOption.getAttribute(RPH);
             // 创建BundleItem对象
             BundleItem bundleItem = new BundleItem(rph);
             // 将bundleItem添加到map中
             comboSourceMap.put(rph, bundleItem);
             // 得到出发时间
             Element flightSegment = getElementByRelativePath(originDestinationOption, "FlightSegment");
-            String month = flightSegment.getAttribute("ArrivalDateTime").split("-")[1];
-            bundleItem.addAttributeNameValuePair("MONTH", month);
+            String month = flightSegment.getAttribute(ARRIVAL_DATE_TIME).split("-")[1];
+            bundleItem.addAttributeNameValuePair(MONTH, month);
             // 得到出发地和目的地
             Element departureAirport = getElementByRelativePath(flightSegment, "DepartureAirport");
-            String departureLocationCode = departureAirport.getAttribute("LocationCode");
+            String departureLocationCode = departureAirport.getAttribute(LOCATION_CODE);
             // 添加到bundleItem中（为了和训练中的属性名称一致，这里用FROM和TO）
             bundleItem.addAttributeNameValuePair("FROM", departureLocationCode);
             Element arrivalAirport = getElementByRelativePath(flightSegment, "ArrivalAirport");
-            String arrivalLocationCode = arrivalAirport.getAttribute("LocationCode");
+            String arrivalLocationCode = arrivalAirport.getAttribute(LOCATION_CODE);
             bundleItem.addAttributeNameValuePair("TO", arrivalLocationCode);
         }
         //如果要极优化，可以储存之前访问过的节点，然后用相对路径来访问
-        String AirItineraryPricingInfoXpath = "/OJ_ComboSearchRQ/ComboSource/PricedItinerary/AirItineraryPricingInfo";
-        NodeList airItineraryPricingInfos = (NodeList) xpath.evaluate(AirItineraryPricingInfoXpath, root, XPathConstants.NODESET);
+        String airItineraryPricingInfoXpath = "/OJ_ComboSearchRQ/ComboSource/PricedItinerary/AirItineraryPricingInfo";
+        NodeList airItineraryPricingInfos = (NodeList) xpath.evaluate(airItineraryPricingInfoXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < airItineraryPricingInfos.getLength(); i++) {
             Element airItineraryPricingInfo = (Element) airItineraryPricingInfos.item(i);
             // 判断其子节点是否为空，若非空则开始解析，否则跳过
             if (airItineraryPricingInfo.hasChildNodes()) {
                 // 得到旅客类型
                 String passengerTypeQuantityXpath = "PTC_FareBreakdowns/PTC_FareBreakdown/PassengerTypeQuantity";
-                Element typeElement = (Element) xpath.evaluate(passengerTypeQuantityXpath, airItineraryPricingInfo, XPathConstants.NODE);
-                String isChild = typeElement.getAttribute("Code").equals("ADT") ? "0" : "1";
-                for (BundleItem bundleItem : comboSourceMap.values()) {
-                    // 加入旅客类型属性，可以为字符串0或1以匹配训练数据
-                    bundleItem.addAttributeNameValuePair("HAVE_CHILD", isChild);
-                }
+                addPassengerType(passengerTypeQuantityXpath, airItineraryPricingInfo, comboSourceMap);
                 // 得到价格
                 String fareInfoXpath = "FareInfos/FareInfo";
                 NodeList fareInfoElement = (NodeList) xpath.evaluate(fareInfoXpath, airItineraryPricingInfo, XPathConstants.NODESET);
@@ -169,7 +168,7 @@ public class XMLParser {
                     String flightSegmentRPH = fareInfo.getAttribute("FlightSegmentRPH");
                     BundleItem bundleItem = comboSourceMap.get(flightSegmentRPH);
                     if (bundleItem == null) {
-                        throw new RuntimeException("ComboSource中前后航段信息不匹配！");
+                        throw new BundleException("ComboSource中前后航段信息不匹配！");
                     }
 
                     // 得到舱位等级
@@ -193,7 +192,6 @@ public class XMLParser {
                 break;
             }
         }
-        //System.out.println("时间（ms）："+(System.currentTimeMillis() - startTime));
         return comboSourceMap;
     }
 
@@ -217,8 +215,8 @@ public class XMLParser {
             bundleItem.addAttributeNameValuePair("INSUR_PRO_NAME", name);
 
             // 得到保险的金额
-            Element PlanCost = getElementByRelativePath(planForQuoteRSX, "PlanCost");
-            String amount = Integer.parseInt(PlanCost.getAttribute("Amount").split("\\.")[0]) + ".00";
+            Element planCost = getElementByRelativePath(planForQuoteRSX, "PlanCost");
+            String amount = Integer.parseInt(planCost.getAttribute(AMOUNT).split("\\.")[0]) + ".00";
             bundleItem.addAttributeNameValuePair("INSUR_AMOUNT", amount);
 
             //得到保险的公司代码
@@ -246,16 +244,16 @@ public class XMLParser {
             // 得到航段
             String baggageXpath = "Baggage";
             Element baggage = (Element) xpath.evaluate(baggageXpath, service, XPathConstants.NODE);
-            String SegmentRef = baggage.getAttribute("SegmentRef");
-            BundleItem bundleItem = new BundleItem(SegmentRef, service.cloneNode(true));
+            String segmentRef = baggage.getAttribute(SEGMENT_REF);
+            BundleItem bundleItem = new BundleItem(segmentRef, service.cloneNode(true));
             // 判断是否航段对应的列表已经存在
             // 若不存在则新建一个列表添加到map中
-            if (!bundleItemsMap.containsKey(SegmentRef)) {
+            if (!bundleItemsMap.containsKey(segmentRef)) {
                 List<BundleItem> bundleItems = new ArrayList<>();
                 bundleItems.add(bundleItem);
-                bundleItemsMap.put(SegmentRef, bundleItems);
+                bundleItemsMap.put(segmentRef, bundleItems);
             }else{
-                bundleItemsMap.get(SegmentRef).add(bundleItem);
+                bundleItemsMap.get(segmentRef).add(bundleItem);
             }
             // 得到重量
             String maxWeightXpath = "MaxWeight";
@@ -266,7 +264,7 @@ public class XMLParser {
             //得到Amount
             String totalXpath = "Prices/Price/Total";
             Element total = (Element) xpath.evaluate(totalXpath, baggage, XPathConstants.NODE);
-            String amount = DataParser.floatStr2Attribute(total.getAttribute("Amount"), 200) + "";
+            String amount = DataParser.floatStr2Attribute(total.getAttribute(AMOUNT), 200) + "";
             bundleItem.addAttributeNameValuePair("PAYMENTAMOUNT", amount);
         }
         return bundleItemsMap;
@@ -283,7 +281,7 @@ public class XMLParser {
         NodeList ancillaries = (NodeList) xpath.evaluate(ancillaryXpath, root, XPathConstants.NODESET);
         for (int i = 0; i < ancillaries.getLength(); i++) {
             Element ancillary = (Element) ancillaries.item(i);
-            String segmentRef = ancillary.getAttribute("SegmentRef");
+            String segmentRef = ancillary.getAttribute(SEGMENT_REF);
             BundleItem bundleItem = new BundleItem(segmentRef, ancillary.cloneNode(true));
             if (!bundleItemsMap.containsKey(segmentRef)) {
                 List<BundleItem> bundleItems = new ArrayList<>();
@@ -293,12 +291,12 @@ public class XMLParser {
                 bundleItemsMap.get(segmentRef).add(bundleItem);
             }
             // 得到餐食代码
-            String supplierProductCode = ancillary.getAttribute("SupplierProductCode");
+            String supplierProductCode = ancillary.getAttribute(SUPPLIER_PRODUCT_CODE);
             bundleItem.addAttributeNameValuePair("MEAL_CODE", supplierProductCode);
             // 得到餐食价格
             String baseXpath = "Prices/Price/Base";
             Element base = (Element) xpath.evaluate(baseXpath, ancillary, XPathConstants.NODE);
-            String amount = DataParser.floatStr2Attribute(base.getAttribute("Amount"), 4) + "";
+            String amount = DataParser.floatStr2Attribute(base.getAttribute(AMOUNT), 4) + "";
             bundleItem.addAttributeNameValuePair("PM_PRICE", amount);
         }
         return bundleItemsMap;
@@ -334,15 +332,15 @@ public class XMLParser {
             // 避免重复添加，这里存储的是主键
             Set<String> haveVisited = new HashSet<>();
             // 解析座位图
-            NodeList Rows = getElementsByRelativePath(seatMapResponse, "AAM_SeatMap/Cabin/Row");
-            for (int j = 0; j < Rows.getLength(); j++) {
-                Element Row = (Element) Rows.item(j);
-                NodeList Blocks = getElementsByRelativePath(Row, "Block");
-                for (int k = 0; k < Blocks.getLength(); k++) {
+            NodeList rows = getElementsByRelativePath(seatMapResponse, "AAM_SeatMap/Cabin/Row");
+            for (int j = 0; j < rows.getLength(); j++) {
+                Element row = (Element) rows.item(j);
+                NodeList blocks = getElementsByRelativePath(row, "Block");
+                for (int k = 0; k < blocks.getLength(); k++) {
                     Map<String,String> xmlAttributes = new HashMap<>();
-                    Element Block = (Element) Blocks.item(k);
-                    String subType = preProcessSubType(Block.getAttribute("Characteristics"));
-                    String supplierProductCode = Block.getAttribute("ProductCode");
+                    Element block = (Element) blocks.item(k);
+                    String subType = preProcessSubType(block.getAttribute("Characteristics"));
+                    String supplierProductCode = block.getAttribute("ProductCode");
                     if (supplierProductCode.isEmpty() || haveVisited.contains(subType+"|"+supplierProductCode)) {
                         continue;
                     }
@@ -356,9 +354,9 @@ public class XMLParser {
                     bundleItem.addAttributeNameValuePair("SubType", subType);
                     // 加入用于组包的属性
                     xmlAttributes.put("SubType", subType);
-                    xmlAttributes.put("SegmentRef", segmentRef);
-                    xmlAttributes.put("SupplierProductCode", supplierProductCode);
-                    xmlAttributes.put("Amount", amountAndCurrencyCode[0]);
+                    xmlAttributes.put(SEGMENT_REF, segmentRef);
+                    xmlAttributes.put(SUPPLIER_PRODUCT_CODE, supplierProductCode);
+                    xmlAttributes.put(AMOUNT, amountAndCurrencyCode[0]);
                     xmlAttributes.put("CurrencyCode", amountAndCurrencyCode[1]);
                     bundleItem.setXmlAttributes(xmlAttributes);
                     // 将已经访问过的主键添加到集合中
@@ -406,11 +404,11 @@ public class XMLParser {
         for (int i = 0; i < ancillaryProducts.getLength(); i++) {
             Element ancillaryProduct = (Element) ancillaryProducts.item(i);
             //得到座位等级
-            String supplierProductCode = ancillaryProduct.getAttribute("SupplierProductCode");
+            String supplierProductCode = ancillaryProduct.getAttribute(SUPPLIER_PRODUCT_CODE);
             //得到座位价格
             String baseXpath = "Prices/Price/Total";
             Element total = (Element) xpath.evaluate(baseXpath, ancillaryProduct, XPathConstants.NODE);
-            String amount = total.getAttribute("Amount");
+            String amount = total.getAttribute(AMOUNT);
             String currency = total.getAttribute("CurrencyCode");
             seatPriceMap.put(supplierProductCode, new String[]{amount, currency});
         }
@@ -453,4 +451,13 @@ public class XMLParser {
     public NodeList getElementsByRelativePath(Element element, String relativePath) throws XPathExpressionException {
         return (NodeList) xpath.evaluate(relativePath, element, XPathConstants.NODESET);
     }
+
+    //一些常用的常量
+    public static final String LOCATION_CODE = "LocationCode";
+    public static final String AMOUNT = "Amount";
+    public static final String SEGMENT_REF = "SegmentRef";
+    public static final String SUPPLIER_PRODUCT_CODE = "SupplierProductCode";
+    public static final String RPH = "RPH";
+    public static final String ARRIVAL_DATE_TIME = "ArrivalDateTime";
+    public static final String MONTH = "MONTH";
 }

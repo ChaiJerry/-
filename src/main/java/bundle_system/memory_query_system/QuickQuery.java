@@ -1,6 +1,5 @@
 package bundle_system.memory_query_system;
 
-import bundle_system.io.sql.*;
 import com.mongodb.client.*;
 import org.bson.*;
 import bundle_system.db_query_system.*;
@@ -27,34 +26,10 @@ public class QuickQuery {
         List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
         List<List<String>> itemTicketRules = new ArrayList<>();
         printProgressBar(33, info);
-        //SQLUtils sqlUtils = new SQLUtils();
-        //测算训练用时
-        long startTime1 = System.nanoTime();
         associationRulesMining(listOfAttributeList, false
                 , true, itemTicketFreqItemSets, itemTicketRules
                 , 0.08, 0);
         return initRulesStorageByType(type, itemTicketRules);
-
-//        try {
-//            //如果已经存在，则直接加载
-//            itemTicketRules = sqlUtils.loadRules(type, "test");
-//            if(itemTicketRules.isEmpty()) {
-//                associationRulesMining(listOfAttributeList, false
-//                        , true, itemTicketFreqItemSets, itemTicketRules
-//                        , 0.08, 0);
-//                sqlUtils.storeRules(type, itemTicketRules, "test",10);
-//            }
-//        }catch (Exception e) {
-//            //否则，进行训练
-//            associationRulesMining(listOfAttributeList, false
-//                    , true, itemTicketFreqItemSets, itemTicketRules
-//                    , 0.08, 0);
-//            sqlUtils.storeRules(type, itemTicketRules, "test",10);
-//        }
-//        printProgressBar(67, info);
-//        printProgressBar(100, info);
-//        System.out.println();
-//        return initRulesStorageByType(type, itemTicketRules);
     }
 
 
@@ -71,8 +46,6 @@ public class QuickQuery {
         ItemAttributesStorage ticketAttributesStorage = getItemAttributesStorage()[TEST_TICKET];
         Map<String, List<List<String>>> ticketOrderNumAttributeMap = getTicketOrderNumAttributesMap(fileIO.read(PATH_TEST_T, TEST_TICKET), ticketAttributesStorage);
         itemPackMap.clear();
-        int total = 0;
-        int round = 0;
         for (Iterator<String> iterator = ticketOrderNumAttributeMap.keySet().iterator(); iterator.hasNext(); ) {
             //得到orderNum（订单号）
             String orderNum = iterator.next();
@@ -84,7 +57,6 @@ public class QuickQuery {
             List<List<String>> listOfTicketAttributeList = ticketOrderNumAttributeMap.get(orderNum);
             //遍历listOfTicketAttributeList（属性值列表的列表）
             for (List<String> attributeValues : listOfTicketAttributeList) {
-                //System.out.println(total++ + ": " + orderNum);
                 //得到每个机票属性列表特征键
                 String itemPackKey = ItemPack.generateItemPackKey(attributeValues);
                 //判断是否已经存在于itemPackMap中
@@ -117,8 +89,6 @@ public class QuickQuery {
 
         String accuracyInfo = "" + averageAccuracy;
         String recallInfo = "" + averageRecallRate;
-        //String f1=(averageAccuracy+averageRecallRate)/2;
-        //System.out.print(getFullNames()[type] + ",");
         System.out.print(accuracyInfo + ",");
         System.out.print(recallInfo + ",");
         System.out.print((averageAccuracy + averageRecallRate) / 2 + ",");
@@ -200,7 +170,7 @@ public class QuickQuery {
         int barLength = 50;
 
         // 计算已完成的部分
-        int completed = (int) (percent * barLength / 100);
+        int completed = (percent * barLength / 100);
 
         // 构建进度条
         StringBuilder progressBar = new StringBuilder(progressBarName + "\t [");

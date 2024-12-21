@@ -16,19 +16,20 @@ import static bundle_system.io.SharedAttributes.*;
 
 public class FPGrowth {
     private static final SparkSession spark ;
+    public static final String ITEMS = "items";
+    public static final String DEBUG = "debug";
+
     static {
-        System.out.println("正在初始化SparkSession");
+        logger.info("正在初始化SparkSession");
         spark = SparkSession // 创建SparkSession对象
                 .builder()
                 .appName("Civil-aviation-recommended-subject")
                 //设置本地运行以及线程数量最大值（local含义为本地运行，*表示线程数量尽可能多）
                 .master("local[*]")
                 .getOrCreate();
-        System.out.println("SparkSession初始化完成");
+        logger.info("SparkSession初始化完成");
     }
 
-//    // 创建日志对象
-//    private static final Logger logger = Logger.getLogger(FPGrowth.class.getName());
 
     private FPGrowth() {
     }
@@ -40,9 +41,9 @@ public class FPGrowth {
      * @return 返回训练好的FPGrowth模型
      */
     public static FPGrowthModel train(Dataset<Row> itemsDF) {
-//        logger.info("正在使用FPGrowth算法训练模型");
+        logger.info("正在使用FPGrowth算法训练模型");
         return new org.apache.spark.ml.fpm.FPGrowth()
-                .setItemsCol("items")//设置items列名
+                .setItemsCol(ITEMS)//设置items列名
                 .setMinSupport(MIN_SUPPORT)//最小支持度
                 .setMinConfidence(MIN_CONFIDENCE)//最小置信度
                 .fit(itemsDF);//让模型适应输入数据
@@ -57,9 +58,9 @@ public class FPGrowth {
      * @return 返回训练好的FPGrowth模型
      */
     public static FPGrowthModel train(Dataset<Row> itemsDF, double minSupport, double minConfidence) {
-//        logger.info("正在使用FPGrowth算法训练模型");
+        logger.info("正在使用FPGrowth算法训练模型");
         return new org.apache.spark.ml.fpm.FPGrowth()
-                .setItemsCol("items")//设置items列名
+                .setItemsCol(ITEMS)//设置items列名
                 .setMinSupport(minSupport)//最小支持度
                 .setMinConfidence(minConfidence)//最小置信度
                 .fit(itemsDF);//让模型适应输入数据
@@ -103,54 +104,6 @@ public class FPGrowth {
         }
     }
 
-    //用来评估第eva个机票属性表现的方法
-    public static void fpGrowthTest(int eva) throws IOException {
-        for (int i = 1; i < 6; i++) {
-
-            // 准备数据
-//            logger.info("正在准备数据");
-            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i, eva);
-
-            // 使用FPGrowth算法训练模型
-            FPGrowthModel model = train(itemsDF);
-
-            // 得到频繁项集
-            Dataset<Row> freqItemSets = model.freqItemsets();
-
-            // 可以选择显示频繁项集(freqItemSets.show();)
-            if (MODE.equals("debug")) {
-//                logger.info("显示频繁项集");
-                //freqItemSets.show();
-            }
-
-            //保存频繁项集到csv
-            if (RESULT_FORM.equals("csv")) {
-                fileIO.freItemSet2CSV(freqItemSets, i);
-            } else if (RESULT_FORM.equals("db")) {
-                MongoUtils.frequentItemSets2db(freqItemSets, i, eva);
-            }
-
-            // 显示生成的关联规则并保存到csv
-            Dataset<Row> rules = model.associationRules();
-            if (MODE.equals("debug")) {
-//                logger.info("显示关联规则");
-                //rules.show();
-            }
-
-            if (RESULT_FORM.equals("csv")) {
-                //保存关联规则到csv
-                fileIO.rules2CSV(rules, i);
-            } else if (RESULT_FORM.equals("db")) {
-                //保存关联规则到数据库
-                MongoUtils.rules2db(rules, i, eva);
-            }
-        }
-
-//        // 停止SparkSession
-//        logger.info("SparkSession停止");
-        //停止MongoDB
-        MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
-    }
 
     public static void fpGrowthTest() throws IOException {
 
@@ -168,7 +121,7 @@ public class FPGrowth {
             Dataset<Row> freqItemSets = model.freqItemsets();
 
             // 可以选择显示频繁项集(freqItemSets.show();)
-            if (MODE.equals("debug")) {
+            if (MODE.equals(DEBUG)) {
 //                logger.info("显示频繁项集");
                 //freqItemSets.show();
             }
@@ -182,7 +135,7 @@ public class FPGrowth {
 
             // 显示生成的关联规则并保存到csv
             Dataset<Row> rules = model.associationRules();
-            if (MODE.equals("debug")) {
+            if (MODE.equals(DEBUG)) {
 //                logger.info("显示关联规则");
                 //rules.show();
             }
@@ -197,37 +150,10 @@ public class FPGrowth {
             long endTime = System.currentTimeMillis();
             System.out.println(getFullNames()[i] + "," + MIN_CONFIDENCE + "," + (endTime - startTime) + "ms");
         }
-
-//        // 停止SparkSession
-//        logger.info("SparkSession停止");
         //停止MongoDB
         MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, MIN_SUPPORT);
     }
 
-    /**
-     * 用于测试单一品类商品训练时间，会重复训练5次
-     *
-     * @param i 品类编号
-     */
-    public static long fpGrowthForEva(int i,double minSupport,double minConfidence) throws IOException {
-        long averageTime = 0;
-        //for (int j = 0; j < 5; j++) {
-            // 准备数据
-            Dataset<Row> itemsDF = fileIO.singleTypeCsv2dataset(i);
-            //得到运行时间
-            long startTime = System.currentTimeMillis();
-            // 使用FPGrowth算法训练模型
-            FPGrowthModel model = train(itemsDF, minSupport, minConfidence);
-            Dataset<Row> rules = model.associationRules();
-            //保存关联规则到数据库
-            MongoUtils.rules2db(rules, i);//
-            long endTime = System.currentTimeMillis();
-            averageTime += endTime - startTime;
-        //}
-        //mongoUtils写入记录
-        MongoUtils.settle(fileIO.getOrderNumber(), COMMENT, minSupport);
-        return averageTime / 5;
-    }
 
     /**
      * 定义数据模式
@@ -235,15 +161,14 @@ public class FPGrowth {
      * @return 返回定义好的特定数据模式
      */
     public static StructType getSchema() {
-//        // 定义数据模式
-//        logger.info("正在定义数据模式");
+        // 定义数据模式
+        logger.info("正在定义数据模式");
         return new StructType(new StructField[]{new StructField(
-                "items",
+                ITEMS,
                 new ArrayType(DataTypes.StringType, true)
                 //该字段名称为items，元素类型为String
                 , false,//false表示该字段不能为空
                 Metadata.empty())//无附加元数据
-
         });
     }
 

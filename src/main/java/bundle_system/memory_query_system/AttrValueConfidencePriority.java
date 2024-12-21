@@ -6,9 +6,6 @@ public class AttrValueConfidencePriority {
     private String attributeValue = "";
     private double confidence = -1;
     private int priority = 0;
-    public AttrValueConfidencePriority() {
-    }
-
     /**
      * 赋值，在得到锁之前会阻塞，这里调用后会解除锁
      *
