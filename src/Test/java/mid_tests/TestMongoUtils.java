@@ -22,6 +22,7 @@ import static bundle_system.io.MongoUtils.*;
  * mongodb在实际生产中不使用，但是这里需要mongo的特性
  * 进行测试验证算法的准确性和效率
  */
+
 public class TestMongoUtils {
     private MongoClient mongoClient = null;
     private MongoDatabase mongoDatabase = null;
