@@ -1,0 +1,5 @@
+
+g
+java:S3824³"IReplace this "Map.containsKey()" with a call to "Map.computeIfPresent()".(Ö›8ÜÌ³Ä¿2
+¡
+java:S1210,"YOverride "equals(Object obj)" to comply with the contract of the "compareTo(T o)" method.(ëÛ•éøÿÿÿÿ8ááã¼¿2J$b761f181-488e-4b8d-b674-83ea362ac751
