@@ -5,7 +5,12 @@ import org.jetbrains.annotations.*;
 import org.w3c.dom.*;
 
 import java.util.*;
+import java.util.regex.*;
 
+/**
+ * 每个该类的实例代表一个打包商品（包括机票）
+ * ，其中包含了商品属性
+ */
 public class BundleItem implements Comparable<BundleItem> {
 
     private final String flightSegmentRPH;
@@ -37,7 +42,7 @@ public class BundleItem implements Comparable<BundleItem> {
                 // 推荐属性值
                 AttrValueConfidencePriority attrValueConfidencePriority = entry.getValue();
                 String recommendValue = attrValueConfidencePriority.getAttributeValue();
-                if (value.equalsIgnoreCase(recommendValue)) {
+                if (value.equals(recommendValue)) {
                     // 优先级加上置信度
                     priority += attrValueConfidencePriority.getConfidence();
                 }
@@ -59,7 +64,7 @@ public class BundleItem implements Comparable<BundleItem> {
                 // 推荐属性值
                 AttrValueConfidencePriority attrValueConfidencePriority = entry.getValue();
                 String recommendValue = attrValueConfidencePriority.getAttributeValue();
-                if (value.equalsIgnoreCase(recommendValue)) {
+                if (value.equals(recommendValue)) {
                     // 优先级加上置信度
                     priority += attrValueConfidencePriority.getConfidence();
                 } else if (isNum(value) && isNum(recommendValue)) {
@@ -72,15 +77,23 @@ public class BundleItem implements Comparable<BundleItem> {
     }
 
 
+    // 正则表达式匹配整数或浮点数
+    private static final Pattern NUMBER_PATTERN = Pattern.compile(
+            "^-?\\d+(\\.\\d+)?$"
+    );
+
     /**
-     * 特殊的判断段是否为数字的方法
-     * 这个地方为了效率仅判断最后一位是否为数字，如果最后一位是数字则认为这个字符串是数字（这是由数据集特性决定的）
-     *
-     * @param s 字符串
+     * 判断字符串是否为数字的方法
+     * @param str 要判断的字符串
      * @return 是否为数字
      */
-    private boolean isNum(String s) {
-        return !s.isEmpty() && Character.isDigit(s.charAt(s.length() - 1));
+    public static boolean isNum(String str) {
+        // 判断字符串是否为空
+        if (str.isEmpty()) {
+            return false;
+        }
+        // 判断字符串是否为数字
+        return NUMBER_PATTERN.matcher(str).matches();
     }
 
     public BundleItem(String rph) {

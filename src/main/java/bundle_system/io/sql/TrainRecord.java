@@ -107,18 +107,6 @@ public class TrainRecord implements Comparable<TrainRecord>{
 
     @Override
     public String toString() {
-        /*
-    训练记录字段返回示例
-        {
-            "train_id": "train-1",
-            "startTime": "2024-08-17 15:10:50",
-            "endTime": "2024-08-17 15:11:14",
-            "orderNumber": "1000",
-            "comments": "null",
-            "minSupport": "0.09000000357627869",
-            "minConfidence": "0.800000011920929"
-         }
-     */
         return "{\n" +
                 "\"train_id\": \""+this.tid +"\",\n" +
                 "\"startTime\": \""+this.startTime+"\",\n" +

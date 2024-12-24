@@ -10,9 +10,13 @@ import java.util.concurrent.*;
 
 import static bundle_system.io.SharedAttributes.*;
 
+/**
+ * 用于第二个接口打包查询的类，
+ * BundleTask类实现了Callable接口，用于在后台线程中执行打包任务。
+ */
 public class BundleTask implements Callable<Void> {
     private final Document doc;
-    private static final XPathFactory xPathfactory = XPathFactory.newInstance();
+    private static final XPathFactory xPathfactory = XPathFactory.newDefaultInstance();
     private final List<RulesStorage> rulesStorages;
 
     public BundleTask(Document doc, List<RulesStorage> rulesStorages) {

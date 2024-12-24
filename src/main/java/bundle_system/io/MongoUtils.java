@@ -139,7 +139,7 @@ public class MongoUtils {
     }
 
     public static void ordersMap2DB(Map<String, List<List<String>>> ordersMap, int type) {
-        ItemAttributesStorage itemAttributesStorage = SharedAttributes.getItemAttributesStorage()[type];
+        ItemAttributeNamesStorage itemAttributeNamesStorage = SharedAttributes.getItemAttributesStorage()[type];
         //获取集合名称
         String collectionName = SharedAttributes.FULL_NAMES[type] + SharedAttributes.ORDERS_FIELD_NAME;
         MongoCollection<Document> collection = mongoOrdersDatabase.getCollection(collectionName);
@@ -150,12 +150,13 @@ public class MongoUtils {
                 doc.append("orderId", entry.getKey());
                 if (!values.isEmpty()) {
                     //借用频繁项集的存储结构，将属性存入
-                    doc.append("attributes", itemAttributesStorage.getFrequentItemSetsDocument(value));
+                    doc.append("attributes", itemAttributeNamesStorage.getFrequentItemSetsDocument(value));
                     collection.insertOne(doc);
                 }
             }
         }
     }
+
 
     public static MongoCollection<Document> getRulesCollection(int type) {
         //获取集合名称
@@ -178,22 +179,22 @@ public class MongoUtils {
     public static void initializeItemAttributesStorages() {
         //排除测试以及训练集这两个特殊的种类
         for (int type = 1; type < SharedAttributes.FULL_NAMES.length; type++) {
-            SharedAttributes.itemAttributesStorage[type] = new ItemAttributesStorage();
+            SharedAttributes.itemAttributeNamesStorage[type] = new ItemAttributeNamesStorage();
             MongoCollection<Document> collection = getFrequentItemSetsCollection(type);
             FindIterable<Document> records = collection.find().sort(Sorts.descending(TRAINING_NUMBER_FIELD_NAME));
             //只用找到一个频繁项集中的itemAttributes中的所有属性名即可
             if (records.iterator().hasNext()) {
                 Document doc = records.iterator().next();
                 if (type == 1) {
-                    SharedAttributes.itemAttributesStorage[0] = new ItemAttributesStorage();
+                    SharedAttributes.itemAttributeNamesStorage[0] = new ItemAttributeNamesStorage();
                     Set<String> strings = ((Document) (doc.get(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME))).keySet();
                     for (String s : strings) {
-                        SharedAttributes.itemAttributesStorage[0].addAttribute(s);
+                        SharedAttributes.itemAttributeNamesStorage[0].addAttribute(s);
                     }
                 }
                 Set<String> strings = ((Document) (doc.get(SharedAttributes.ITEM_ATTRIBUTES_FIELD_NAME))).keySet();
                 for (String s : strings) {
-                    SharedAttributes.itemAttributesStorage[type].addAttribute(s);
+                    SharedAttributes.itemAttributeNamesStorage[type].addAttribute(s);
                 }
             }
 
@@ -223,39 +224,8 @@ public class MongoUtils {
             Document antecedent = new Document();
             //得到对应的集合
             MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + SharedAttributes.FULL_NAMES[type]);
-            if (SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET]
+            if (SharedAttributes.itemAttributeNamesStorage[SharedAttributes.TRAIN_TICKET]
                     .getRulesDocument(r.getList(0), antecedent)) {
-                doc.append("antecedent", antecedent);
-                //处理(consequent)
-                String[] parts = r.getList(1).get(0).toString().split(":");
-                //如果consequent是机票类型的属性，则跳过
-                if (parts[0].equals("Ticket")) {
-                    continue;
-                }
-                //添加consequent
-                doc.append("consequence", parts[1] + ":" + parts[2]);
-                //添加置信度
-                doc.append("confidence", Float.parseFloat(r.get(2).toString()));
-                //添加训练编号
-                doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(nextTrainingNumber));
-                //加入数据库
-                collection.insertOne(doc);
-            }
-        }
-    }
-
-    /**
-     * 读取规则，并存入MongoDB
-     */
-    public static void rules2db(Dataset<Row> rules, int type, int eva) {
-        for (Row r : rules.collectAsList()) {
-            //处理第0列antecedent
-            Document doc = new Document();
-            Document antecedent = new Document();
-            //得到对应的集合
-            MongoCollection<Document> collection = mongoKnowledgeDatabase.getCollection("r_" + SharedAttributes.FULL_NAMES[type]);
-            if (SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET]
-                    .getRulesDocument(r.getList(0), antecedent, eva)) {
                 doc.append("antecedent", antecedent);
                 //处理(consequent)
                 String[] parts = r.getList(1).get(0).toString().split(":");
@@ -299,9 +269,9 @@ public class MongoUtils {
                 continue;
             }
             //将ticketAttributes添加到doc
-            doc.append(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME, SharedAttributes.itemAttributesStorage[SharedAttributes.TRAIN_TICKET].getFrequentItemSetsDocument(ticketAttributes));
+            doc.append(SharedAttributes.TICKET_ATTRIBUTES_FIELD_NAME, SharedAttributes.itemAttributeNamesStorage[SharedAttributes.TRAIN_TICKET].getFrequentItemSetsDocument(ticketAttributes));
             //将goodAttributes添加到doc
-            doc.append("itemAttributes", SharedAttributes.itemAttributesStorage[type].getFrequentItemSetsDocument(goodAttributes));
+            doc.append("itemAttributes", SharedAttributes.itemAttributeNamesStorage[type].getFrequentItemSetsDocument(goodAttributes));
             //添加训练编号
             doc.append(TRAINING_NUMBER_FIELD_NAME, Integer.parseInt(nextTrainingNumber));
             //添加频次
@@ -312,7 +282,8 @@ public class MongoUtils {
     }
 
     /*
-     * 关闭MongoDB连接
+     * 关闭MongoDB连接，并写入训练信息
+     * 这是老方法之中用mongodb进行训练的结尾，现在已经被废弃
      */
     public static void settle(int orderNumber, String comments, double minSupport) {
 
@@ -336,9 +307,7 @@ public class MongoUtils {
         doc.append("minSupport", minSupport);
         //将doc加入数据库
         collection.insertOne(doc);
-
         nextTrainingNumber = (Integer.parseInt(nextTrainingNumber) + 1) + "";
-
     }
 
 }

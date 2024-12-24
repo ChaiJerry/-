@@ -2,28 +2,27 @@ package bundle_system.memory_query_system;
 
 import bundle_system.io.*;
 
-
-import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
 
 import static bundle_system.io.SharedAttributes.*;
-import static bundle_system.memory_query_system.QuickQuery.*;
 
+/**
+ * 规则存储系统，用于存储和查询关联规则。
+ * 需要注意的是这里由于初始化后都是读取操作因此并没有控制线程安全问题
+ * 之后若是希望拓展增加写入操作则需要考虑线程安全。
+ * @author lyt
+ */
 public class RulesStorage {
     //规则编号-规则map
-    private Map<Integer, AssociationRuleConsResult> rulesMap = new HashMap<>();
+    private final Map<Integer, AssociationRuleConsResult> rulesMap = new HashMap<>();
     //通过机票属性名查找【属性值-规则编号集合】map的map
     //外层map的key为属性名,value为该属性名对应的【属性值-规则编号集合】map
     //内层map的key为属性值，value为该属性值对应的规则编号集合
-    private Map<String, Map<String, Set<Integer>>> atttributeMap = new HashMap<>();
+    private final Map<String, Map<String, Set<Integer>>> atttributeMap = new HashMap<>();
+    //规则数量
     private int ruleCount = 0;
-    // 创建一个固定大小的线程池，现在暂时为1，主要是为了之后的拓展可以调整
-    private final ExecutorService executorService = Executors.newFixedThreadPool(1);
-    //private final RandomLRUPool lruPool = new RandomLRUPool(40);
-
+    //品类编码
     int type;
-    private static final List<RulesStorage> allRulesStorages = new ArrayList<>();
     /**
      * 构造函数
      *
@@ -31,12 +30,40 @@ public class RulesStorage {
      */
     public RulesStorage(int type) {
         this.type = type;
-        allRulesStorages.add(this);
     }
 
     /**
-     * 添加规则的方法
-     *
+     * 输出一个动态的进度条的方法
+     * @param percent      当前的进度百分比（0 到 100）
+     * @param progressBarName 进度条的名字
+     */
+    public static void printProgressBar(int percent, String progressBarName) {
+        if (percent < 0 || percent > 100) {
+            throw new IllegalArgumentException("Percent must be between 0 and 100");
+        }
+        // 进度条的总长度
+        int barLength = 50;
+        // 计算已完成的部分
+        int completed = (percent * barLength / 100);
+        // 构建进度条
+        StringBuilder progressBar = new StringBuilder(progressBarName + "\t [");
+        for (int i = 0; i < barLength; i++) {
+            if (i < completed) {
+                progressBar.append("\u001B[32m=\u001B[0m"); // 绿色的 "="
+            } else if (i == completed) {
+                progressBar.append(">");
+            } else {
+                progressBar.append(" ");
+            }
+        }
+        progressBar.append("] ").append(String.format("%3d%%", percent));
+        // 输出进度条
+        System.out.print("\r" + progressBar.toString());
+        System.out.flush(); // 确保立即输出
+    }
+
+    /**
+     * 向存储系统中添加规则的方法
      * @param ates 前件属性列表，格式为[Ticket:属性名:属性值]
      * @param rule 关联规则的后件以及confidence值
      */
@@ -51,6 +78,7 @@ public class RulesStorage {
             ticketAttributesTemplate.put(attributeName, attributeValue);
         }
         for (Map.Entry<String, String> entry : ticketAttributesTemplate.entrySet()) {
+            //遍历机票属性键值对
             String attributeName = entry.getKey();
             String attributeValue = entry.getValue();
             if (!atttributeMap.containsKey(attributeName)) {
@@ -76,13 +104,14 @@ public class RulesStorage {
     }
 
     /**
-     * 初始化所有规则存储对象的方法
+     * 初始化参数type对应的规则存储对象的方法
      * @param type 商品品类代码
      * @param itemTicketRules 商品规则列表
      * @return RulesStorage对象
      */
-    public static RulesStorage initRulesStorageByType(int type,List<List<String>> itemTicketRules){
-        //训练阶段
+    public static RulesStorage initRulesStorageByType(int type, List<List<String>> itemTicketRules){
+        //加载阶段
+        //初始化进度条信息
         String info = "正在初始化"+SharedAttributes.getFullNames()[type]+"知识库";
         printProgressBar(0, info);
         RulesStorage rulesStorage = new RulesStorage(type);
@@ -98,8 +127,8 @@ public class RulesStorage {
     }
 
     /**
-     * 根据机票属性查询规则后件的方法
-     *
+     * 根据机票属性查询规则后件的方法（用于测试）
+     *  会预处理机票属性，将机票属性列表转换为机票属性键值对
      * @param ateAttributes 机票属性列表，格式为[属性名:属性值]
      */
     public Map<String, AttrValueConfidencePriority> queryItemAttributesAndConfidence(List<String> ateAttributes) {
@@ -110,22 +139,19 @@ public class RulesStorage {
             //att[0]为属性名,att[1]为属性值
             String attributeName = att[0];
             String attributeValue = att[1];
+            //放入机票属性键值对
             ateAttributesTemplate.put(attributeName, attributeValue);
         }
-        return queryItemAttributes(ateAttributesTemplate);
+        return queryBestRules(ateAttributesTemplate);
     }
 
-    public void shutdown() {
-        executorService.shutdownNow();
-    }
-
-    public static void shutdownAll() {
-        for (RulesStorage rulesStorage : allRulesStorages) {
-            rulesStorage.shutdown();
-        }
-    }
-
-    public Map<String, AttrValueConfidencePriority> queryItemAttributes(Map<String, String> ateAttributes) {
+    /**
+     * 根据机票属性查询最匹配的所有关联规则的方法
+     * 这些关联规则的后件是商品属性键值对，当规则充分时会填充商品的所有属性
+     * @param ateAttributes 作为前件的机票属性键值对
+     * @return 最匹配的规则后件的集合，商品属性键值对，其中键是属性名，值是属性值和置信度以及优先度
+     */
+    public Map<String, AttrValueConfidencePriority> queryBestRules(Map<String, String> ateAttributes) {
         //用于储存查到的对应规则编号集合的列表
         List<Set<Integer>> ruleIdSets = new ArrayList<>();
         //用于储存属性值为null的对应规则编号集合的列表
@@ -136,6 +162,7 @@ public class RulesStorage {
             //得到属性名以及属性值对应的规则集合，如果属性名不存在，则返回空集合
             String attributeName = ateAttribute.getKey();
             String attributeValue = ateAttribute.getValue();
+            // 得到属性名对应的规则编号集合
             Map<String, Set<Integer>> attriValueRuleIdSetsMap = atttributeMap.get(attributeName);
             if (attriValueRuleIdSetsMap == null) {
                 attriValueRuleIdSetsMap = new HashMap<>();
@@ -145,89 +172,53 @@ public class RulesStorage {
             // 当确定好顺序后，关联规则前件的属性属性值为null的id集合(nullRuleIdSets)按理来说可以直接得到
             // 但是为了保险起见还是每次都得到一个新的
             nullRuleIdSets.add(attriValueRuleIdSetsMap.getOrDefault(null, new HashSet<>()));
+            // 将规则编号集合放入列表中，列表中对应着不同属性对应的规则编号集合
             ruleIdSets.add(ruleIds);
             allRuleIds.addAll(ruleIds);
         }
-        // map中前面是属性名，后面是属性值和置信度
+        // map中键是属性名，值是属性值和置信度以及优先度
+        // 这里是在得到一个商品属性模板
         Map<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
+        // 遍历所有可能的规则编号集合
         for (int ruleId : allRuleIds) {
             int queryValue = 0;// 满足查询条件的数量
             boolean qualified = true;
+            // 遍历该规则所有属性值
             for (int i = 0; i < ruleIdSets.size(); i++) {
                 if (ruleIdSets.get(i).contains(ruleId)) {
+                    // 如果某个属性值满足，就说明这个前件符合查询条件
                     queryValue++;
                 }else if(!nullRuleIdSets.get(i).contains(ruleId)){
+                    // 如果某个属性值既不满足也不为null，就说明这个前件不符合查询条件，直接跳过这个规则
                     qualified = false;
                     break;
                 }
             }
+            // 如果某个规则的前件不符合查询条件，则直接跳过该规则
             if (!qualified) {
                 continue;
             }
+            // 到这里的规则满足条件，则尝试将该规则的后件加入到结果中
             AssociationRuleConsResult associationRuleConsResult = rulesMap.get(ruleId);
+            // 得到置信度
             double confidence = associationRuleConsResult.getConfidence();
-            String AttributeName = associationRuleConsResult.getAttributeName();
-            String AttributeValue = associationRuleConsResult.getAttributeValue();
-            attributeNameVCPMap.get(AttributeName).tryAssign(AttributeValue, queryValue, confidence);
+            // 得到后件属性名
+            String attributeName = associationRuleConsResult.getAttributeName();
+            // 得到后件属性值
+            String attributeValue = associationRuleConsResult.getAttributeValue();
+            // 尝试将该规则的后件加入到结果中
+            attributeNameVCPMap.get(attributeName).tryAssign(attributeValue, queryValue, confidence);
         }
         return attributeNameVCPMap;
     }
 
     /**
-     * 根据机票属性查询规则后件的方法
-     *
-     * @param ateAttributes 机票的属性键值对（作为关联规则前件，key为属性名，value为属性值）
-     * @return 商品属性键值对
+     * 获取规则数量
+     * @return 规则数量
      */
-    public Map<String, AttrValueConfidencePriority> queryItemAttributesAndConfidence(Map<String, String> ateAttributes) {
-        //用于储存查到的对应规则编号集合的列表
-        List<Set<Integer>> ruleIdSets = new ArrayList<>();
-        //用于储存属性值为null的对应规则编号集合的列表
-        List<Set<Integer>> nullRuleIdSets = new ArrayList<>();
-        List<String> ateAttributesValeList = new ArrayList<>();//用于作为lruPool的key
-        //用于储存查到的所有规则编号的集合
-        Set<Integer> AllRuleIds = new HashSet<>();
-        for (Map.Entry<String,String> ateAttribute : ateAttributes.entrySet()) {
-            //得到属性名以及属性值对应的规则集合，如果属性名不存在，则返回空集合
-            String attributeName = ateAttribute.getKey();
-            String attributeValue = ateAttribute.getValue();
-            ateAttributesValeList.add(attributeValue);
-            Set<Integer> integers = atttributeMap.get(attributeName).getOrDefault(attributeValue, new HashSet<>());
-            // 当确定好顺序后，关联规则前件的属性属性值为null的id集合(nullRuleIdSets)按理来说可以直接得到
-            // 但是为了保险起见还是每次都得到一个新的
-            nullRuleIdSets.add(atttributeMap.get(attributeName).getOrDefault(null, new HashSet<>()));
-            ruleIdSets.add(integers);
-            AllRuleIds.addAll(integers);
-        }
-        // map中前面是属性名，后面是属性值和置信度
-        Map<String, AttrValueConfidencePriority> attributeNameVCPMap = getAttributesMap(type);
-        // 提交查询任务到线程池
-        List<Future<?>> futures = new ArrayList<>();
-        for (int ruleId : AllRuleIds) {
-            futures.add(executorService.submit(new QueryTask(ruleId, ruleIdSets, attributeNameVCPMap, rulesMap,nullRuleIdSets)));
-        }
-
-//        //在lruPool中查询存储的机票属性对应的商品属性
-//        Map<String, AttrValueConfidencePriority> attrInLRUPool = lruPool.tryGet(ateAttributesValeList);
-//        if (attrInLRUPool != null) {
-//            //System.out.println("lru命中，查询到缓存");
-//            return attrInLRUPool;
-//        }
-
-        // 创建属性名-属性值查询结果
-        HashMap<String, String> result = new HashMap<>();
-        // 等待并获取查询结果
-        for (Future<?> future : futures) {
-            try {
-                future.get(); // 这会阻塞直到结果可用
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-        for (String attributeName : attributeNameVCPMap.keySet()) {
-            result.put(attributeName, attributeNameVCPMap.get(attributeName).getAttributeValue());
-        }
-//        lruPool.add(ateAttributesValeList, attributeNameVCPMap);
-        return attributeNameVCPMap;
+    public int getSize(){
+        //从规则映射中获取规则数量
+        return rulesMap.size();
     }
+
 }

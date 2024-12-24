@@ -1,4 +1,4 @@
-package mid_tests;
+package abandoned_tests;
 
 import org.junit.*;
 
@@ -12,7 +12,7 @@ public class TestCsvFileIO {
 
     @Test
     public void testReadTicket() throws IOException {
-        Map<String, List<List<String>>> testMap = fileIO.read(0);
+        Map<String, List<List<String>>> testMap = SharedAttributes.fileIO.read(0);
         int count = 0;
         for(Map.Entry<String, List<List<String>>> entry : testMap.entrySet()) {
             List<List<String>> value = entry.getValue();
@@ -22,11 +22,11 @@ public class TestCsvFileIO {
                     if(i==2||i==3){
                         continue;
                     }
-                    assertEquals(value.get(0).size(), value.get(1).size());
+                    Assert.assertEquals(value.get(0).size(), value.get(1).size());
                 }
             }
         }
-        assertTrue(count >= 10);
+        Assert.assertTrue(count >= 10);
     }
 
 

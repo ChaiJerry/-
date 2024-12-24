@@ -6,6 +6,9 @@ import org.w3c.dom.*;
 
 import java.util.*;
 
+/**
+ * 所有的打包方法在这里
+ */
 public class BundleMethods {
     private BundleMethods() {
     }
@@ -28,11 +31,11 @@ public class BundleMethods {
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
             //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryBestRules(entry.getValue().getAttributes());
             //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
             List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
             //排序
-            BackendBundleSystem.setPriorityAndSort(map, bundleItemList);
+            BackendBundleSystem.setPriorityAndSortWithNumParse(map, bundleItemList);
             //将排序好的附加产品添加到节点中
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
@@ -62,11 +65,11 @@ public class BundleMethods {
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
             //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryBestRules(entry.getValue().getAttributes());
             //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
             List<BundleItem> bundleItemList = bundleItems.get(entry.getKey());
             //排序
-            BackendBundleSystem.setPriorityAndSort(map, bundleItemList);
+            BackendBundleSystem.setPriorityAndSortWithNumParse(map, bundleItemList);
             //将排序好的附加产品添加到节点中
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
@@ -93,7 +96,7 @@ public class BundleMethods {
         //遍历ticketInfo，得到其中的机票属性
         for (Map.Entry<String, BundleItem> entry : ticketInfo.entrySet()) {
             //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryBestRules(entry.getValue().getAttributes());
             //预处理属性map，将座位列和subType对应
             preProcessSeatNoTOSubType(map);
             segAttributesmap.put(entry.getKey(), map);
@@ -104,7 +107,7 @@ public class BundleMethods {
             List<BundleItem> bundleItemList = entry.getValue();
             String segRef = entry.getKey().split("\\|")[0];
             //排序
-            BackendBundleSystem.setPriorityAndSort(segAttributesmap.get(segRef), bundleItemList);
+            BackendBundleSystem.setPriorityAndSortWithNumParse(segAttributesmap.get(segRef), bundleItemList);
             //将排序好的附加产品添加到节点中
             for (int i = 0, size = bundleItemList.size(); i < size; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
@@ -158,11 +161,11 @@ public class BundleMethods {
             }
             isFirstEntry = false;
             //根据机票属性查询附加产品规则，得到附加产品属性
-            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryItemAttributes(entry.getValue().getAttributes());
+            Map<String, AttrValueConfidencePriority> map = rulesStorage.queryBestRules(entry.getValue().getAttributes());
             //根据机票属性查询附加产品航段，得到附加产品航段的商品键值对
             List<BundleItem> bundleItemList = bundleItems.get(null);
             //排序
-            BackendBundleSystem.setPriorityAndSort(map, bundleItemList);
+            BackendBundleSystem.setPriorityAndSortWithNumParse(map, bundleItemList);
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItem bundleItem = bundleItemList.get(i);
                 //将排序好的附加产品添加到节点中

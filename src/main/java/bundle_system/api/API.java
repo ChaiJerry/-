@@ -2,9 +2,17 @@ package bundle_system.api;
 
 import java.util.*;
 
-import static bundle_system.data_generating_system.FPGrowth.*;
+import static bundle_system.train_system.FPGrowth.*;
 
+/**
+ * 用于训练的API类
+ * ，封装了FPGrowth的singleTypeMining方法
+ * ，方便外部调用。
+ */
 public class API {
+    /**
+     * 私有构造器，防止实例化
+     */
     private API() {}
 
     /**

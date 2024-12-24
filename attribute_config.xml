@@ -24,6 +24,6 @@
         <attribute name="INSURANCE_COMPANYCODE" type="string"/>
     </item>
     <item name="Seat">
-            <attribute name="SEAT_NO" type="string" comment="这里只有一个字母表示其具体位置 如ABC等"/>
+        <attribute name="SEAT_NO" type="string" comment="这里只有一个字母表示其具体位置 如ABC等"/>
     </item>
 </Configuration>

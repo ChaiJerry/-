@@ -7,14 +7,14 @@ import org.junit.*;
 import java.io.*;
 
 import static bundle_system.data_processer.DataConverter.*;
-import static bundle_system.data_generating_system.FPGrowth.*;
+import static bundle_system.train_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 public class TestDataConverter {
 
     @Test
     public void testRow2rule() throws IOException {
-        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1,0);
+        Dataset<Row> rowDataset = getFileIO().csv2datasetByType(1);
         FPGrowthModel model = train(rowDataset);
         Dataset<Row> ruleDataset = model.associationRules();
         for (Row row : ruleDataset.collectAsList()) {

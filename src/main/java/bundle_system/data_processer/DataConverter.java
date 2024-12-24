@@ -6,7 +6,7 @@ import org.bson.*;
 
 import java.util.*;
 
-import static bundle_system.data_generating_system.FPGrowth.*;
+import static bundle_system.train_system.FPGrowth.*;
 import static bundle_system.io.SharedAttributes.*;
 
 
@@ -14,6 +14,7 @@ public class DataConverter {
     private DataConverter() {
     }
 
+    //将机票舱位字母转化为舱位等级相关字段
     // 头等舱
     protected static List<String> firstClassGrades = new ArrayList<>(Arrays.asList("F", "A", "P"));
 
@@ -25,7 +26,9 @@ public class DataConverter {
             "B","Y", "K", "H", "M", "N", "L", "Q", "E", "T", "X", "U", "W", "R", "O"));
 
     // 其余是特殊舱位
-
+    private static String priceGrade2price(String priceGrade,int grade){
+        return Integer.parseInt(priceGrade) * grade+"";
+    }
 
 
     //将训练得到的包含关联规则信息的dataset中的数据转化为List<String>
@@ -200,6 +203,12 @@ public class DataConverter {
         return sb.toString();
     }
 
+    /**
+     * 从历史订单中获取商品名称和价格
+     * @param document 历史订单（Document格式）
+     * @param type 品类编码
+     * @return 商品名称和价格列表，第一个元素为商品名称（String），第二个元素为价格（String）
+     */
     public static List<String> getItemNameAndPriceFromDocument(Document document, int type) {
         List<String> result = new ArrayList<>();
         List<String> targetItemNames = getTargetItemNames(type);
@@ -215,6 +224,12 @@ public class DataConverter {
         return result;
     }
 
+    /**
+     * 获得历史订单之中商品价格的方法
+     * @param document 历史订单（Document格式）
+     * @param type 品类编码
+     * @return 商品价格（String格式）
+     */
     private static String getPriceFromDocument(Document document, int type) {
        Document document1 = ((Document) document.get(ATTRIBUTES_FIELD_NAME));
        if(type==MEAL){
@@ -227,11 +242,12 @@ public class DataConverter {
            return "0";
        }
     }
-    private static String priceGrade2price(String priceGrade,int grade){
-        return Integer.parseInt(priceGrade) * grade+"";
-    }
 
 
+    /**将一串属性列表转化为Dataset<Row>的方法
+     * @param attributeLists 属性列表的List
+     * @return Dataset<Row>格式的属性列表
+     */
     public static Dataset<Row> listOfAttributeList2Dataset (List<List<String>> attributeLists){
         List<Row> data = new ArrayList<>();
         for (List<String> attributeList : attributeLists) {

@@ -12,9 +12,7 @@ public class SharedAttributes {
     public static final Logger logger = Logger.getLogger("BundleSystem");
     private SharedAttributes() {
     }
-    //之后若是要添加新的品类，则在此处添加一个名字，并注册到FULL_NAMES中
-    protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
-    //下面用于定义商品品类对应的编号，其实可以换成枚举类
+    //下面用于定义商品品类对应的编号，不使用枚举类的原因是更方便抽取遍历
     public static final int TICKET = 0;
     public static final int HOTEL = 1;
     public static final int MEAL = 2;
@@ -28,54 +26,30 @@ public class SharedAttributes {
     public static final int TRAIN_TICKET = 6 ;//值为FULL_NAMES.length + 1
     //测试订单的品类编号
     public static final int TEST_TICKET = 7 ; //值为FULL_NAMES.length + 2
+    //之后若是要添加新的品类，则在此处添加一个名字，并注册到FULL_NAMES中
+    protected static final String[] FULL_NAMES = {"Ticket", "Hotel", "Meal", "Baggage", "Insurance", "Seat"};
 
-    public static final String TICKET_ATTRIBUTES_FIELD_NAME = "ticketAttributes";
     //用于添加到属性中的品类标识
     //机票标识
-    public static final String T_SIGN = "Ticket:";
-    //餐食标识
-    public static final String M_SIGN = "Meal:";
-    //行李标识
-    public static final String B_SIGN = "Baggage:";
+    public static final String T_SIGN = FULL_NAMES[TICKET]+":";
     //酒店标识
-    public static final String H_SIGN = "Hotel:";
+    public static final String H_SIGN = FULL_NAMES[HOTEL]+":";
+    //餐食标识
+    public static final String M_SIGN =  FULL_NAMES[MEAL]+":";
+    //行李标识
+    public static final String B_SIGN = FULL_NAMES[BAGGAGE]+":";
     //保险标识
-    public static final String I_SIGN = "Insurance:";
+    public static final String I_SIGN = FULL_NAMES[INSURANCE]+":";
     //选座标识
-    public static final String S_SIGN = "Seat:";
-    //若是之后要添加新的品类，则在注册标识
+    public static final String S_SIGN = FULL_NAMES[SEAT]+":";
+
+    //若是之后要添加新的品类，则在注册新标识
+
+    ////////////////////////////
+    public static final String TICKET_ATTRIBUTES_FIELD_NAME = "ticketAttributes";
 
     //之后要是添加新的品类，则在此处添加，并注册到itemAttributeNames中
-    private final static List<String[]> itemAttributeNames = new ArrayList<>();
-    static {
-        itemAttributeNames.add(ConstItemAttributes.TICKET_ATTRIBUTES);
-        itemAttributeNames.add(ConstItemAttributes.HOTEL_ATTRIBUTES);
-        itemAttributeNames.add(ConstItemAttributes.MEAL_ATTRIBUTES);
-        itemAttributeNames.add(ConstItemAttributes.BAGGAGE_ATTRIBUTES);
-        itemAttributeNames.add(ConstItemAttributes.INSURANCE_ATTRIBUTES);
-        itemAttributeNames.add(ConstItemAttributes.SEAT_ATTRIBUTES);
-        //用于训练测试的属性，这里和普通机票属性存储一样
-        itemAttributeNames.add(ConstItemAttributes.TICKET_ATTRIBUTES);
-        //之后要是添加新的品类，则在此处添加
-    }
-    public static Map<String,String> getTicketAttributesTemplate() {
-        Map<String, String> attributes = new HashMap<>();
-        for (String ticketAttribute : ConstItemAttributes.TICKET_ATTRIBUTES) {
-            attributes.put(ticketAttribute, null);
-        }
-        return attributes;
-    }
-
-
-    public static Map<String, AttrValueConfidencePriority> getAttributesMap(int type) {
-        Map<String, AttrValueConfidencePriority> attributesMap = new HashMap<>();
-        for(String attributeName : itemAttributeNames.get(type)) {
-           attributesMap.put(attributeName, new AttrValueConfidencePriority());
-        }
-        return attributesMap;
-    }
-
-
+    private static final List<String[]> itemAttributeNames = ConstItemAttributes.itemAttributeNames;
 
     protected static final int[] attributeNumForEachType = {0, ConstItemAttributes.HOTEL_ATTRIBUTES.length, ConstItemAttributes.MEAL_ATTRIBUTES.length, ConstItemAttributes.BAGGAGE_ATTRIBUTES.length,
             ConstItemAttributes.INSURANCE_ATTRIBUTES.length, ConstItemAttributes.SEAT_ATTRIBUTES.length};
@@ -86,13 +60,15 @@ public class SharedAttributes {
 
     protected static Map<String, List<List<String>>> testTicketsMap;
 
-    public static ItemAttributesStorage[] getItemAttributesStorage() {
-        return itemAttributesStorage;
+    public static ItemAttributeNamesStorage[] getItemAttributesStorage() {
+        return itemAttributeNamesStorage;
     }
 
     //存储每个品类下的商品属性，用于快速查找，主要从CSV文件的头文件读取
-    protected static ItemAttributesStorage[] itemAttributesStorage = new ItemAttributesStorage[9];
+    protected static ItemAttributeNamesStorage[] itemAttributeNamesStorage = new ItemAttributeNamesStorage[9];
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // 下面区域是展示中可能使用到的常量
     // 最小置信度
     public static final double MIN_CONFIDENCE;
     // 最小支持度
@@ -135,14 +111,16 @@ public class SharedAttributes {
     public static final String ATTRIBUTES_FIELD_NAME = "attributes";
     public static final String ITEM_ATTRIBUTES_FIELD_NAME = "itemAttributes";
     public static final String TRAINING_NUMBER_FIELD_NAME = "trainingNumber";
+    // 共享的测试用CSVFileIO对象,请不要在实际生产环境之中直接引用它
+    public static final CSVFileIO fileIOForTest;
+    ////////////////////////////////////////////////////////////////////////////////
     public static final double LITTLE_DOUBLE =10e-7;//一个非常小的数，用于抵消掉浮点数无法精确表示导致的误差
 
-    // 创建CSVFileIO对象
-    public static final CSVFileIO fileIO;
+
 
     static {
+        // 暂时的fileIO
         CSVFileIO tmpFileIO;
-
         // 创建Properties对象
         Properties properties = new Properties();
         // 读取配置文件
@@ -182,14 +160,8 @@ public class SharedAttributes {
         // 获取训练备注
         COMMENT = properties.getProperty("comment");
 
-        //初始化一个静态的CSVFileIO对象，仅作为测试，在生产环境下不要使用
-        try {
-            tmpFileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
-        } catch (IOException e) {
-            tmpFileIO = null;
-            //logger.info("创建CSVFileIO对象失败");
-        }
-        fileIO = tmpFileIO;
+        //作为商品的唯一标识符属性的field名
+        // （用于MongoDB中查找商品以展示）
         targetItemFieldNames = new ArrayList<>();
         targetItemFieldNames.add(new ArrayList<>());
         targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + ConstItemAttributes.HOTEL_NAME, ATTRIBUTES_FIELD + ConstItemAttributes.PRODUCT_NAME));
@@ -198,6 +170,8 @@ public class SharedAttributes {
         targetItemFieldNames.add(Arrays.asList(ATTRIBUTES_FIELD + ConstItemAttributes.INSUR_PRO_NAME, ATTRIBUTES_FIELD + ConstItemAttributes.INSURANCE_COMPANYCODE));
         targetItemFieldNames.add(List.of(ATTRIBUTES_FIELD + ConstItemAttributes.SEAT_NO));
 
+        //作为商品的唯一标识符属性的名字
+        // （用于MongoDB中查找商品以展示）
         targetItemNames = new ArrayList<>();
         targetItemNames.add(new ArrayList<>());
         targetItemNames.add(Arrays.asList(ConstItemAttributes.HOTEL_NAME, ConstItemAttributes.PRODUCT_NAME));
@@ -208,29 +182,69 @@ public class SharedAttributes {
 
         //初始化属性储存的结构体
         for(int i = HOTEL;i < TEST_TICKET;i++) {
-            itemAttributesStorage[i] = new ItemAttributesStorage();
+            itemAttributeNamesStorage[i] = new ItemAttributeNamesStorage();
             for (String s : itemAttributeNames.get(i)){
-                itemAttributesStorage[i].addAttribute(s);
+                itemAttributeNamesStorage[i].addAttribute(s);
             }
         }
-
+        //初始化测试订单的属性名储存的结构体（用作测试）
+        itemAttributeNamesStorage[TEST_TICKET] = new ItemAttributeNamesStorage();
+        //初始化一个静态的CSVFileIO对象，仅作为测试，在生产环境下不要使用
+        try {
+            tmpFileIO = new CSVFileIO(RESULT_DIR_PATH, PATH_T, PATH_H, PATH_M, PATH_B, PATH_I, PATH_S);
+        } catch (IOException e) {
+            tmpFileIO = null;
+        }
+        fileIOForTest = tmpFileIO;
     }
 
+    /**
+     * 获取指定品类下的作为标识符的属性名的field名
+     * @param type 品类编号
+     * @return 品类下的作为标识符的属性名的field名
+     */
     public static List<String> getTargetItemNames(int type) {
         return targetItemNames.get(type);
     }
 
-
+    /**
+     * 获取指定品类下的作为标识符的属性名的field名
+     * @param type 品类编号
+     * @return 品类下的作为标识符的属性名的field名
+     */
     public static List<String> getTargetItemFieldNames(int type) {
         return targetItemFieldNames.get(type);
     }
 
-    public static Map<String, List<List<String>>> getTestTicketsMap() {
-        return testTicketsMap;
-    }
-
+    /**
+     * 得到所有品类商品的全名
+     * @return 商品全名的数组
+     */
     public static String[] getFullNames() {
         return FULL_NAMES;
     }
+    /**
+     * 获取机票的属性模板，用于在打包时初始化所有机票属性
+     * @return 获取机票的属性模板
+     */
+    public static Map<String,String> getTicketAttributesTemplate() {
+        Map<String, String> attributes = new HashMap<>();
+        for (String ticketAttribute : ConstItemAttributes.TICKET_ATTRIBUTES) {
+            attributes.put(ticketAttribute, null);
+        }
+        return attributes;
+    }
 
+    /**
+     * 获取指定品类下的属性模板
+     * @param type 品类编号
+     * @return 品类下的属性模板，用于在打包时初始化所有该品类的属性
+     */
+    public static Map<String, AttrValueConfidencePriority> getAttributesMap(int type) {
+        Map<String, AttrValueConfidencePriority> attributesMap = new HashMap<>();
+        for(String attributeName : itemAttributeNames.get(type)) {
+            attributesMap.put(attributeName, new AttrValueConfidencePriority());
+        }
+        return attributesMap;
+    }
 }

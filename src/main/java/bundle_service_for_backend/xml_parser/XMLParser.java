@@ -8,24 +8,36 @@ import javax.xml.xpath.*;
 import java.util.*;
 
 import static bundle_system.data_processer.DataConverter.*;
+import static bundle_system.io.ConstItemAttributes.*;
 import static bundle_system.io.SharedAttributes.*;
 
+/**
+ * 解析XML文件的类
+ * ，用于从XML文件中提取各种商品信息信息
+ */
 public class XMLParser {
+    // 实例化后用该xpath解析保证线程安全
     private final XPath xpath;
 
-    public List<ParseMethod> getParseMethods() {
-        return parseMethodMethods;
-    }
 
-    private final List<ParseMethod> parseMethodMethods = new ArrayList<>();
+    // 解析方法列表，用于解析不同类型的商品信息
+    private final List<ParseMethod> parseMethods = new ArrayList<>();
 
     public XMLParser(XPath xpath) {
-        parseMethodMethods.add(null);
-        parseMethodMethods.add(null);
-        parseMethodMethods.add(this::parseMeal);
-        parseMethodMethods.add(this::parseBaggage);
-        parseMethodMethods.add(this::parseInsurances);
-        parseMethodMethods.add(this::parseSeat);
+        // 机票类型的解析方法有两个，分别是parseMeal和parseBaggage
+        // ，所以无法填入列表
+        parseMethods.add(null);
+        // 预留位置，用于后续扩展酒店类型的解析方法
+        parseMethods.add(null);
+        // meal解析方法对应在列表中的位置为常量MEAL的值
+        parseMethods.add(this::parseMeal);
+        // baggage解析方法对应在列表中的位置为常量BAGGAGE的值
+        parseMethods.add(this::parseBaggage);
+        // Insurance类型的解析方法对应在列表中的位置为常量INSURANCE的值
+        parseMethods.add(this::parseInsurances);
+        // Seat类型的解析方法对应在列表中的位置为常量SEAT的值
+        parseMethods.add(this::parseSeat);
+        // 为其中的xpath赋值
         this.xpath = xpath;
     }
 
@@ -51,16 +63,20 @@ public class XMLParser {
             comboSourceMap.put(rph, bundleItem);
             // 得到出发时间
             Element flightSegment = getElementByRelativePath(originDestinationOption, "FlightSegment");
+            // 将时间解析成月份
             String month = flightSegment.getAttribute(ARRIVAL_DATE_TIME).split("-")[1];
+            // 添加到bundleItem中（这里用MONTH作为名字）
             bundleItem.addAttributeNameValuePair(MONTH, month);
-            // 得到出发地和目的地
+            // 得到出发地机场代码
             Element departureAirport = getElementByRelativePath(flightSegment, "DepartureAirport");
             String departureLocationCode = departureAirport.getAttribute(LOCATION_CODE);
-            // 添加到bundleItem中（为了和训练中的属性名称一致，这里用FROM和TO）
-            bundleItem.addAttributeNameValuePair("FROM", departureLocationCode);
+            // 添加到bundleItem中（为了和训练中的属性名称一致，这里用FROM）
+            bundleItem.addAttributeNameValuePair(FROM, departureLocationCode);
+            // 得到目的地机场代码
             Element arrivalAirport = getElementByRelativePath(flightSegment, "ArrivalAirport");
             String arrivalLocationCode = arrivalAirport.getAttribute(LOCATION_CODE);
-            bundleItem.addAttributeNameValuePair("TO", arrivalLocationCode);
+            // 添加到bundleItem中（为了和训练中的属性名称一致，这里用TO）
+            bundleItem.addAttributeNameValuePair(TO, arrivalLocationCode);
         }
         String airItineraryPricingInfoXpath = "/OJ_ComboSearchRS/ComboSource/PricedItinerary/AirItineraryPricingInfo";
         NodeList airItineraryPricingInfos = (NodeList) xpath.evaluate(airItineraryPricingInfoXpath, root, XPathConstants.NODESET);
@@ -78,6 +94,7 @@ public class XMLParser {
                     Element fareInfo = (Element) fareInfoElement.item(j);
                     // 得到航段RPH
                     String flightSegmentRPH = fareInfo.getAttribute("FlightSegmentRPH");
+                    // 通过RPH找到对应的BundleItem（机票）对象
                     BundleItem bundleItem = comboSourceMap.get(flightSegmentRPH);
                     if (bundleItem == null) {
                         throw new BundleException("ComboSource中前后航段信息不匹配！");
@@ -85,21 +102,29 @@ public class XMLParser {
 
                     // 得到舱位等级
                     Element fareReference = getElementByRelativePath(fareInfo, "FareReference");
+                    // 将舱位等级转换为具体的等级
+                    // ，例如经济舱、商务舱等
                     String grade = ticketGrade2Specific(fareReference.getAttribute("CabinCode"));
-                    bundleItem.addAttributeNameValuePair("T_GRADE", grade);
+                    // 添加到bundleItem中（为了和训练中的属性名称一致，这里用T_GRADE）
+                    bundleItem.addAttributeNameValuePair(T_GRADE, grade);
 
-                    // 得到折扣
+                    // 得到折扣属性
                     Element info = getElementByRelativePath(fareInfo, "FareInfo");
+                    // 得到折扣百分比
                     String discount = info.getAttribute("DisCount");
+                    // 将折扣其转换为具体的折扣等级
                     String promotionRateGrade = (((int) (100 - Double.parseDouble(discount) * 100 + LITTLE_DOUBLE)) / 10) + "";
-
-                    bundleItem.addAttributeNameValuePair("PROMOTION_RATE", promotionRateGrade);
+                    // 将折扣属性（包括属性名和属性值）加入商品中
+                    bundleItem.addAttributeNameValuePair(PROMOTION_RATE, promotionRateGrade);
 
                     // 得到折扣前价格
                     Element fare = getElementByRelativePath(info, "Fare");
+                    // 解析价格
                     String baseCabinClassAmount = fare.getAttribute("BaseCabinClassAmount");
+                    // 将价格转换为具体的等级
                     Integer priceGrade = DataParser.floatStr2Attribute(baseCabinClassAmount, 1000);
-                    bundleItem.addAttributeNameValuePair("T_FORMER", priceGrade + "");
+                    // 将价格属性（包括属性名和属性值）加入商品中
+                    bundleItem.addAttributeNameValuePair(T_FORMER, priceGrade + "");
                 }
                 break;
             }
@@ -112,7 +137,7 @@ public class XMLParser {
         String isChild = typeElement.getAttribute("Code").equals("ADT") ? "0" : "1";
         for (BundleItem bundleItem : comboSourceMap.values()) {
             // 加入旅客类型属性，可以为字符串0或1以匹配训练数据
-            bundleItem.addAttributeNameValuePair("HAVE_CHILD", isChild);
+            bundleItem.addAttributeNameValuePair(HAVE_CHILD, isChild);
         }
     }
 
@@ -144,10 +169,10 @@ public class XMLParser {
             Element departureAirport = getElementByRelativePath(flightSegment, "DepartureAirport");
             String departureLocationCode = departureAirport.getAttribute(LOCATION_CODE);
             // 添加到bundleItem中（为了和训练中的属性名称一致，这里用FROM和TO）
-            bundleItem.addAttributeNameValuePair("FROM", departureLocationCode);
+            bundleItem.addAttributeNameValuePair(FROM, departureLocationCode);
             Element arrivalAirport = getElementByRelativePath(flightSegment, "ArrivalAirport");
             String arrivalLocationCode = arrivalAirport.getAttribute(LOCATION_CODE);
-            bundleItem.addAttributeNameValuePair("TO", arrivalLocationCode);
+            bundleItem.addAttributeNameValuePair(TO, arrivalLocationCode);
         }
         //如果要极优化，可以储存之前访问过的节点，然后用相对路径来访问
         String airItineraryPricingInfoXpath = "/OJ_ComboSearchRQ/ComboSource/PricedItinerary/AirItineraryPricingInfo";
@@ -174,20 +199,20 @@ public class XMLParser {
                     // 得到舱位等级
                     Element fareReference = getElementByRelativePath(fareInfo, "FareReference");
                     String grade = ticketGrade2Specific(fareReference.getAttribute("CabinCode"));
-                    bundleItem.addAttributeNameValuePair("T_GRADE", grade);
+                    bundleItem.addAttributeNameValuePair(T_GRADE, grade);
 
                     // 得到折扣
                     Element info = getElementByRelativePath(fareInfo, "FareInfo");
                     String discount = info.getAttribute("DisCount");
                     String promotionRateGrade = (((int) (100 - Double.parseDouble(discount) * 100 + LITTLE_DOUBLE)) / 10) + "";
 
-                    bundleItem.addAttributeNameValuePair("PROMOTION_RATE", promotionRateGrade);
+                    bundleItem.addAttributeNameValuePair(PROMOTION_RATE, promotionRateGrade);
 
                     // 得到折扣前价格
                     Element fare = getElementByRelativePath(info, "Fare");
                     String baseCabinClassAmount = fare.getAttribute("BaseCabinClassAmount");
                     Integer priceGrade = DataParser.floatStr2Attribute(baseCabinClassAmount, 1000);
-                    bundleItem.addAttributeNameValuePair("T_FORMER", priceGrade + "");
+                    bundleItem.addAttributeNameValuePair(T_FORMER, priceGrade + "");
                 }
                 break;
             }
@@ -205,19 +230,25 @@ public class XMLParser {
     public Map<String,List<BundleItem>> parseInsurances(Element root) throws XPathExpressionException {
         List<BundleItem> bundleItems = new ArrayList<>();
         String planForQuoteRSXpath = "/OJ_ComboSearchRS/ComboWith/Insurance/PlanForQuoteRS";
+        // 解析保险信息
         NodeList planForQuoteRSXs = (NodeList) xpath.evaluate(planForQuoteRSXpath, root, XPathConstants.NODESET);
+        // 遍历每个保险商品的信息
         for (int i = 0; i < planForQuoteRSXs.getLength(); i++) {
+            // 得到每个保险的详细信息
             Element planForQuoteRSX = (Element) planForQuoteRSXs.item(i);
+            // bundleItem的RPH为null，因为保险按理来说覆盖两边，不需要考虑航段信息来区分
             BundleItem bundleItem = new BundleItem(null, planForQuoteRSX.cloneNode(true));
+            // 将保险加入到保险列表中
             bundleItems.add(bundleItem);
             // 得到保险的名称
             String name = planForQuoteRSX.getAttribute("Name");
-            bundleItem.addAttributeNameValuePair("INSUR_PRO_NAME", name);
+            // 将保险的名称加入到bundleItem中
+            bundleItem.addAttributeNameValuePair(INSUR_PRO_NAME, name);
 
             // 得到保险的金额
             Element planCost = getElementByRelativePath(planForQuoteRSX, "PlanCost");
             String amount = Integer.parseInt(planCost.getAttribute(AMOUNT).split("\\.")[0]) + ".00";
-            bundleItem.addAttributeNameValuePair("INSUR_AMOUNT", amount);
+            bundleItem.addAttributeNameValuePair(INSUR_AMOUNT, amount);
 
             //得到保险的公司代码
             String providerCompanyXpath = "QuoteDetail/ProviderCompany";
@@ -424,7 +455,9 @@ public class XMLParser {
      */
     public void renewComboWith(Element root, Element comboWith) throws XPathExpressionException {
         Element oldComboWith = getElementByRelativePath(root, "ComboWith");
+        // 清空旧的comboWith节点，方便后续添加新的节点
         root.removeChild(oldComboWith);
+        // 添加新的comboWith节点到根节点中
         root.appendChild(comboWith);
     }
 
@@ -451,6 +484,13 @@ public class XMLParser {
     public NodeList getElementsByRelativePath(Element element, String relativePath) throws XPathExpressionException {
         return (NodeList) xpath.evaluate(relativePath, element, XPathConstants.NODESET);
     }
+    /**
+     * 获得所有的解析方法
+     * @return 解析方法的列表
+     */
+    public List<ParseMethod> getParseMethods() {
+        return parseMethods;
+    }
 
     //一些常用的常量
     public static final String LOCATION_CODE = "LocationCode";
@@ -459,5 +499,4 @@ public class XMLParser {
     public static final String SUPPLIER_PRODUCT_CODE = "SupplierProductCode";
     public static final String RPH = "RPH";
     public static final String ARRIVAL_DATE_TIME = "ArrivalDateTime";
-    public static final String MONTH = "MONTH";
 }

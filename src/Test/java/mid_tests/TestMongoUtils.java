@@ -10,7 +10,7 @@ import org.apache.spark.sql.*;
 import org.bson.*;
 import org.junit.*;
 
-import static bundle_system.data_generating_system.FPGrowth.*;
+import static bundle_system.train_system.FPGrowth.*;
 import static org.junit.Assert.*;
 
 import java.io.*;
@@ -48,7 +48,7 @@ public class TestMongoUtils {
     public void testDatasets2DBFunction() throws IOException {
         int trainingNumber = getTrainingNumber(mongoDatabase
                 .getCollection("TrainingController")) + 1;
-        Dataset<Row> rowDataset = getFileIO().singleTypeCsv2dataset(1,0);
+        Dataset<Row> rowDataset = getFileIO().csv2datasetByType(1);
         FPGrowthModel model = train(rowDataset);
         Dataset<Row> frequentItemSet = model.freqItemsets();
         Dataset<Row> ruleDataset = model.associationRules();

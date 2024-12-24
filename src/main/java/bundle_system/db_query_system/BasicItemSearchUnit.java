@@ -11,17 +11,31 @@ import static com.mongodb.client.model.Projections.*;
 import static bundle_system.data_processer.DataConverter.*;
 import static bundle_system.io.SharedAttributes.*;
 
+/**
+ * 单个商品的搜索单元，用于单个商品属性的搜索
+ * 利用这个单元进行基础的商品搜索
+ * ，当使用多个该单元进行bfs搜索时便可以得到想要的结果
+ */
 public class BasicItemSearchUnit {
     //用于单个搜索的属性
     private final List<Map.Entry<String, String>> itemAttributes;
-    //用于多个搜索的属性
-    private List<Map.Entry<String, String>> itemAttributeAndConfidencePriority;
+    //指向mongoDB订单库的集合
     private final MongoCollection<Document> collection;
+    //传入的bfs搜索队列，用于bfs搜索
     private final Queue<BasicItemSearchUnit> bfsQueue;
+    //已经访问过的节点集合，用于bfs搜索
     private final Set<Integer> haveVisited;
+    //商品类型编码，用于确定实际对字段的处理
     private final int type;
 
-
+    /**
+     * 构造函数，用于初始化单个商品的搜索单元
+     * @param itemAttributes 单个商品属性的键值对列表
+     * @param collection mongoDB订单库的集合
+     * @param type 商品类型编码
+     * @param bfsQueue 传入的bfs搜索队列，用于bfs搜索
+     * @param haveVisited 已经访问过的节点集合，用于bfs搜索
+     */
     public BasicItemSearchUnit(List<Map.Entry<String, String>> itemAttributes
             , MongoCollection<Document> collection, int type
             , Queue<BasicItemSearchUnit> bfsQueue, Set<Integer> haveVisited) {
@@ -32,10 +46,11 @@ public class BasicItemSearchUnit {
         this.haveVisited = haveVisited;
     }
 
-//    public ItemSearchUnit(List<Map.Entry<String, AttrValueConfidencePriority>> attributeList, MongoCollection<Document> ordersCollection, int type, Queue<ItemSearchUnit> bfsQueue, Set<Integer> haveVisited) {
-//
-//    }
-
+    /**
+     * 根据商品属性在订单库之中进行单个商品的搜索
+     * 如果找到了一个商品，就快速返回该商品的Document对象
+     * @return 搜索到的商品信息，如果没有找到则返回空Document对象
+     */
     public Document search() {
         List<Bson> bsonList = new ArrayList<>();
         //从头到尾遍历List<Map.Entry<String, String>> itemAttributes的每个键值对，将键值对添加到bsonList中
@@ -73,6 +88,11 @@ public class BasicItemSearchUnit {
         return new Document();
     }
 
+    /**
+     * 根据商品属性在订单库之中进行多个符合属性的商品的搜索
+     * 找到商品后不会立刻返回，而是将多个符合条件的商品都加入到结果列表中
+     * @return 搜索到的商品信息列表，如果没有找到则返回空List对象
+     */
     public List<Document> searchWithoutQuickReturn() {
         List<Document> result = new ArrayList<>();
         List<Bson> bsonList = new ArrayList<>();

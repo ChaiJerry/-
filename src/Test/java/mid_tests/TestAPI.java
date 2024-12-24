@@ -1,30 +1,29 @@
 package mid_tests;
 
+import bundle_system.api.*;
 import bundle_system.io.*;
+import bundle_system.train_system.*;
+import org.junit.*;
 
 import java.io.*;
 import java.util.*;
-
-import static bundle_system.api.API.*;
-import static bundle_system.data_generating_system.FPGrowth.*;
-import static org.junit.Assert.*;
-import static bundle_system.io.SharedAttributes.*;
 
 public class TestAPI {
 
     @org.junit.Test
     public void test() throws IOException {
-        CSVFileIO fileIO = getFileIO();
-        List<List<String>> listOfAttributeList = fileIO.singleTypeCsv2ListOfAttributeList(HOTEL);
+
+        CSVFileIO fileIO = FPGrowth.getFileIO();
+        List<List<String>> listOfAttributeList = fileIO.csv2ListOfAttributeListByType(SharedAttributes.INSURANCE);
         List<List<String>> itemTicketFreqItemSets = new ArrayList<>();
         List<List<String>> itemTicketRules = new ArrayList<>();
-        associationRulesMining(listOfAttributeList, false, false, itemTicketFreqItemSets, itemTicketRules, 0.07,0);
-        assertTrue(itemTicketFreqItemSets.isEmpty());
-        assertTrue(itemTicketRules.isEmpty());
+        API.associationRulesMining(listOfAttributeList, false, false, itemTicketFreqItemSets, itemTicketRules, 0.08,0);
+        Assert.assertTrue(itemTicketFreqItemSets.isEmpty());
+        Assert.assertTrue(itemTicketRules.isEmpty());
 
-        associationRulesMining(listOfAttributeList, true, true, itemTicketFreqItemSets, itemTicketRules, 0.07,0);
-        assertFalse(itemTicketFreqItemSets.isEmpty());
-        assertFalse(itemTicketRules.isEmpty());
-        assertEquals(2679, itemTicketRules.size());
+        API.associationRulesMining(listOfAttributeList, true, true, itemTicketFreqItemSets, itemTicketRules, 0.08,0);
+        Assert.assertFalse(itemTicketFreqItemSets.isEmpty());
+        Assert.assertFalse(itemTicketRules.isEmpty());
+        Assert.assertEquals(380, itemTicketRules.size());
     }
 }

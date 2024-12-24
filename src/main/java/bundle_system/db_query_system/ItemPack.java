@@ -2,6 +2,10 @@ package bundle_system.db_query_system;
 
 import java.util.*;
 
+/**
+ * 用于记录打包系统推荐的产品和原始订单中同时出现的其它品类产品
+ * 主要是为了测算精确度等
+ */
 public class ItemPack {
 
     //根据原始订单中机票信息推荐系统推荐的其它品类打包产品
@@ -102,17 +106,5 @@ public class ItemPack {
         return stringBuilder.toString();
     }
 
-    public void show(int type){
-        System.out.print("type:"+type);
-        System.out.print(",orderItems:");
-        for(String item:orderItemsList.get(type)){
-            System.out.print(item+" ");
-        }
-        System.out.print(",recommendedItems:");
-        for(String item:recommendedItemsList.get(type)){
-            System.out.print(item+" ");
-        }
-        System.out.println();
-    }
 
 }
