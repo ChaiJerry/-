@@ -1,0 +1,10 @@
+
+¡	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(îð¶×ûÿÿÿÿ8ªÙ¨º¿2J$794839db-cfa5-44ac-9185-19ee9bc1ddd0
+…
+java:S6813"BRemove this field injection and use constructor injection instead.(êæÄÞ8­Ù¨º¿2J$97e28065-adde-47ac-be0d-1f29cda7af6c
+}
+java:S2209("5Change this instance-reference to a static reference.(ä¶žžüÿÿÿÿ8¹Ù¨º¿2J$8a34de99-e3ca-473e-9201-cd602b66a55f
+u
+java:S6126*"2Replace this String concatenation with Text block.(¼Ç©¾8ÒÑ§º¿2J$b4da18c5-affb-4274-af00-93b495508370
+v
+java:S6126–"2Replace this String concatenation with Text block.(­ß¶ž8ÓÑ§º¿2J$5082176f-612c-4ed4-a7a8-4bdddcd3d41e

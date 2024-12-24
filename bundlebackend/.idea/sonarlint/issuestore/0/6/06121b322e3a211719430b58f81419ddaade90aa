@@ -1,0 +1,14 @@
+
+“	java:S117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(á‘\8„Üù¿¿2J$3cea2b53-6a5a-4066-9a4c-dd3925eb6db0
+¤
+java:S1104"\Make trainIdForBundle a static final constant or non-public and provide accessors if needed.(£‰åøÿÿÿÿ8„Üù¿¿2J$6372449f-308b-4b95-847e-58fc26cb26f3
+§
+java:S1104 "_Make defaultBundleSystem a static final constant or non-public and provide accessors if needed.(—¯ä”úÿÿÿÿ8„Üù¿¿2J$1fab8bec-e935-4e3c-a92c-fab04271b20f
+˜
+java:S1104*"UMake threadNum a static final constant or non-public and provide accessors if needed.(âÙƒ‘8„Üù¿¿2J$d9453d77-ce79-4222-a475-6a2d81b9f850
+~
+java:S1444"6Make this "public static trainIdForBundle" field final(£‰åøÿÿÿÿ8„Üù¿¿2J$4003c242-4a61-476e-a85b-86a1a7730e3f
+
+java:S1444 "9Make this "public static defaultBundleSystem" field final(—¯ä”úÿÿÿÿ8„Üù¿¿2J$18f3c6f9-aa0e-4511-afd5-2ed112696183
+r
+java:S1444*"/Make this "public static threadNum" field final(âÙƒ‘8„Üù¿¿2J$b2a0f4c7-3ce1-4cad-b0e5-03d9bff54a29
