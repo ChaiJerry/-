@@ -1,0 +1,27 @@
+
+œ	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(†şäÈ8‡¨ª‹¿2J$75c49806-87df-418e-a271-28c2bd6448e7
+œ
+java:S3008L"TRename this field "TypeNames" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Şõşşÿÿÿÿ8Œ¨ª‹¿2J$159b6164-758a-4132-879c-c8ca0fc30cd8
+r	java:S106+"+Replace this use of System.out by a logger.(Á¸óşÿÿÿÿ8¨ª‹¿2J$3b609eca-9d29-40a3-ac8c-b10918a51b4a
+m	java:S106,"+Replace this use of System.out by a logger.(÷ßÒæ8×ø»½¿2J$8c03493b-d993-4da1-adfc-eb73adeb0dde
+y
+java:S1128"1Remove this unused import 'com.bundling.service'.(ëÒÅµúÿÿÿÿ8˜¨ª‹¿2J$4cc35f5b-eb58-4b04-9ab0-541b5198c109
+t
+java:S1128",Remove this unused import 'com.bundling.vo'.(ÄˆºÅüÿÿÿÿ8˜¨ª‹¿2J$840bde6d-988b-4c57-ada7-ead5dce695a1
+Œ
+java:S1128"IRemove this unused import 'org.springframework.beans.factory.annotation'.(–ÛÌç8˜¨ª‹¿2J$cd33f9f2-1d16-4586-abe6-8d420315c249
+}
+java:S1128"5Remove this unused import 'org.springframework.http'.(çôø·ûÿÿÿÿ8˜¨ª‹¿2J$ae1cce4d-aaa4-42c9-9b09-c586f099aec5
+€
+java:S1128">Remove this unused import 'org.springframework.web.multipart'.(ßM8˜¨ª‹¿2J$f6c65c1f-9c0f-401c-966e-94bb8be9223a
+™
+java:S1128	"VRemove this unused import 'org.apache.commons.compress.archivers.zip.ZipArchiveEntry'.(ºÖÁ8˜¨ª‹¿2J$7df105f4-597e-4916-aecb-df86586de589
+‘
+java:S1128
+"NRemove this unused import 'org.apache.commons.compress.archivers.zip.ZipFile'.(…àøÁ8˜¨ª‹¿2J$85e255e8-b27b-4927-8773-8df42ca324f2
+‡
+java:S1128"DRemove this unused import 'org.springframework.web.bind.annotation'.(Ñ»ïÒ8˜¨ª‹¿2J$0bc5bd9f-c011-4411-a895-afba1c4dea77
+f
+java:S1128"$Remove this unused import 'java.io'.(¬›ãD8˜¨ª‹¿2J$c5b558db-ccb7-4aeb-ad74-dd182b1a4210
+i
+java:S1128"&Remove this unused import 'java.text'.(ë¼Èí8˜¨ª‹¿2J$f99bc7ef-661f-4e30-9b17-ea285d1adcff

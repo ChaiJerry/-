@@ -1,0 +1,184 @@
+package bundle_service_for_backend.xml_parser;
+
+import bundle_system.memory_query_system.*;
+import org.jetbrains.annotations.*;
+import org.w3c.dom.*;
+
+import java.util.*;
+import java.util.regex.*;
+
+/**
+ * 每个该类的实例代表一个打包商品（包括机票）
+ * ，其中包含了商品属性
+ */
+public class BundleItem implements Comparable<BundleItem> {
+
+    private final String flightSegmentRPH;
+    private Element element;
+    private final Map<String, String> attributes = new HashMap<>();
+    // priority优先级，默认为0，是double的原因是方便以后根据置信度拓展排序优先度计算
+    private double priority = 0;
+
+
+    // xmlAttributes是xml元素的属性，用于存储xml元素的属性，以便于后续的处理，这里主要是为了重组Seat的xml属性
+    private  Map<String, String> xmlAttributes;
+
+
+
+    public Element getElement() {
+        return element;
+    }
+
+    /**
+     * 设置优先级，直接比较字符串
+     * @param recommendAttributes 推荐的属性
+     */
+    public void setPriority(Map<String, AttrValueConfidencePriority> recommendAttributes) {
+        for (Map.Entry<String, AttrValueConfidencePriority> entry : recommendAttributes.entrySet()) {
+            String key = entry.getKey();
+            if (attributes.containsKey(key)) {
+                // 实际的属性值
+                String value = attributes.get(key);
+                // 推荐属性值
+                AttrValueConfidencePriority attrValueConfidencePriority = entry.getValue();
+                String recommendValue = attrValueConfidencePriority.getAttributeValue();
+                if (value.equals(recommendValue)) {
+                    // 优先级加上置信度
+                    priority += attrValueConfidencePriority.getConfidence();
+                }
+            }
+        }
+    }
+
+    /**
+     * 设置优先级，如果是字符串，直接比较，如果是数字，则计算二者的差值的负指数
+     * 但是有风险在于字符串要是内容是数值但是其实是应该直接比较的情况下可能造成错误
+     * @param recommendAttributes 推荐的属性
+     */
+    public void setPriorityWithNumParse(Map<String, AttrValueConfidencePriority> recommendAttributes) {
+        for (Map.Entry<String, AttrValueConfidencePriority> entry : recommendAttributes.entrySet()) {
+            String key = entry.getKey();
+            if (attributes.containsKey(key)) {
+                // 实际的属性值
+                String value = attributes.get(key);
+                // 推荐属性值
+                AttrValueConfidencePriority attrValueConfidencePriority = entry.getValue();
+                String recommendValue = attrValueConfidencePriority.getAttributeValue();
+                if (value.equals(recommendValue)) {
+                    // 优先级加上置信度
+                    priority += attrValueConfidencePriority.getConfidence();
+                } else if (isNum(value) && isNum(recommendValue)) {
+                    // 判断不相等的情况，判断是否为浮点数或整数
+                    // 优先级加上二者之差的绝对值的负指数
+                    priority += attrValueConfidencePriority.getConfidence() * Math.exp(-Math.abs(Double.parseDouble(value) - Double.parseDouble(recommendValue)));
+                }
+            }
+        }
+    }
+
+
+    // 正则表达式匹配整数或浮点数
+    private static final Pattern NUMBER_PATTERN = Pattern.compile(
+            "^-?\\d+(\\.\\d+)?$"
+    );
+
+    /**
+     * 判断字符串是否为数字的方法
+     * @param str 要判断的字符串
+     * @return 是否为数字
+     */
+    public static boolean isNum(String str) {
+        // 判断字符串是否为空
+        if (str.isEmpty()) {
+            return false;
+        }
+        // 判断字符串是否为数字
+        return NUMBER_PATTERN.matcher(str).matches();
+    }
+
+    public BundleItem(String rph) {
+        this.flightSegmentRPH = rph;
+    }
+
+    public BundleItem(String rph, Node node) {
+        this.flightSegmentRPH = rph;
+        this.element = (Element) node;
+    }
+
+    public String getFlightSegmentRPH() {
+        return flightSegmentRPH;
+    }
+
+    /**
+     * 为商品加入属性名和属性值键值对
+     *
+     * @param name  属性名
+     * @param value 属性值
+     */
+    public void addAttributeNameValuePair(String name, String value) {
+        attributes.put(name, value);
+    }
+
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
+
+    public Map<String, String> getXmlAttributes() {
+        return xmlAttributes;
+    }
+
+    public void setXmlAttributes(Map<String, String> xmlAttributes) {
+        this.xmlAttributes = xmlAttributes;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\nFlightSegmentRPH: ").append(this.getFlightSegmentRPH()).append("\n");
+        // 打印优先级
+        sb.append("Priority: ").append(this.priority).append("\n");
+        // 遍历attributes的所有键值对
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+        }
+        sb.append("}\n");
+        return sb.toString();
+    }
+
+    /**
+     * Compares this object with the specified object for order.  Returns a
+     * negative integer, zero, or a positive integer as this object is less
+     * than, equal to, or greater than the specified object.
+     *
+     * <p>The implementor must ensure {@link Integer#signum
+     * signum}{@code (x.compareTo(y)) == -signum(y.compareTo(x))} for
+     * all {@code x} and {@code y}.  (This implies that {@code
+     * x.compareTo(y)} must throw an exception if and only if {@code
+     * y.compareTo(x)} throws an exception.)
+     *
+     * <p>The implementor must also ensure that the relation is transitive:
+     * {@code (x.compareTo(y) > 0 && y.compareTo(z) > 0)} implies
+     * {@code x.compareTo(z) > 0}.
+     *
+     * <p>Finally, the implementor must ensure that {@code
+     * x.compareTo(y)==0} implies that {@code signum(x.compareTo(z))
+     * == signum(y.compareTo(z))}, for all {@code z}.
+     *
+     * @param o the object to be compared.
+     * @return a negative integer, zero, or a positive integer as this object
+     * is less than, equal to, or greater than the specified object.
+     * @throws NullPointerException if the specified object is null
+     * @throws ClassCastException   if the specified object's type prevents it
+     *                              from being compared to this object.
+     * @apiNote It is strongly recommended, but <i>not</i> strictly required that
+     * {@code (x.compareTo(y)==0) == (x.equals(y))}.  Generally speaking, any
+     * class that implements the {@code Comparable} interface and violates
+     * this condition should clearly indicate this fact.  The recommended
+     * language is "Note: this class has a natural ordering that is
+     * inconsistent with equals."
+     */
+    @Override
+    public int compareTo(@NotNull BundleItem o) {
+        return Double.compare(o.priority,this.priority);
+    }
+}
