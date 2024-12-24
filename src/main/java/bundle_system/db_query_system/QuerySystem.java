@@ -5,11 +5,11 @@ import com.mongodb.client.*;
 import org.bson.*;
 import bundle_system.io.*;
 
-import java.io.*;
+
 import java.util.*;
 
 import static bundle_system.data_processer.DataConverter.*;
-import static bundle_system.io.SharedAttributes.*;
+
 
 public class QuerySystem {
     private QuerySystem() {
