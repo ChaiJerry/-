@@ -18,7 +18,7 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 
 import static bundle_system.api.API.*;
-
+import static bundle_system.io.SharedAttributes.*;
 
 public class BackendBundleSystem {
 
@@ -76,6 +76,8 @@ public class BackendBundleSystem {
         rulesStorages = initAllRulesStorageFromDB(trainId);
         fileIO = null;
     }
+
+
 
     /**
      * 从字符串中读取 XML 文件，然后提交打包任务到线程池的方法
@@ -211,12 +213,12 @@ public class BackendBundleSystem {
             Document doc;
             doc = xmlio.readTest2();
             submitBundleTask(doc);
-            saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test2.xml");
+            saveDocument(doc, "D:\\programms\\java_projects\\version_control\\test2.xml");
             String testMsg = "time(ms):" + ((double) (System.nanoTime() - start)) / 1000000;
             logger.info(testMsg);
             doc = xmlio.readTest1();
             submitQueryTask(doc);
-            saveDocument(doc, "D:\\programms\\java_projects\\version_control\\output\\test1.xml");
+            saveDocument(doc, "D:\\programms\\java_projects\\version_control\\test1.xml");
             shutdownAll();
             return true;
         }catch(ParserConfigurationException | IOException | SAXException | TransformerException | ExecutionException  e){
@@ -256,6 +258,8 @@ public class BackendBundleSystem {
         rootElement.appendChild(comboWith);
         return comboWith;
     }
+
+
 
     public static Element buildSeatElement(BundleItem bundleItem, Document doc) {
         //建立各级节点
@@ -312,14 +316,20 @@ public class BackendBundleSystem {
      *
      * @param map            推荐的附加产品属性键值对
      * @param bundleItemList 附加产品键列表
+     * @return boolean 返回是否有商品需要被解析
      */
-    public static void setPriorityAndSortWithNumParse(Map<String, AttrValueConfidencePriority> map, List<BundleItem> bundleItemList) {
+    public static boolean setPriorityAndSortWithNumParse(Map<String, AttrValueConfidencePriority> map, List<BundleItem> bundleItemList) {
+        // 判断bundleItemList是否为null，如果为空则直接返回false
+        if(bundleItemList==null) {
+            return false;
+        }
         // 遍历每个 BundleItem 并设置优先级（带有数值解析）
         for (BundleItem bundleItem : bundleItemList) {
             bundleItem.setPriorityWithNumParse(map);
         }
         // 对 BundleItem 列表进行排序
         Collections.sort(bundleItemList);
+        return true;
     }
 
     /**
@@ -381,11 +391,8 @@ public class BackendBundleSystem {
         // 跳过机票标号
         rulesStoragesFromDBSystem.add(null);
 
-        // 跳过酒店品类（没有使用）
-        rulesStoragesFromDBSystem.add(null);
-
         // 遍历每个品类并初始化规则存储
-        for (int type = 2; type < SharedAttributes.getFullNames().length; type++) {
+        for (int type = HOTEL; type < SharedAttributes.getFullNames().length; type++) {
             List<List<String>> rules;
 
             // 从数据库中获取规则

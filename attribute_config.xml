@@ -10,6 +10,12 @@
                    comment="这里是折扣率的百分数，值最高为100，在传入的combolSource中由100-discount*100得到"/>
         <attribute name="T_FORMER" type="num" grade="1000" comment="折扣前的价格"/>
     </item>
+    <item name="Hotel">
+            <attribute name="AIR_REAL_MONEY" type="num" grade="300"/>
+            <attribute name="PRODUCTTYPE" type="string"/>
+            <attribute name="PRODUCT_NAME" type="string"/>
+            <attribute name="HOTEL_NAME" type="string"/>
+    </item>
     <item name="Baggage">
         <attribute name="PAYMENTAMOUNT" type="num" grade="200"/>
         <attribute name="BAGGAGE_SPECIFICATION" type="halfNum" comment="这里可以尝试对重量数值尝试划分档位"/>

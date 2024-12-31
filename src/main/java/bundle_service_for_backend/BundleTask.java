@@ -56,8 +56,14 @@ public class BundleTask implements Callable<Void> {
         // 处理选座
         bundleItems = parseMethods.get(SEAT).execute(root);
         // 得到选座返回的ancillary1
-        Element ancillary1 = BundleMethods.bundleSeat(segTicketMap, bundleItems
+        BundleMethods.bundleSeat(segTicketMap, bundleItems
                 , rulesStorages.get(SEAT), ancillaryProducts, doc);
+
+        // 处理酒店
+        bundleItems = parseMethods.get(HOTEL).execute(root);
+        // 得到酒店返回的ancillary1
+        Element ancillary1 = BundleMethods.bundleHotel(segTicketMap, bundleItems
+                , rulesStorages.get(HOTEL), ancillaryProducts , doc);
 
         // 将返回的ancillaryProducts、insurance、ancillary0、ancillary1添加到comboWith中
         comboWith.appendChild(insurance);

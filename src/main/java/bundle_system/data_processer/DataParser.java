@@ -49,6 +49,10 @@ public class DataParser {
         List<String> attributeList = new ArrayList<>();
         //得到订单号
         String key = csvReader.get(ORDER_NO);
+        //这是为了处理csv解析库的问题，可能不能用列名读出第一列的东西
+        if(key.isEmpty()) {
+            key = csvReader.get(0);
+        }
         List<List<String>> listofAttributeList;
 
         if (map.containsKey(key)) {
@@ -75,11 +79,11 @@ public class DataParser {
         } else {
             listofAttributeList = new ArrayList<>();
             //添加时间属性（划分到月） 0
-            addDate2list(attributeList, csvReader.get(2), T_SIGN);
+            addDate2list(attributeList, csvReader.get("T_AIRDATE"), T_SIGN);
             //添加出发地、目的地属性 1,2
-            splitSegment(attributeList, csvReader.get(5));
+            splitSegment(attributeList, csvReader.get(T_VOYAGE));
             //添加航班等级属性 3
-            attributeList.add(T_SIGN + csvReader.getHeader(6) + ":" + ticketGrade2Specific(csvReader.get(6)));
+            attributeList.add(T_SIGN + T_GRADE + ":" + ticketGrade2Specific(csvReader.get(T_GRADE)));
             //添加是否有孩童票属性 4
             attributeList.add(T_SIGN + HAVE_CHILD + ":" + (csvReader.get(T_PASSENGER).equals("ADT") ? "0" : "1"));
             //添加PROMOTION_RATE属性 5
@@ -241,7 +245,7 @@ public class DataParser {
     public static List<List<String>> getListOfAttributeList(CsvReader csvReader, Map<String, List<List<String>>> map) throws IOException {
         //得到订单号
         String key = csvReader.get(ORDER_NO);
-        //这是为了处理csv解析库的bug，可能不能用列名读出第一列的东西
+        //这是为了处理csv解析库的问题，可能不能用列名读出第一列的东西
         if(key.isEmpty()) {
             key = csvReader.get(0);
         }

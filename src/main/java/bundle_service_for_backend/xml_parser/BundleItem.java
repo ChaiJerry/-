@@ -13,17 +13,15 @@ import java.util.regex.*;
  */
 public class BundleItem implements Comparable<BundleItem> {
 
-    private final String flightSegmentRPH;
-    private Element element;
-    private final Map<String, String> attributes = new HashMap<>();
+    protected final String flightSegmentRPH;
+    protected Element element;
+    protected final Map<String, String> attributes = new HashMap<>();
     // priority优先级，默认为0，是double的原因是方便以后根据置信度拓展排序优先度计算
     private double priority = 0;
 
 
     // xmlAttributes是xml元素的属性，用于存储xml元素的属性，以便于后续的处理，这里主要是为了重组Seat的xml属性
     private  Map<String, String> xmlAttributes;
-
-
 
     public Element getElement() {
         return element;
@@ -64,7 +62,7 @@ public class BundleItem implements Comparable<BundleItem> {
                 // 推荐属性值
                 AttrValueConfidencePriority attrValueConfidencePriority = entry.getValue();
                 String recommendValue = attrValueConfidencePriority.getAttributeValue();
-                if (value.equals(recommendValue)) {
+                if (value.equalsIgnoreCase(recommendValue)) {
                     // 优先级加上置信度
                     priority += attrValueConfidencePriority.getConfidence();
                 } else if (isNum(value) && isNum(recommendValue)) {
@@ -78,7 +76,7 @@ public class BundleItem implements Comparable<BundleItem> {
 
 
     // 正则表达式匹配整数或浮点数
-    private static final Pattern NUMBER_PATTERN = Pattern.compile(
+    protected static final Pattern NUMBER_PATTERN = Pattern.compile(
             "^-?\\d+(\\.\\d+)?$"
     );
 

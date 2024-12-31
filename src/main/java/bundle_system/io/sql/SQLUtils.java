@@ -24,7 +24,7 @@ public class SQLUtils {
      * 参数化构造函数，用于生产环境中的数据库连接。
      * 接受数据库 URL、用户名和密码作为参数，并尝试建立与数据库的连接。
      * 如果连接成功，则调用 createTablesForMemQueryIfNotExist 方法创建必要的表。
-     * 初始化 typeNames 数组，将除 HOTEL 类型外的所有类型的名称转换为小写形式。
+     * 初始化 typeNames 数组
      *
      * @param url      数据库连接的 URL
      * @param username 连接数据库的用户名
@@ -38,8 +38,6 @@ public class SQLUtils {
         createTablesForMemQueryIfNotExist();
         // 初始化 TypeNames 数组
         for (int i = 0; i < getFullNames().length; ++i) {
-            // 酒店由于实际生产中没有使用，所以这里直接跳过
-            if (i == HOTEL) continue;
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
     }
@@ -93,6 +91,10 @@ public class SQLUtils {
      * @return String 训练数据表名称
      */
     public String getTrainDataTableName(String typeName) {
+        // 判断typeName是否是否存在于typeNames数组中，防止sql注入
+        if (!Arrays.asList(typeNames).contains(typeName)) {
+            return null;
+        }
         return "train_data_" + typeName;
     }
 
@@ -422,7 +424,7 @@ public class SQLUtils {
     /**
      * 创建训练数据表。
      * 根据不同的品类（TICKET 到 SEAT），如果相应的表不存在，则创建该表，包含 did、file_name 和 upload_time 字段。
-     * 注意：HOTEL 类型的表不会被创建。
+     * 注意：会创建所有类型的表。
      *
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
@@ -430,7 +432,6 @@ public class SQLUtils {
         String sql;
         try (Statement stmt = con.createStatement()) {
             for (int i = TICKET; i <= SEAT; i++) {
-                if (i == HOTEL) continue;
                 sql = "CREATE TABLE IF NOT EXISTS " + getTrainDataTableName(i) + " (" +
                         "did INT AUTO_INCREMENT PRIMARY KEY, " +
                         "file_name VARCHAR(512), " +
@@ -442,14 +443,14 @@ public class SQLUtils {
     }
 
     /**
-     * 创建所有的规则表，包括 MEAL、BAGGAGE、INSURANCE 和 SEAT 几个品类，并创建对应的训练记录表。
+     * 创建所有的规则表，包括 HOTEL、BAGGAGE、INSURANCE 和 SEAT 几个品类，并创建对应的训练记录表。
      *
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void createTablesForMemQueryIfNotExist() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            // 使用 for 循环创建规则表，由于 HOTEL 和 TICKET 的表都不用建，所以从 MEAL 开始创建
-            for (int i = MEAL; i <= SEAT; i++) {
+            // 使用 for 循环创建规则表，由于 TICKET 的表都不用建，所以从 HOTEL 开始创建
+            for (int i = HOTEL; i <= SEAT; i++) {
                 String sql = "CREATE TABLE IF NOT EXISTS " + getRuleTableName(i) + " (" +
                         "rid INT AUTO_INCREMENT PRIMARY KEY, " +
                         "ate VARCHAR(1024), " +
@@ -483,7 +484,7 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void dropRulesTables(Statement stmt) throws SQLException {
-        for (int i = MEAL; i <= SEAT; i++) {
+        for (int i = HOTEL; i <= SEAT; i++) {
             String sql = "DROP TABLE IF EXISTS " + getRuleTableName(i);
             stmt.executeUpdate(sql);
         }

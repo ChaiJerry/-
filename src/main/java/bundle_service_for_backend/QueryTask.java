@@ -36,7 +36,7 @@ public class QueryTask implements Callable<Void> {
         root.appendChild(comboWith);
         Map<String, BundleItem> segTicketMap = xmlParser.parseComboSourceForRQ(root);
 
-        for(int i=MEAL; i<=SEAT; i++){
+        for(int i=HOTEL; i<=SEAT; i++){
             boolean haveEmptyAttribute = false;
             for(BundleItem item : segTicketMap.values()) {
                 for(AttrValueConfidencePriority attrValueConfidencePriority

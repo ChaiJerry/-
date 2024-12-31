@@ -16,6 +16,8 @@ import static bundle_system.io.SharedAttributes.*;
  * ，用于从XML文件中提取各种商品信息信息
  */
 public class XMLParser {
+    public static final String ROOM_ROOT_PATH = "/OJ_ComboSearchRS/ComboWith/OTA_HotelAvailRS/RoomStays/RoomStay";
+    public static final String SEAT_ROOT_PATH = "/OJ_ComboSearchRS/ComboWith/OJ_AirSeatMapRS/Product/SeatMapResponse";
     // 实例化后用该xpath解析保证线程安全
     private final XPath xpath;
 
@@ -28,7 +30,7 @@ public class XMLParser {
         // ，所以无法填入列表
         parseMethods.add(null);
         // 预留位置，用于后续扩展酒店类型的解析方法
-        parseMethods.add(null);
+        parseMethods.add(this::parseHotel);
         // meal解析方法对应在列表中的位置为常量MEAL的值
         parseMethods.add(this::parseMeal);
         // baggage解析方法对应在列表中的位置为常量BAGGAGE的值
@@ -340,8 +342,7 @@ public class XMLParser {
      */
     public Map<String,List<BundleItem>> parseSeat(Element root) throws XPathExpressionException {
         Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
-        String seatMapResponseXpath = "/OJ_ComboSearchRS/ComboWith/OJ_AirSeatMapRS/Product/SeatMapResponse";
-        NodeList seatMapResponses = (NodeList) xpath.evaluate(seatMapResponseXpath, root, XPathConstants.NODESET);
+        NodeList seatMapResponses = (NodeList) xpath.evaluate(SEAT_ROOT_PATH, root, XPathConstants.NODESET);
         // 得到座位信息，另外作为需要重构xml的数据格式
         //<!-- 座位返回 -->
         //使用XSD中的Tag放入推荐标识? 推荐标识应在同一类型的航段下唯
@@ -394,6 +395,77 @@ public class XMLParser {
                     haveVisited.add(subType+"|"+supplierProductCode);
                 }
             }
+        }
+        return bundleItemsMap;
+    }
+
+    /**
+     * 解析XML文件，得到选座信息
+     * @param root XML文件的根节点
+     * @return comboWith中的酒店信息（包括属性和Element），map中的key为"航段|subType"，对应的值为列表对应着一个需要单独打包的BundleItem序列
+     */
+    public Map<String,List<BundleItem>> parseHotel(Element root) throws XPathExpressionException {
+        Map<String,List<BundleItem>> bundleItemsMap = new HashMap<>();
+        List<BundleItem> bundleItems = new ArrayList<>();
+        bundleItemsMap.put("1", bundleItems);
+        String segmentIDRef = "1";
+        String serviceType = "Hotel";
+        NodeList roomStays = (NodeList) xpath.evaluate(ROOM_ROOT_PATH, root, XPathConstants.NODESET);
+        for (int i = 0; i < roomStays.getLength(); i++) {
+            Element roomStay = (Element) roomStays.item(i);
+            Element timeSpan = getElementByRelativePath(roomStay, "TimeSpan");
+            String notValidBefore = timeSpan.getAttribute("Start");
+            String notValidAfter = timeSpan.getAttribute("End");
+
+            Element basicPropertyInfo = getElementByRelativePath(roomStay, "BasicPropertyInfo");
+            String serviceCode = basicPropertyInfo.getAttribute("HotelCode");
+            String serviceLocation = basicPropertyInfo.getAttribute("HotelCityCode");
+            String text1 = basicPropertyInfo.getAttribute("HotelName");
+            NodeList roomTypes = getElementsByRelativePath(roomStay, "RoomTypes/RoomType");
+            Map<String,String> roomTypeCode2TypeNameMap = new HashMap<>();
+
+            for(int j = 0; j < roomTypes.getLength(); j++) {
+                Element roomType = (Element) roomTypes.item(j);
+                String roomTypeCode = roomType.getAttribute("RoomTypeCode");
+                String roomTypeName = roomType.getAttribute("RoomTypeName");
+                roomTypeCode2TypeNameMap.put(roomTypeCode, roomTypeName);
+            }
+
+            NodeList roomRates = getElementsByRelativePath(roomStay, "RoomRates/RoomRate");
+            for (int j = 0; j < roomRates.getLength(); j++) {
+                BundleItemForHotel bundleItem = new BundleItemForHotel(segmentIDRef);
+                Element roomRate = (Element) roomRates.item(j);
+                Element total = getElementByRelativePath(roomRate, "Rates/Rate/Total");
+                String amount = total.getAttribute("Adjusted");
+                String currencyCode = total.getAttribute("CurrencyCode");
+                String roomTypeCode = roomRate.getAttribute("RoomTypeCode");
+                String roomTypeName = roomTypeCode2TypeNameMap.get(roomTypeCode);
+                /*
+                 * 这里判断房间类型对应的码是否存在，如果不存在则跳过当前循环
+                 */
+                if (roomTypeName == null) {
+                    continue;
+                }
+                bundleItem.setInfoTexts(new String[]{text1,roomTypeName});
+                bundleItem.setCurrencyCode(currencyCode);
+                bundleItem.setTotalAmount(amount);
+                bundleItem.setNotValidBefore(notValidBefore);
+                bundleItem.setNotValidAfter(notValidAfter);
+                bundleItem.setServiceCode(serviceCode);
+                bundleItem.setServiceLocation(serviceLocation);
+                bundleItem.setServiceType(serviceType);
+                bundleItem.setSegmentIDRef(segmentIDRef);
+                bundleItem.setSubCode(roomTypeCode);
+                String moneyGrade = DataParser.floatStr2Attribute(amount, 300)+"";
+                bundleItem.addAttributeNameValuePair("AIR_REAL_MONEY", moneyGrade);
+                bundleItem.addAttributeNameValuePair(PRODUCTTYPE,serviceType);
+                bundleItem.addAttributeNameValuePair(PRODUCT_NAME,roomTypeName);
+                bundleItem.addAttributeNameValuePair(HOTEL_NAME,text1);
+
+                bundleItems.add(bundleItem);
+            }
+
+
         }
         return bundleItemsMap;
     }
