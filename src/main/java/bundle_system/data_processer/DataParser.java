@@ -146,9 +146,8 @@ public class DataParser {
         ///通过订单号得到订单属性的存储列表的列表
         List<List<String>> listOfAttributeList = getListOfAttributeList(csvReader, map);
         //可以选择用addDate2list(attributeList, csvReader.get(1), H_SIGN)导入酒店入住时间属性
-        attributeList.add(H_SIGN + AIR_REAL_MONEY + ":" + floatStr2Attribute(csvReader.get(AIR_REAL_MONEY), 300));
+        attributeList.add(H_SIGN + H_TOTAL_PRICE + ":" + floatStr2Attribute(csvReader.get(H_TOTAL_PRICE), 200));
         //加入其它酒店属性
-        attributeList.add(H_SIGN + PRODUCTTYPE + ":" + csvReader.get(PRODUCTTYPE));
         attributeList.add(H_SIGN + PRODUCT_NAME + ":" + csvReader.get(PRODUCT_NAME));
         attributeList.add(H_SIGN + HOTEL_NAME + ":" + csvReader.get(HOTEL_NAME));
 

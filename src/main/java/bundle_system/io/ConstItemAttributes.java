@@ -58,12 +58,7 @@ public class ConstItemAttributes {
     /**
      * 表示实际支付金额的商品属性。
      */
-    public static final String AIR_REAL_MONEY = "AIR_REAL_MONEY";
-
-    /**
-     * 表示酒店类型的商品属性。
-     */
-    public static final String PRODUCTTYPE = "PRODUCTTYPE";
+    public static final String H_TOTAL_PRICE = "H_TOTAL_PRICE";
 
     /**
      * 表示酒店产品名称的商品属性。
@@ -151,7 +146,7 @@ public class ConstItemAttributes {
     /**
      * 包含酒店相关信息的商品属性数组。
      */
-    protected static final String[] HOTEL_ATTRIBUTES = {AIR_REAL_MONEY, PRODUCTTYPE, PRODUCT_NAME, HOTEL_NAME};
+    protected static final String[] HOTEL_ATTRIBUTES = {H_TOTAL_PRICE, PRODUCT_NAME, HOTEL_NAME};
 
     /**
      * 包含机票相关信息的商品属性数组。

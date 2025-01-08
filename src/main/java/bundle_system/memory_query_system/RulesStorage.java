@@ -207,7 +207,10 @@ public class RulesStorage {
             // 得到后件属性值
             String attributeValue = associationRuleConsResult.getAttributeValue();
             // 尝试将该规则的后件加入到结果中
-            attributeNameVCPMap.get(attributeName).tryAssign(attributeValue, queryValue, confidence);
+            AttrValueConfidencePriority attrValueConfidencePriority = attributeNameVCPMap.get(attributeName);
+            if(attrValueConfidencePriority != null) {
+                attrValueConfidencePriority.tryAssign(attributeValue, queryValue, confidence);
+            }
         }
         return attributeNameVCPMap;
     }

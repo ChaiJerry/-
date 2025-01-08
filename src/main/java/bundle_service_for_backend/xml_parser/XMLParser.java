@@ -456,9 +456,8 @@ public class XMLParser {
                 bundleItem.setServiceType(serviceType);
                 bundleItem.setSegmentIDRef(segmentIDRef);
                 bundleItem.setSubCode(roomTypeCode);
-                String moneyGrade = DataParser.floatStr2Attribute(amount, 300)+"";
-                bundleItem.addAttributeNameValuePair("AIR_REAL_MONEY", moneyGrade);
-                bundleItem.addAttributeNameValuePair(PRODUCTTYPE,serviceType);
+                String moneyGrade = DataParser.floatStr2Attribute(amount, 200)+"";
+                bundleItem.addAttributeNameValuePair(H_TOTAL_PRICE, moneyGrade);
                 bundleItem.addAttributeNameValuePair(PRODUCT_NAME,roomTypeName);
                 bundleItem.addAttributeNameValuePair(HOTEL_NAME,text1);
 
