@@ -431,7 +431,7 @@ public class SQLUtils {
     public void createTrainDataTables() throws SQLException {
         String sql;
         try (Statement stmt = con.createStatement()) {
-            for (int i = TICKET; i <= SEAT; i++) {
+            for (int i = TICKET; i < getFullNames().length; i++) {
                 sql = "CREATE TABLE IF NOT EXISTS " + getTrainDataTableName(i) + " (" +
                         "did INT AUTO_INCREMENT PRIMARY KEY, " +
                         "file_name VARCHAR(512), " +
@@ -443,14 +443,14 @@ public class SQLUtils {
     }
 
     /**
-     * 创建所有的规则表，包括 HOTEL、BAGGAGE、INSURANCE 和 SEAT 几个品类，并创建对应的训练记录表。
+     * 创建所有的规则表，包括 HOTEL、MEAL、BAGGAGE、INSURANCE 和 SEAT 几个品类，并创建对应的训练记录表。
      *
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void createTablesForMemQueryIfNotExist() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             // 使用 for 循环创建规则表，由于 TICKET 的表都不用建，所以从 HOTEL 开始创建
-            for (int i = HOTEL; i <= SEAT; i++) {
+            for (int i = HOTEL; i < getFullNames().length; i++) {
                 String sql = "CREATE TABLE IF NOT EXISTS " + getRuleTableName(i) + " (" +
                         "rid INT AUTO_INCREMENT PRIMARY KEY, " +
                         "ate VARCHAR(1024), " +
@@ -484,7 +484,7 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void dropRulesTables(Statement stmt) throws SQLException {
-        for (int i = HOTEL; i <= SEAT; i++) {
+        for (int i = HOTEL; i < getFullNames().length; i++) {
             String sql = "DROP TABLE IF EXISTS " + getRuleTableName(i);
             stmt.executeUpdate(sql);
         }
@@ -507,7 +507,7 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void dropTrainDataTables(Statement stmt) throws SQLException {
-        for (int i = TICKET; i <= SEAT; i++) {
+        for (int i = TICKET; i < getFullNames().length; i++) {
             String sql = "DROP TABLE IF EXISTS " + getTrainDataTableName(i);
             stmt.executeUpdate(sql);
         }

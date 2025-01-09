@@ -21,7 +21,6 @@ public class QueryTask implements Callable<Void> {
     private static final XPathFactory xPathfactory = XPathFactory.newDefaultInstance();
     private final List<RulesStorage> rulesStorages;
 
-
     public QueryTask(Document doc, List<RulesStorage> rulesStorages) {
         this.doc = doc;
         this.rulesStorages = rulesStorages;
@@ -36,21 +35,21 @@ public class QueryTask implements Callable<Void> {
         root.appendChild(comboWith);
         Map<String, BundleItem> segTicketMap = xmlParser.parseComboSourceForRQ(root);
 
-        for(int i=HOTEL; i<=SEAT; i++){
+        for (int i = HOTEL; i < getFullNames().length; i++) {
             boolean haveEmptyAttribute = false;
-            for(BundleItem item : segTicketMap.values()) {
-                for(AttrValueConfidencePriority attrValueConfidencePriority
-                        : rulesStorages.get(i).queryBestRules(item.getAttributes()).values()){
-                    if(attrValueConfidencePriority.getConfidence() <0){
+            for (BundleItem item : segTicketMap.values()) {
+                for (AttrValueConfidencePriority attrValueConfidencePriority
+                        : rulesStorages.get(i).queryBestRules(item.getAttributes()).values()) {
+                    if (attrValueConfidencePriority.getConfidence() < 0) {
                         haveEmptyAttribute = true;
                         break;
                     }
                 }
-                if(haveEmptyAttribute) break;
+                if (haveEmptyAttribute) break;
             }
             if (!haveEmptyAttribute) {
                 Element ancillary = doc.createElement("Ancillary");
-                ancillary.setAttribute("type",SharedAttributes.getFullNames()[i]);
+                ancillary.setAttribute("type", SharedAttributes.getFullNames()[i]);
                 comboWith.appendChild(ancillary);
             }
         }

@@ -242,25 +242,6 @@ public class BackendBundleSystem {
         logger.info(msg);
     }
 
-
-    /**
-     * 获取返回的Document模板（用于非破坏性操作）
-     *
-     * @param doc   新建的返回的Document
-     * @param xmlns xmlns
-     * @return 返回的Document模板
-     */
-    public static Element getReturnDocTemplate(Document doc, String xmlns) {
-        Element rootElement = doc.createElement("OJ_ComboSearchRS");
-        rootElement.setAttribute("xmlns", xmlns);
-        doc.appendChild(rootElement);
-        Element comboWith = doc.createElement("ComboWith");
-        rootElement.appendChild(comboWith);
-        return comboWith;
-    }
-
-
-
     public static Element buildSeatElement(BundleItem bundleItem, Document doc) {
         //建立各级节点
         Element ancillary = doc.createElement("Ancillary");

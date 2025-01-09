@@ -35,6 +35,36 @@ public class CSVFileIO {
     protected int orderNumber;
 
     /**
+     * 初始化CSVFileIO，用于实际生产环境的构造方法
+     * @param pathT 机票订单csv文件路径
+     * @param pathH 酒店csv文件路径，如果不用就写成null
+     * @param pathM 餐食csv文件路径
+     * @param pathB 行李csv文件路径
+     * @param pathI 保险csv文件路径
+     * @param pathS 选座csv文件路径
+     */
+    public CSVFileIO(String pathT
+            , String pathH, String pathM, String pathB
+            , String pathI, String pathS) throws IOException {
+        // 初始化路径
+        // 机票订单相关数据csv文件路径
+        csvPaths[TICKET] = pathT;
+        // 酒店相关数据csv文件路径
+        csvPaths[HOTEL] = pathH;
+        // 餐食相关数据csv文件路径
+        csvPaths[MEAL] = pathM;
+        // 行李相关数据csv文件路径
+        csvPaths[BAGGAGE] = pathB;
+        // 保险相关数据csv文件路径
+        csvPaths[INSURANCE] = pathI;
+        // 座位相关数据csv文件路径
+        csvPaths[SEAT] = pathS;
+        //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
+        //训练用机票订单
+        trainTicketsMap = read(csvPaths[TICKET], TICKET);
+    }
+
+    /**
      * 初始化CSVFileIO（用于测试）
      */
     public CSVFileIO(String resultDirPath, String pathT
@@ -64,35 +94,6 @@ public class CSVFileIO {
         }catch (Exception ignored){logger.info("不使用默认csv输入输出系统（并非错误或异常，实际环境请忽略）");}
     }
 
-    /**
-     * 初始化CSVFileIO，用于实际生产环境的构造方法
-     * @param pathT 机票订单csv文件路径
-     * @param pathH 酒店csv文件路径，如果不用就写成null
-     * @param pathM 餐食csv文件路径
-     * @param pathB 行李csv文件路径
-     * @param pathI 保险csv文件路径
-     * @param pathS 选座csv文件路径
-     */
-    public CSVFileIO(String pathT
-            , String pathH, String pathM, String pathB
-            , String pathI, String pathS) throws IOException {
-        // 初始化路径
-        // 机票订单相关数据csv文件路径
-        csvPaths[TICKET] = pathT;
-        // 酒店相关数据csv文件路径
-        csvPaths[HOTEL] = pathH;
-        // 餐食相关数据csv文件路径
-        csvPaths[MEAL] = pathM;
-        // 行李相关数据csv文件路径
-        csvPaths[BAGGAGE] = pathB;
-        // 保险相关数据csv文件路径
-        csvPaths[INSURANCE] = pathI;
-        // 座位相关数据csv文件路径
-        csvPaths[SEAT] = pathS;
-        //首先读取Ticket订单相关信息方便建立订单和属性之间的映射
-        //训练用机票订单
-        trainTicketsMap = read(csvPaths[TICKET], TRAIN_TICKET);
-    }
 
 
     /**
@@ -216,6 +217,14 @@ public class CSVFileIO {
         csvReader.readHeaders();
         //通过type判断调用哪个方法
         switch (type) {
+            case TICKET:
+                //用于机票订单解析
+                while (csvReader.readRecord()) {
+                    //订单数量计数
+                    orderNumber++;
+                    dealT(csvReader, map);
+                }
+                break;
             case MEAL:
                 while (csvReader.readRecord()) {
                     //订单数量计数
@@ -253,8 +262,8 @@ public class CSVFileIO {
                     dealS(csvReader, map);
                 }
                 break;
-            case TICKET | TRAIN_TICKET:
-                //用于字段作用评估
+            case TRAIN_TICKET:
+                //用于测试训练集上的机票订单解析
                 while (csvReader.readRecord()) {
                     //订单数量计数
                     orderNumber++;
@@ -263,9 +272,9 @@ public class CSVFileIO {
                 break;
             case TEST_TICKET:
                 //这是用于评估的测试数据类型，实际生产环境不需要 使用这个地方
-                //得到对应的属性头实例
+                //得到对应的属性名存储实例
                 ItemAttributeNamesStorage attributesStorage = itemAttributeNamesStorage[type];
-                //添加处理后得到的属性头
+                //添加处理后得到的属性名
                 attributesStorage.addAttribute("MONTH",0);
                 attributesStorage.addAttribute("FROM",1);
                 attributesStorage.addAttribute("TO",2);
@@ -274,8 +283,8 @@ public class CSVFileIO {
                 attributesStorage.addAttribute("PROMOTION_RATE",5);
                 attributesStorage.addAttribute("T_FORMER",6);
                 attributesStorage.addAttribute("T_CARRIER",7);
-                //读取csv文件时会将一些不需要的属性头删读入，这里需要删除
-                //删去多余的属性头
+                //读取csv文件时会将一些不需要的属性名删读入，这里需要删除
+                //删去多余的属性名
 
                 //用于字段作用评估
                 while (csvReader.readRecord()) {
