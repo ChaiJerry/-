@@ -19,7 +19,6 @@ public class SQLUtils {
 
     public final String[] typeNames = new String[getFullNames().length];//全小写
 
-
     /**
      * 参数化构造函数，用于生产环境中的数据库连接。
      * 接受数据库 URL、用户名和密码作为参数，并尝试建立与数据库的连接。
@@ -32,10 +31,15 @@ public class SQLUtils {
      * @throws ClassNotFoundException 如果找不到 MySQL 驱动类
      * @throws SQLException           如果连接数据库时发生错误
      */
-    public SQLUtils(String url, String username, String password) throws ClassNotFoundException, SQLException {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        con = DriverManager.getConnection(url, username, password);
-        createTablesForMemQueryIfNotExist();
+    public SQLUtils(String url, String username, String password) {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            con = DriverManager.getConnection(url, username, password);
+            //createTablesForMemQueryIfNotExist();
+        } catch (ClassNotFoundException | SQLException e) {
+            logger.info("自动建表失败");
+            logger.info(e.getMessage());
+        }
         // 初始化 TypeNames 数组
         for (int i = 0; i < getFullNames().length; ++i) {
             typeNames[i] = getFullNames()[i].toLowerCase();
@@ -67,7 +71,6 @@ public class SQLUtils {
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
     }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
     //训练数据的文件表
@@ -150,7 +153,6 @@ public class SQLUtils {
     public String getTrainDataIdForFrontByIdAndTypeName(int id, String typeName) {
         return typeName + "-" + id;
     }
-
 
     /**
      * 获取一个表中所有训练数据记录
@@ -253,9 +255,9 @@ public class SQLUtils {
      *
      * @param tid 训练任务的 ID
      * @return 训练状态字符串：
-     *         - "processing"：如果 endTime 为空或未设置
-     *         - "error handling"：如果 endTime 为 "error" 或查询结果不存在
-     *         - "processing completed"：如果 endTime 设置且不为 "error"
+     * - "processing"：如果 endTime 为空或未设置
+     * - "error handling"：如果 endTime 为 "error" 或查询结果不存在
+     * - "processing completed"：如果 endTime 设置且不为 "error"
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public String getTrainStatusByTid(int tid) throws SQLException {
@@ -279,7 +281,6 @@ public class SQLUtils {
             }
         }
     }
-
 
     private void trainRecordQueryResToMap(ResultSet rs, Map<String, String> recordMap) throws SQLException {
         recordMap.put("startTime", rs.getString("startTime"));
@@ -449,7 +450,7 @@ public class SQLUtils {
      */
     public void createTablesForMemQueryIfNotExist() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            // 使用 for 循环创建规则表，由于 TICKET 的表都不用建，所以从 HOTEL 开始创建
+            // 使用 for 循环创建规则表，由于 TICKET 的规则表不用建，所以从 HOTEL 开始创建
             for (int i = HOTEL; i < getFullNames().length; i++) {
                 String sql = "CREATE TABLE IF NOT EXISTS " + getRuleTableName(i) + " (" +
                         "rid INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -546,7 +547,7 @@ public class SQLUtils {
      * @param itemRule 规则列表，必须包含三个元素：ate, cons, conf
      * @param tid      训练编号
      * @throws IllegalArgumentException 如果 itemRule 为空或不包含三个元素
-     * @throws RuntimeException       如果在执行 SQL 操作时发生错误
+     * @throws RuntimeException         如果在执行 SQL 操作时发生错误
      */
     private void insertRule(int type, List<String> itemRule, int tid) throws SQLException {
         // 检查 itemRule 是否为空或长度是否不等于3
@@ -577,7 +578,6 @@ public class SQLUtils {
         }
     }
 
-
     /**
      * 将规则批量存入数据库中的方法，这里和之前的associationRulesMining接口得到的数据格式一样
      * ，可以将associationRulesMining训练好的数据直接拿来存入
@@ -594,7 +594,7 @@ public class SQLUtils {
     }
 
     public void insertRules(int type, List<List<String>> itemRulesList, int tid, int limit) throws SQLException {
-        //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
+        //因为这里性能完全足够，因此暂时不考虑优化，之后可以使用批量插入进行优化
         for (int i = 0; i < limit && i < itemRulesList.size(); i++) {
             insertRule(type, itemRulesList.get(i), tid);
         }
@@ -639,7 +639,6 @@ public class SQLUtils {
             }
         }
     }
-
 
     /**
      * 统一获得表名的方法

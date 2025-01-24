@@ -29,8 +29,11 @@ public class QueryTask implements Callable<Void> {
     @Override
     public Void call() throws Exception {
         XMLParser xmlParser = new XMLParser(xPathfactory.newXPath());
-
         Element root = doc.getDocumentElement();
+        // 删掉原有的comboWith标签（如果有），重新创建新的comboWith标签
+        if(xmlParser.getElementByRelativePath(root, "/OJ_ComboSearchRQ/ComboWith") != null) {
+            root.removeChild(xmlParser.getElementByRelativePath(root, "/OJ_ComboSearchRQ/ComboWith"));
+        }
         Element comboWith = doc.createElement("ComboWith");
         root.appendChild(comboWith);
         Map<String, BundleItem> segTicketMap = xmlParser.parseComboSourceForRQ(root);
@@ -53,6 +56,37 @@ public class QueryTask implements Callable<Void> {
                 comboWith.appendChild(ancillary);
             }
         }
+        replaceRootNode(doc, "OJ_ComboSearchRS");
         return null;
+    }
+
+    /**
+     * 替换给定文档的根节点。
+     *
+     * @param doc 包含要替换的根节点的文档
+     * @param newRootName 新的根节点名称
+     */
+    public static void replaceRootNode(Document doc, String newRootName) {
+        // 创建一个新的元素，作为新的根节点
+        Element newRootElement = doc.createElement(newRootName);
+
+        // 获取当前的根节点
+        Element oldRootElement = doc.getDocumentElement();
+
+        // 复制所有属性到新根节点（如果有）
+        NamedNodeMap attributes = oldRootElement.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Attr attr = (Attr) attributes.item(i);
+            newRootElement.setAttribute(attr.getName(), attr.getValue());
+        }
+
+        // 将旧根节点的所有子节点移动到新根节点
+        while (oldRootElement.hasChildNodes()) {
+            Node child = oldRootElement.getFirstChild();
+            newRootElement.appendChild(child);
+        }
+
+        // 将新根节点添加到文档，并移除旧根节点
+        doc.replaceChild(newRootElement, oldRootElement);
     }
 }
