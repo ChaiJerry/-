@@ -5,10 +5,32 @@ import org.jetbrains.annotations.*;
 import java.util.*;
 
 public class TrainRecord implements Comparable<TrainRecord>{
+    // 训练记录的id
     private final int tid;
+    // 训练开始时间
     private final String startTime;
+    // 训练结束时间
     private final String endTime;
+    // 订单数量
+    private final String orderNumber;
+    // 备注信息
+    private final String comments;
+    // 最小支持度
+    private final String minSupport;
+    // 最小置信度
+    private final String minConfidence;
+    private final Map<String,String> trainingRecordMap;
 
+    /**
+     * 构造一个训练记录对象，但不包含tid字段
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param orderNumber 订单数量
+     * @param comments 备注信息
+     * @param minSupport 最小支持度
+     * @param minConfidence 最小置信度
+     * @param trainingRecordMap 训练记录的map信息
+     */
     public TrainRecord(String startTime, String endTime
             , String orderNumber, String comments, String minSupport
             , String minConfidence, Map<String, String> trainingRecordMap) {
@@ -22,12 +44,11 @@ public class TrainRecord implements Comparable<TrainRecord>{
         this.tid = -1;
     }
 
-    private final String orderNumber;
-    private final String comments;
-    private final String minSupport;
-    private final String minConfidence;
-    private final Map<String,String> trainingRecordMap;
 
+    /**
+     * @param trainingRecordMap 包含训练记录信息的map
+     * @param tid 训练记录的tid
+     */
     public TrainRecord(Map<String,String> trainingRecordMap,int tid){
         this.startTime = trainingRecordMap.get("startTime");
         this.endTime = trainingRecordMap.get("endTime");
@@ -39,6 +60,11 @@ public class TrainRecord implements Comparable<TrainRecord>{
         this.tid = tid;
     }
 
+    /**
+     * 将内部的tid转换为更直观的train-id
+     * @param id 训练记录的tid
+     * @return train-id字符串
+     */
     public static String getTrainIdFromId(int id) {
         return "train-" + id;
     }
@@ -93,6 +119,11 @@ public class TrainRecord implements Comparable<TrainRecord>{
         return minConfidence;
     }
 
+    /**
+     * 将训练记录转换为json格式的map
+     * 方便前端返回
+     * @return 训练数据的json格式
+     */
     public Map<String,String> toJson() {
         Map<String, String> map = new HashMap<>();
         map.put("train_id", ""+tid);
@@ -105,6 +136,10 @@ public class TrainRecord implements Comparable<TrainRecord>{
         return map;
     }
 
+    /**
+     * 将训练记录转换为json格式的字符串
+     * @return 训练数据的json格式
+     */
     @Override
     public String toString() {
         return String.format("{%n" +

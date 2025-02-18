@@ -18,6 +18,10 @@ public class SQLUtils {
     // 连接状态标记，用于判断是否成功连接到数据库。
     private boolean connected;
 
+    public boolean isConnected() {
+        return connected;
+    }
+
     public final String[] typeNames = new String[getFullNames().length];//全小写
 
     /**

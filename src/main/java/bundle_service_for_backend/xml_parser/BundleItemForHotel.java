@@ -7,15 +7,26 @@ import org.w3c.dom.*;
  *
  */
 public class BundleItemForHotel extends BundleItem {
+    // 定义酒店套餐相关的属性
+    // 服务类型
     private String serviceType;
+    // 服务代码
     private String serviceCode;
+    // 子代码
     private String subCode;
+    // 关联的行程段ID引用
     private String segmentIDRef;
+    // 有效期开始时间
     private String notValidBefore;
+    // 有效期结束时间
     private String notValidAfter;
+    // 服务地点描述文本
     private String serviceLocation;
+    // 信息文本数组
     private String[] infoTexts;
+    // 总金额
     private String totalAmount;
+    // 货币代码
     private String currencyCode;
 
     public BundleItemForHotel(String key) {
@@ -62,7 +73,14 @@ public class BundleItemForHotel extends BundleItem {
         this.currencyCode = currencyCode;
     }
 
+    /**
+     * 通过实例化后的诸多属性构建酒店房间级商品的XML元素
+     * ，用于在报文之中返回。
+     * @param doc XML文档对象
+     * @return Element 对象，即构建的酒店房间级商品的XML元素
+     */
     public Node buildHotelElement(Document doc) {
+        // 创建Service元素，构建xml结构
         Element serviceElement = doc.createElement("Service");
         serviceElement.setAttribute("ServiceType", serviceType);
         serviceElement.setAttribute("ServiceCode", serviceCode);
@@ -76,6 +94,7 @@ public class BundleItemForHotel extends BundleItem {
         serviceElement.appendChild(serviceLocationElement);
 
         Element infoElement = doc.createElement("Info");
+        // 添加多个文本信息
         for (String text : infoTexts) {
             Element textElement = doc.createElement("Text");
             textElement.appendChild(doc.createTextNode(text));
