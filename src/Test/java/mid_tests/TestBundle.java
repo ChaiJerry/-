@@ -1,7 +1,6 @@
 package mid_tests;
 
 import bundle_service_for_backend.*;
-import bundle_system.io.sql.*;
 import bundle_system.memory_query_system.*;
 import org.junit.*;
 
@@ -15,6 +14,7 @@ public class TestBundle {
     public void test() throws InterruptedException, IOException {
         BackendBundleSystem backendBundleSystem = new BackendBundleSystem();
         List<RulesStorage> rulesStorages = backendBundleSystem.getRulesStorages();
+        assertEquals(415, rulesStorages.get(HOTEL).getSize());
         assertEquals(246, rulesStorages.get(MEAL).getSize());
         assertEquals(240, rulesStorages.get(BAGGAGE).getSize());
         assertEquals(380, rulesStorages.get(INSURANCE).getSize());

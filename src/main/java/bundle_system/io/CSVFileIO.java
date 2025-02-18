@@ -264,38 +264,46 @@ public class CSVFileIO {
                 break;
             case TRAIN_TICKET:
                 //用于测试训练集上的机票订单解析
-                while (csvReader.readRecord()) {
-                    //订单数量计数
-                    orderNumber++;
-                    dealT(csvReader, map);
-                }
+                parseTicketForTrainingSet(csvReader, map);
                 break;
             case TEST_TICKET:
-                //这是用于评估的测试数据类型，实际生产环境不需要 使用这个地方
-                //得到对应的属性名存储实例
-                ItemAttributeNamesStorage attributesStorage = itemAttributeNamesStorage[type];
-                //添加处理后得到的属性名
-                attributesStorage.addAttribute("MONTH",0);
-                attributesStorage.addAttribute("FROM",1);
-                attributesStorage.addAttribute("TO",2);
-                attributesStorage.addAttribute("T_GRADE",3);
-                attributesStorage.addAttribute("HAVE_CHILD",4);
-                attributesStorage.addAttribute("PROMOTION_RATE",5);
-                attributesStorage.addAttribute("T_FORMER",6);
-                attributesStorage.addAttribute("T_CARRIER",7);
-                //读取csv文件时会将一些不需要的属性名删读入，这里需要删除
-                //删去多余的属性名
-
-                //用于字段作用评估
-                while (csvReader.readRecord()) {
-                    //订单数量计数
-                    orderNumber++;
-                    dealTest(csvReader, map);
-                }
+                //这是用于评估的测试数据集，实际生产环境不需要使用这个地方
+                parseTicketForTestSet(type, csvReader, map);
                 break;
             default:
                 break;
         }
         return map;
+    }
+
+    private void parseTicketForTrainingSet(CsvReader csvReader, HashMap<String, List<List<String>>> map) throws IOException {
+        while (csvReader.readRecord()) {
+            //订单数量计数
+            orderNumber++;
+            dealT(csvReader, map);
+        }
+    }
+
+    private void parseTicketForTestSet(int type, CsvReader csvReader, HashMap<String, List<List<String>>> map) throws IOException {
+        //得到对应的属性名存储实例
+        ItemAttributeNamesStorage attributesStorage = itemAttributeNamesStorage[type];
+        //添加处理后得到的属性名
+        attributesStorage.addAttribute("MONTH",0);
+        attributesStorage.addAttribute("FROM",1);
+        attributesStorage.addAttribute("TO",2);
+        attributesStorage.addAttribute("T_GRADE",3);
+        attributesStorage.addAttribute("HAVE_CHILD",4);
+        attributesStorage.addAttribute("PROMOTION_RATE",5);
+        attributesStorage.addAttribute("T_FORMER",6);
+        attributesStorage.addAttribute("T_CARRIER",7);
+        //读取csv文件时会将一些不需要的属性名删读入，这里需要删除
+        //删去多余的属性名
+
+        //用于字段作用评估
+        while (csvReader.readRecord()) {
+            //订单数量计数
+            orderNumber++;
+            dealTest(csvReader, map);
+        }
     }
 }

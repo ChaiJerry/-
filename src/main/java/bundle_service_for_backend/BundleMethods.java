@@ -10,6 +10,9 @@ import java.util.*;
  * 所有的打包方法在这里
  */
 public class BundleMethods {
+
+    public static final String ANCILLARY = "Ancillary";
+
     private BundleMethods() {
     }
 
@@ -24,7 +27,7 @@ public class BundleMethods {
     public static Element bundleMeal(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
             , RulesStorage rulesStorage, Document doc) {
-        Element ancillary = doc.createElement("Ancillary");
+        Element ancillary = doc.createElement(ANCILLARY);
         Element boundProducts = doc.createElement("BoundProducts");
         Element ancillaryProducts = doc.createElement("AncillaryProducts");
         ancillary.appendChild(boundProducts);
@@ -58,7 +61,7 @@ public class BundleMethods {
     public static Element bundleBaggage(Map<String, BundleItem> ticketInfo
             , Map<String, List<BundleItem>> bundleItems
             , RulesStorage rulesStorage, Document doc) {
-        Element ancillary = doc.createElement("Ancillary");
+        Element ancillary = doc.createElement(ANCILLARY);
         Element baggage = doc.createElement("Baggage");
         ancillary.appendChild(baggage);
         Element originDestination = doc.createElement("OriginDestination");

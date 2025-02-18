@@ -18,6 +18,8 @@ import static bundle_system.io.SharedAttributes.*;
 public class XMLParser {
     public static final String ROOM_ROOT_PATH = "/OJ_ComboSearchRS/ComboWith/OTA_HotelAvailRS/RoomStays/RoomStay";
     public static final String SEAT_ROOT_PATH = "/OJ_ComboSearchRS/ComboWith/OJ_AirSeatMapRS/Product/SeatMapResponse";
+    public static final String TOTAL_XPATH = "Prices/Price/Total";
+    public static final String CURRENCY_CODE = "CurrencyCode";
     // 实例化后用该xpath解析保证线程安全
     private final XPath xpath;
 
@@ -295,8 +297,7 @@ public class XMLParser {
             bundleItem.addAttributeNameValuePair("BAGGAGE_SPECIFICATION", weight);
 
             //得到Amount
-            String totalXpath = "Prices/Price/Total";
-            Element total = (Element) xpath.evaluate(totalXpath, baggage, XPathConstants.NODE);
+            Element total = (Element) xpath.evaluate(TOTAL_XPATH, baggage, XPathConstants.NODE);
             String amount = DataParser.floatStr2Attribute(total.getAttribute(AMOUNT), 200) + "";
             bundleItem.addAttributeNameValuePair("PAYMENTAMOUNT", amount);
         }
@@ -389,7 +390,7 @@ public class XMLParser {
                     xmlAttributes.put(SEGMENT_REF, segmentRef);
                     xmlAttributes.put(SUPPLIER_PRODUCT_CODE, supplierProductCode);
                     xmlAttributes.put(AMOUNT, amountAndCurrencyCode[0]);
-                    xmlAttributes.put("CurrencyCode", amountAndCurrencyCode[1]);
+                    xmlAttributes.put(CURRENCY_CODE, amountAndCurrencyCode[1]);
                     bundleItem.setXmlAttributes(xmlAttributes);
                     // 将已经访问过的主键添加到集合中
                     haveVisited.add(subType+"|"+supplierProductCode);
@@ -437,7 +438,7 @@ public class XMLParser {
                 Element roomRate = (Element) roomRates.item(j);
                 Element total = getElementByRelativePath(roomRate, "Rates/Rate/Total");
                 String amount = total.getAttribute("Adjusted");
-                String currencyCode = total.getAttribute("CurrencyCode");
+                String currencyCode = total.getAttribute(CURRENCY_CODE);
                 String roomTypeCode = roomRate.getAttribute("RoomTypeCode");
                 String roomTypeName = roomTypeCode2TypeNameMap.get(roomTypeCode);
                 /*
@@ -508,10 +509,9 @@ public class XMLParser {
             //得到座位等级
             String supplierProductCode = ancillaryProduct.getAttribute(SUPPLIER_PRODUCT_CODE);
             //得到座位价格
-            String baseXpath = "Prices/Price/Total";
-            Element total = (Element) xpath.evaluate(baseXpath, ancillaryProduct, XPathConstants.NODE);
+            Element total = (Element) xpath.evaluate(TOTAL_XPATH, ancillaryProduct, XPathConstants.NODE);
             String amount = total.getAttribute(AMOUNT);
-            String currency = total.getAttribute("CurrencyCode");
+            String currency = total.getAttribute(CURRENCY_CODE);
             seatPriceMap.put(supplierProductCode, new String[]{amount, currency});
         }
         return seatPriceMap;

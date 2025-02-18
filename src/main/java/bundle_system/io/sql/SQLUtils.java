@@ -35,11 +35,13 @@ public class SQLUtils {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(url, username, password);
-            //createTablesForMemQueryIfNotExist();
+            createTablesForMemQueryIfNotExist();
         } catch (ClassNotFoundException | SQLException e) {
-            logger.info("自动建表失败");
+            logger.info("自动建表失败（可忽略）");
             logger.info(e.getMessage());
         }
+        String msg= String.format("数据库连接状态：获取连接=%s", con != null);
+        logger.info(msg);
         // 初始化 TypeNames 数组
         for (int i = 0; i < getFullNames().length; ++i) {
             typeNames[i] = getFullNames()[i].toLowerCase();
@@ -242,7 +244,7 @@ public class SQLUtils {
                     trainRecordQueryResToMap(rs, recordMap);
                     return recordMap;
                 } else {
-                    return null;
+                    return new HashMap<>();
                 }
             }
         }
@@ -339,7 +341,7 @@ public class SQLUtils {
      */
     public String insertTrainRecord(String startTime, String endTime
             , String orderNumber, String comments
-            , String minSupport, String minConfidence) {
+            , String minSupport, String minConfidence) throws SQLException {
 
         // 准备插入语句
         String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES (?, ?, ?, ?, ?, ?)";
@@ -367,8 +369,6 @@ public class SQLUtils {
                     throw new SQLException("Creating train record failed, no ID obtained.");
                 }
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 

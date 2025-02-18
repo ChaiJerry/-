@@ -55,7 +55,7 @@ public class BackendBundleSystem {
         sqlUtils = new SQLUtils();
         // 测试时使用文件系统之中的文件，因此需要csv文件输入输出操作的支持
         fileIO = SharedAttributes.fileIOForTest;
-        rulesStorages = initAllRulesStorageFromDB(51);
+        rulesStorages = initAllRulesStorageFromDB(1);
     }
 
     /**
@@ -150,7 +150,6 @@ public class BackendBundleSystem {
         Future<?> future = executorService.submit(new QueryTask(doc, rulesStorages));
         // 等待查询任务完成
         future.get();
-
         // 返回处理后的 Document 对象
         return doc;
     }
@@ -213,12 +212,12 @@ public class BackendBundleSystem {
             Document doc;
             doc = xmlio.readTest2();
             submitBundleTask(doc);
-            saveDocument(doc, "D:\\programms\\java_projects\\version_control\\test2.xml");
+            saveDocument(doc, "test2.xml");
             String testMsg = "time(ms):" + ((double) (System.nanoTime() - start)) / 1000000;
             logger.info(testMsg);
             doc = xmlio.readTest1();
             submitQueryTask(doc);
-            saveDocument(doc, "D:\\programms\\java_projects\\version_control\\test1.xml");
+            saveDocument(doc, "test1.xml");
             shutdownAll();
             return true;
         }catch(ParserConfigurationException | IOException | SAXException | TransformerException | ExecutionException  e){

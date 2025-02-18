@@ -107,15 +107,22 @@ public class TrainRecord implements Comparable<TrainRecord>{
 
     @Override
     public String toString() {
-        return "{\n" +
-                "\"train_id\": \""+this.tid +"\",\n" +
-                "\"startTime\": \""+this.startTime+"\",\n" +
-                "\"endTime\": \""+this.endTime+"\",\n" +
-                "\"orderNumber\": \""+this.orderNumber+"\",\n" +
-                "\"comments\": \""+this.comments+"\",\n" +
-                "\"minSupport\": \""+this.minSupport+"\",\n" +
-                "\"minConfidence\": \""+this.minConfidence+"\"\n"+
-                "}";
+        return String.format("{%n" +
+                        "  \"train_id\": \"%s\",%n" +
+                        "  \"startTime\": \"%s\",%n" +
+                        "  \"endTime\": \"%s\",%n" +
+                        "  \"orderNumber\": \"%s\",%n" +
+                        "  \"comments\": \"%s\",%n" +
+                        "  \"minSupport\": \"%s\",%n" +
+                        "  \"minConfidence\": \"%s\"%n" +
+                        "}",
+                this.tid,
+                this.startTime,
+                this.endTime,
+                this.orderNumber,
+                this.comments,
+                this.minSupport,
+                this.minConfidence);
     }
 
     @Override

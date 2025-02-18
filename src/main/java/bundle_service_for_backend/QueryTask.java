@@ -31,9 +31,7 @@ public class QueryTask implements Callable<Void> {
         XMLParser xmlParser = new XMLParser(xPathfactory.newXPath());
         Element root = doc.getDocumentElement();
         // 删掉原有的comboWith标签（如果有），重新创建新的comboWith标签
-        if(xmlParser.getElementByRelativePath(root, "/OJ_ComboSearchRQ/ComboWith") != null) {
-            root.removeChild(xmlParser.getElementByRelativePath(root, "/OJ_ComboSearchRQ/ComboWith"));
-        }
+        deleteComboWithIfExists(xmlParser, root);
         Element comboWith = doc.createElement("ComboWith");
         root.appendChild(comboWith);
         Map<String, BundleItem> segTicketMap = xmlParser.parseComboSourceForRQ(root);
@@ -58,6 +56,18 @@ public class QueryTask implements Callable<Void> {
         }
         replaceRootNode(doc, "OJ_ComboSearchRS");
         return null;
+    }
+
+    /**
+     * 检查是否存在comboWith标签，如果存在则删除。
+     * @param xmlParser xml解析器对象，用于执行XPath查询
+     * @param root XML文档的根元素
+     * @throws XPathExpressionException 如果XPath表达式无效，则抛出此异常
+     */
+    private static void deleteComboWithIfExists(XMLParser xmlParser, Element root) throws XPathExpressionException {
+        if(xmlParser.getElementByRelativePath(root, "/OJ_ComboSearchRQ/ComboWith") != null) {
+            root.removeChild(xmlParser.getElementByRelativePath(root, "/OJ_ComboSearchRQ/ComboWith"));
+        }
     }
 
     /**
