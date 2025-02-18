@@ -39,7 +39,7 @@ public class XMLIO {
      */
     public Document readTest1() throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilder builder = factory.newDocumentBuilder();
-        File file = new File("D:\\programms\\java_projects\\version_control\\动态打包北航及XDIST流转报文带酒店\\0.可打包附加产品类型查询请求.OJ_ComboSearchRQ.xml");
+        File file = new File("动态打包北航及XDIST流转报文带酒店\\0.可打包附加产品类型查询请求.OJ_ComboSearchRQ.xml");
         return builder.parse(file);
     }
 
@@ -52,7 +52,7 @@ public class XMLIO {
      */
     public Document readTest2() throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilder builder = factory.newDocumentBuilder();
-        File file = new File("D:\\programms\\java_projects\\version_control\\动态打包北航及XDIST流转报文带酒店\\4.动态打包信息查询请求.OJ_ComboSearchRS.xml");
+        File file = new File("动态打包北航及XDIST流转报文带酒店\\4.动态打包信息查询请求.OJ_ComboSearchRS.xml");
         return builder.parse(file);
     }
 

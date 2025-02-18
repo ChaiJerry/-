@@ -14,8 +14,9 @@ public class SQLUtils {
     public static final String INSERT_INTO = "INSERT INTO ";
     public static final String END_TIME = "endTime";
     public static final String DID = "did";
-
     private Connection con;
+    // 连接状态标记，用于判断是否成功连接到数据库。
+    private boolean connected;
 
     public final String[] typeNames = new String[getFullNames().length];//全小写
 
@@ -28,19 +29,27 @@ public class SQLUtils {
      * @param url      数据库连接的 URL
      * @param username 连接数据库的用户名
      * @param password 连接数据库的密码
-     * @throws ClassNotFoundException 如果找不到 MySQL 驱动类
-     * @throws SQLException           如果连接数据库时发生错误
      */
     public SQLUtils(String url, String username, String password) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(url, username, password);
-            createTablesForMemQueryIfNotExist();
+            // 连接成功，设置 connected 为 true
+            connected = true;
         } catch (ClassNotFoundException | SQLException e) {
-            logger.info("自动建表失败（可忽略）");
+            // 连接失败，设置 connected 为 false 并记录错误信息
+            connected = false;
+            logger.info("数据库连接失败！请检查驱动或数据库配置");
             logger.info(e.getMessage());
         }
-        String msg= String.format("数据库连接状态：获取连接=%s", con != null);
+        try {
+            // 尝试创建必要的表，如果它们不存在的话
+            createTablesForMemQueryIfNotExist();
+        } catch (SQLException e) {
+            logger.info("自动建表失败（可忽略）");
+        }
+        // 打印数据库连接状态信息
+        String msg= String.format("数据库连接状态：连接成功=%s", con != null);
         logger.info(msg);
         // 初始化 TypeNames 数组
         for (int i = 0; i < getFullNames().length; ++i) {
@@ -64,9 +73,16 @@ public class SQLUtils {
             String password = properties.getProperty("password");
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(url, username, password);
-            createTablesForMemQueryIfNotExist();
+            connected = true;
         } catch (IOException | ClassNotFoundException | SQLException ignored) {
+            connected = false;
             logger.info("数据库连接失败，请不要用默认构造函数，这是为测试用的");
+        }
+        try {
+            // 尝试创建必要的表，如果它们不存在的话
+            createTablesForMemQueryIfNotExist();
+        } catch (SQLException e) {
+            logger.info("自动建表失败（可忽略）");
         }
         // 初始化 TypeNames 数组
         for (int i = 0; i < getFullNames().length; i++) {
