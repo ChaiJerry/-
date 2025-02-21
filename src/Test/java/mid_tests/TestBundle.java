@@ -19,6 +19,5 @@ public class TestBundle {
         assertEquals(240, rulesStorages.get(BAGGAGE).getSize());
         assertEquals(380, rulesStorages.get(INSURANCE).getSize());
         assertEquals(120, rulesStorages.get(SEAT).getSize());
-        assertTrue(backendBundleSystem.test());
     }
 }

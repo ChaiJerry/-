@@ -22,6 +22,14 @@
 
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.anyline/anyline-data-jdbc-goldendb -->
+        <dependency>
+            <groupId>org.anyline</groupId>
+            <artifactId>anyline-data-jdbc-goldendb</artifactId>
+            <version>8.7.2-jdk17-20250212</version>
+        </dependency>
+
+
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

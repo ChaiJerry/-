@@ -14,6 +14,7 @@ public class SQLUtils {
     public static final String INSERT_INTO = "INSERT INTO ";
     public static final String END_TIME = "endTime";
     public static final String DID = "did";
+    public static final String TRAIN_DATA = "train_data_";
     private Connection con;
     // 连接状态标记，用于判断是否成功连接到数据库。
     private boolean connected;
@@ -35,6 +36,10 @@ public class SQLUtils {
      * @param password 连接数据库的密码
      */
     public SQLUtils(String url, String username, String password) {
+        // 初始化 TypeNames 数组
+        for (int i = 0; i < getFullNames().length; ++i) {
+            typeNames[i] = getFullNames()[i].toLowerCase();
+        }
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(url, username, password);
@@ -55,10 +60,6 @@ public class SQLUtils {
         // 打印数据库连接状态信息
         String msg= String.format("数据库连接状态：连接成功=%s", con != null);
         logger.info(msg);
-        // 初始化 TypeNames 数组
-        for (int i = 0; i < getFullNames().length; ++i) {
-            typeNames[i] = getFullNames()[i].toLowerCase();
-        }
     }
 
     /**
@@ -68,6 +69,10 @@ public class SQLUtils {
      * 初始化 typeNames 数组，将所有类型的名称转换为小写形式。
      */
     public SQLUtils() {
+        // 初始化 TypeNames 数组
+        for (int i = 0; i < getFullNames().length; i++) {
+            typeNames[i] = getFullNames()[i].toLowerCase();
+        }
         try {
             Properties properties = new Properties();
             properties.load(SQLUtils.class.getClassLoader().getResourceAsStream("sql.properties"));
@@ -88,10 +93,6 @@ public class SQLUtils {
         } catch (SQLException e) {
             logger.info("自动建表失败（可忽略）");
         }
-        // 初始化 TypeNames 数组
-        for (int i = 0; i < getFullNames().length; i++) {
-            typeNames[i] = getFullNames()[i].toLowerCase();
-        }
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -104,9 +105,10 @@ public class SQLUtils {
      * @return String 训练数据表名称
      */
     public String getTrainDataTableName(int type) {
-        //getFullNames()[type]返回的是种类名称，如"Insurance"
-        //由于数据库中都是小写，所以这里需要将种类名称转换为小写
-        return "train_data_" + getFullNames()[type].toLowerCase();
+        //typenames返回的是种类名称，如"insurance"
+        //这里将种类名称都是小写
+        if(type==-1) return null;
+        return TRAIN_DATA + typeNames[type];
     }
 
     /**
@@ -116,11 +118,23 @@ public class SQLUtils {
      * @return String 训练数据表名称
      */
     public String getTrainDataTableName(String typeName) {
+        return getTrainDataTableName(getIndexOfTableNameInTypeNames(typeName));
+    }
+
+    /**
+     * 获取训练数据表名称在typeNames数组中的索引位置
+     *
+     * @param typeName 种类代码
+     * @return String 训练数据表名称
+     */
+    public int getIndexOfTableNameInTypeNames(String typeName) {
         // 判断typeName是否是否存在于typeNames数组中，防止sql注入
-        if (!Arrays.asList(typeNames).contains(typeName)) {
-            return null;
+        for (int i = 0; i < typeNames.length; ++i) {
+            if (typeNames[i].equals(typeName)) {
+                return i;
+            }
         }
-        return "train_data_" + typeName;
+        return -1;//触发异常，防止sql注入
     }
 
     /**
@@ -452,7 +466,7 @@ public class SQLUtils {
     public void createTrainDataTables() throws SQLException {
         String sql;
         try (Statement stmt = con.createStatement()) {
-            for (int i = TICKET; i < getFullNames().length; i++) {
+            for (int i = TICKET; i < typeNames.length ; i++) {
                 sql = "CREATE TABLE IF NOT EXISTS " + getTrainDataTableName(i) + " (" +
                         "did INT AUTO_INCREMENT PRIMARY KEY, " +
                         "file_name VARCHAR(512), " +
@@ -471,7 +485,7 @@ public class SQLUtils {
     public void createTablesForMemQueryIfNotExist() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             // 使用 for 循环创建规则表，由于 TICKET 的规则表不用建，所以从 HOTEL 开始创建
-            for (int i = HOTEL; i < getFullNames().length; i++) {
+            for (int i = HOTEL; i < typeNames.length; i++) {
                 String sql = "CREATE TABLE IF NOT EXISTS " + getRuleTableName(i) + " (" +
                         "rid INT AUTO_INCREMENT PRIMARY KEY, " +
                         "ate VARCHAR(1024), " +
@@ -505,7 +519,7 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void dropRulesTables(Statement stmt) throws SQLException {
-        for (int i = HOTEL; i < getFullNames().length; i++) {
+        for (int i = HOTEL; i < typeNames.length; i++) {
             String sql = "DROP TABLE IF EXISTS " + getRuleTableName(i);
             stmt.executeUpdate(sql);
         }
@@ -528,7 +542,7 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void dropTrainDataTables(Statement stmt) throws SQLException {
-        for (int i = TICKET; i < getFullNames().length; i++) {
+        for (int i = TICKET; i < typeNames.length; i++) {
             String sql = "DROP TABLE IF EXISTS " + getTrainDataTableName(i);
             stmt.executeUpdate(sql);
         }
@@ -667,7 +681,7 @@ public class SQLUtils {
      * @return 表名
      */
     private String getRuleTableName(int type) {
-        return "rules_" + SharedAttributes.getFullNames()[type].toLowerCase();
+        return "rules_" + typeNames[type];
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
