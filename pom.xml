@@ -22,13 +22,23 @@
 
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.anyline/anyline-data-jdbc-goldendb -->
-        <dependency>
-            <groupId>org.anyline</groupId>
-            <artifactId>anyline-data-jdbc-goldendb</artifactId>
-            <version>8.7.2-jdk17-20250212</version>
-        </dependency>
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.anyline/anyline-data-jdbc-goldendb &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.anyline</groupId>-->
+<!--            <artifactId>anyline-data-jdbc-goldendb</artifactId>-->
+<!--            <version>8.7.2-jdk17-20250212</version>-->
+<!--        </dependency>-->
 
+        <!--        <dependency>-->
+<!--            <groupId>goldenDb</groupId>-->
+<!--            <artifactId>gdb_mysql-connector-java</artifactId>-->
+<!--            <version>5.1.46.33</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.0.1</version> <!-- 请根据需要选择版本 -->
+        </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>

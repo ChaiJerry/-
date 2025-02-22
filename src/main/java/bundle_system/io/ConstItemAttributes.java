@@ -163,9 +163,11 @@ public class ConstItemAttributes {
         itemAttributeNames.add(ConstItemAttributes.BAGGAGE_ATTRIBUTES);
         itemAttributeNames.add(ConstItemAttributes.INSURANCE_ATTRIBUTES);
         itemAttributeNames.add(ConstItemAttributes.SEAT_ATTRIBUTES);
+        //之后要是添加新的品类，则在此处添加
+
         //用于训练测试的属性，这里和普通机票属性存储一样
         itemAttributeNames.add(ConstItemAttributes.TICKET_ATTRIBUTES);
-        //之后要是添加新的品类，则在此处添加
+
     }
 }
 

@@ -1,10 +1,11 @@
 package main;
 
 import bundle_service_for_backend.*;
-import bundle_system.db_query_system.*;
+import bundle_system.api.*;
 import bundle_system.io.*;
 import bundle_system.io.sql.*;
 import bundle_system.memory_query_system.*;
+import bundle_system.train_system.*;
 import org.xml.sax.*;
 
 import javax.xml.parsers.*;
@@ -18,7 +19,7 @@ import java.util.concurrent.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class MainClass {
-    public static void main(String[] args) throws  InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         SQLUtils sqlUtils = new SQLUtils();
         BackendBundleSystem backendBundleSystem = new BackendBundleSystem(8,sqlUtils,1);
         backendBundleSystem.test();

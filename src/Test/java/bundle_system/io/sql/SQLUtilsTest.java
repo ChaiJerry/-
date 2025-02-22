@@ -1,10 +1,9 @@
-package mid_tests;
+package bundle_system.io.sql;
 
-import bundle_system.io.sql.*;
 import org.junit.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestSQLUtils {
+public class SQLUtilsTest {
     SQLUtils sqlUtils = new SQLUtils();
     @Test
     public void testConnection() {

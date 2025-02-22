@@ -1,10 +1,8 @@
-bundle_system\db_query_system\Evaluator.class
 bundle_service_for_backend\BackendBundleSystem.class
 bundle_service_for_backend\BundleMethods.class
 main\MainClass.class
 bundle_system\train_system\FPGrowth.class
 bundle_system\io\SharedAttributes.class
-bundle_system\io\MongoUtils.class
 bundle_system\io\ConstItemAttributes.class
 bundle_system\io\ItemAttributeNamesStorage.class
 bundle_service_for_backend\QueryTask.class
@@ -15,14 +13,10 @@ bundle_service_for_backend\xml_parser\ParseMethod.class
 bundle_system\data_processer\DataParser.class
 bundle_system\io\sql\TrainRecord.class
 bundle_system\memory_query_system\RulesStorage.class
-bundle_system\db_query_system\ItemPack.class
 bundle_system\memory_query_system\AttrValueConfidencePriority.class
 bundle_system\io\sql\SQLUtils.class
 bundle_system\io\CSVFileIO.class
-bundle_system\db_query_system\BasicItemSearchUnit.class
 bundle_service_for_backend\xml_parser\XMLParser.class
-bundle_system\memory_query_system\QuickQuery.class
-bundle_system\db_query_system\QuerySystem.class
 bundle_system\memory_query_system\AssociationRuleConsResult.class
 bundle_service_for_backend\xml_parser\BundleItemForHotel.class
 bundle_service_for_backend\xml_parser\BundleItem.class

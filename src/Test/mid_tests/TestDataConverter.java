@@ -14,8 +14,8 @@ public class TestDataConverter {
 
     @Test
     public void testRow2rule() throws IOException {
-        Dataset<Row> rowDataset = getFileIO().csv2datasetByType(1);
-        FPGrowthModel model = train(rowDataset);
+        Dataset<Row> rowDataset = FPGrowth.getFileIO().csv2datasetByType(1);
+        FPGrowthModel model = FPGrowth.train(rowDataset);
         Dataset<Row> ruleDataset = model.associationRules();
         for (Row row : ruleDataset.collectAsList()) {
             boolean flag = true;
@@ -29,8 +29,8 @@ public class TestDataConverter {
             if (temp.charAt(0) == 'T') {
                 flag = false;
             }
-            String[] processedStr = row2rule(row);
-            assertEquals(flag, processedStr.length != 0);
+            String[] processedStr = DataConverter.row2rule(row);
+            Assert.assertEquals(flag, processedStr.length != 0);
         }
 
     }

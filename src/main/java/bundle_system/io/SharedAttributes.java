@@ -46,7 +46,6 @@ public class SharedAttributes {
     //若是之后要添加新的品类，则在注册新标识
 
     ////////////////////////////
-    public static final String TICKET_ATTRIBUTES_FIELD_NAME = "ticketAttributes";
 
     //之后要是添加新的品类，则在此处添加，并注册到itemAttributeNames中
     private static final List<String[]> itemAttributeNames = ConstItemAttributes.itemAttributeNames;
@@ -98,8 +97,6 @@ public class SharedAttributes {
     public static final String RESULT_FORM;
     // 训练备注
     public static final String COMMENT;
-
-    public static final String ORDERS_FIELD_NAME = "Orders";
 
     //数据库中商品唯一标识符的field名
     private static final List<List<String>> targetItemFieldNames;
@@ -205,15 +202,6 @@ public class SharedAttributes {
      */
     public static List<String> getTargetItemNames(int type) {
         return targetItemNames.get(type);
-    }
-
-    /**
-     * 获取指定品类下的作为标识符的属性名的field名
-     * @param type 品类编号
-     * @return 品类下的作为标识符的属性名的field名
-     */
-    public static List<String> getTargetItemFieldNames(int type) {
-        return targetItemFieldNames.get(type);
     }
 
     /**

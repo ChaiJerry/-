@@ -1,7 +1,5 @@
 package bundle_system.io.sql;
 
-import bundle_system.io.*;
-
 import java.io.*;
 import java.sql.*;
 import java.util.*;
@@ -10,7 +8,6 @@ import static bundle_system.io.SharedAttributes.*;
 
 @SuppressWarnings("SqlNoDataSourceInspection")
 public class SQLUtils {
-
     public static final String INSERT_INTO = "INSERT INTO ";
     public static final String END_TIME = "endTime";
     public static final String DID = "did";
@@ -25,6 +22,10 @@ public class SQLUtils {
 
     public final String[] typeNames = new String[getFullNames().length];//全小写
 
+    private String url = null;
+    private String username = null;
+    private String password = null;
+
     /**
      * 参数化构造函数，用于生产环境中的数据库连接。
      * 接受数据库 URL、用户名和密码作为参数，并尝试建立与数据库的连接。
@@ -36,13 +37,35 @@ public class SQLUtils {
      * @param password 连接数据库的密码
      */
     public SQLUtils(String url, String username, String password) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
         // 初始化 TypeNames 数组
         for (int i = 0; i < getFullNames().length; ++i) {
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
+        con = getConnection();
+        try {
+            // 尝试创建必要的表，如果它们不存在的话
+            if(con != null)
+                createTablesForMemQueryIfNotExist();
+        } catch (SQLException e) {
+            logger.info("自动建表失败（可忽略）");
+        }
+        // 打印数据库连接状态信息
+        String msg= String.format("数据库连接状态：连接成功=%s", con != null);
+        logger.info(msg);
+    }
+
+    /**
+     * 尝试建立与数据库的连接的方法
+     * @return Connection 连接对象，如果成功则返回有效的 Connection 实例；
+     */
+    private Connection getConnection() {
+        Connection connection = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection(url, username, password);
+            connection =DriverManager.getConnection(this.url, this.username, this.password);
             // 连接成功，设置 connected 为 true
             connected = true;
         } catch (ClassNotFoundException | SQLException e) {
@@ -51,15 +74,7 @@ public class SQLUtils {
             logger.info("数据库连接失败！请检查驱动或数据库配置");
             logger.info(e.getMessage());
         }
-        try {
-            // 尝试创建必要的表，如果它们不存在的话
-            createTablesForMemQueryIfNotExist();
-        } catch (SQLException e) {
-            logger.info("自动建表失败（可忽略）");
-        }
-        // 打印数据库连接状态信息
-        String msg= String.format("数据库连接状态：连接成功=%s", con != null);
-        logger.info(msg);
+        return connection;
     }
 
     /**
@@ -76,10 +91,9 @@ public class SQLUtils {
         try {
             Properties properties = new Properties();
             properties.load(SQLUtils.class.getClassLoader().getResourceAsStream("sql.properties"));
-            // 在配置文件中修改成自己的数据库
-            String url = properties.getProperty("url");
-            String username = properties.getProperty("username");
-            String password = properties.getProperty("password");
+            this.url = properties.getProperty("url");
+            this.username = properties.getProperty("username");
+            this.password = properties.getProperty("password");
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(url, username, password);
             connected = true;
@@ -89,7 +103,8 @@ public class SQLUtils {
         }
         try {
             // 尝试创建必要的表，如果它们不存在的话
-            createTablesForMemQueryIfNotExist();
+            if(con != null)
+                createTablesForMemQueryIfNotExist();
         } catch (SQLException e) {
             logger.info("自动建表失败（可忽略）");
         }

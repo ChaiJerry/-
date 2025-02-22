@@ -14,10 +14,10 @@ public class TestBundle {
     public void test() throws InterruptedException, IOException {
         BackendBundleSystem backendBundleSystem = new BackendBundleSystem();
         List<RulesStorage> rulesStorages = backendBundleSystem.getRulesStorages();
-        assertEquals(415, rulesStorages.get(HOTEL).getSize());
-        assertEquals(246, rulesStorages.get(MEAL).getSize());
-        assertEquals(240, rulesStorages.get(BAGGAGE).getSize());
-        assertEquals(380, rulesStorages.get(INSURANCE).getSize());
-        assertEquals(120, rulesStorages.get(SEAT).getSize());
+        Assertions.assertEquals(415, rulesStorages.get(SharedAttributes.HOTEL).getSize());
+        Assertions.assertEquals(246, rulesStorages.get(SharedAttributes.MEAL).getSize());
+        Assertions.assertEquals(240, rulesStorages.get(SharedAttributes.BAGGAGE).getSize());
+        Assertions.assertEquals(380, rulesStorages.get(SharedAttributes.INSURANCE).getSize());
+        Assertions.assertEquals(120, rulesStorages.get(SharedAttributes.SEAT).getSize());
     }
 }

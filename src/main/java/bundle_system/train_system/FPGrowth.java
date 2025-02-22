@@ -1,6 +1,5 @@
 package bundle_system.train_system;
 
-import java.io.*;
 import java.util.*;
 
 
@@ -39,7 +38,6 @@ public class FPGrowth {
      * @return 返回训练好的FPGrowth模型
      */
     public static FPGrowthModel train(Dataset<Row> itemsDF) {
-        //logger.info("正在使用FPGrowth算法训练模型");
         return new org.apache.spark.ml.fpm.FPGrowth()
                 .setItemsCol(ITEMS)//设置items列名
                 .setMinSupport(MIN_SUPPORT)//最小支持度
@@ -101,40 +99,6 @@ public class FPGrowth {
             dataset2RulesList(rules, rulesList);
         }
     }
-
-
-    public static void fpGrowthTest() throws IOException {
-
-        for (int i = 1; i < 6; i++) {
-            //得到运行时间
-            long startTime = System.currentTimeMillis();
-            // 准备数据
-//            logger.info("正在准备数据");
-            Dataset<Row> itemsDF = fileIOForTest.csv2datasetByType(i);
-
-            // 使用FPGrowth算法训练模型
-            FPGrowthModel model = train(itemsDF);
-
-
-
-            // 显示生成的关联规则并保存到csv
-            Dataset<Row> rules = model.associationRules();
-
-            if (RESULT_FORM.equals("csv")) {
-                //保存关联规则到csv
-                fileIOForTest.rules2CSV(rules, i);
-            } else if (RESULT_FORM.equals("db")) {
-                //保存关联规则到数据库
-                MongoUtils.rules2db(rules, i);
-            }
-            long endTime = System.currentTimeMillis();
-            String msg = getFullNames()[i] + "," + MIN_CONFIDENCE + "," + (endTime - startTime) + "ms";
-            logger.info(msg);
-        }
-        //停止MongoDB
-        MongoUtils.settle(fileIOForTest.getOrderNumber(), COMMENT, MIN_SUPPORT);
-    }
-
 
     /**
      * 定义数据模式

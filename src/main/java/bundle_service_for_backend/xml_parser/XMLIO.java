@@ -38,8 +38,11 @@ public class XMLIO {
      * @throws SAXException SAX异常
      */
     public Document readTest1() throws ParserConfigurationException, IOException, SAXException {
+        // 创建DocumentBuilder实例
         DocumentBuilder builder = factory.newDocumentBuilder();
-        File file = new File("动态打包北航及XDIST流转报文带酒店\\0.可打包附加产品类型查询请求.OJ_ComboSearchRQ.xml");
+        // 使用File.separator确保文件路径在不同操作系统下都能正确解析
+        File file = new File("动态打包北航及XDIST流转报文带酒店" + File.separator + "0.可打包附加产品类型查询请求.OJ_ComboSearchRQ.xml");
+        // 解析XML文件并返回Document对象
         return builder.parse(file);
     }
 
@@ -51,8 +54,11 @@ public class XMLIO {
      * @throws SAXException SAX异常
      */
     public Document readTest2() throws ParserConfigurationException, IOException, SAXException {
+        // 创建DocumentBuilder实例
         DocumentBuilder builder = factory.newDocumentBuilder();
-        File file = new File("动态打包北航及XDIST流转报文带酒店\\4.动态打包信息查询请求.OJ_ComboSearchRS.xml");
+        // 使用File.separator确保文件路径在不同操作系统下都能正确解析
+        File file = new File("动态打包北航及XDIST流转报文带酒店" + File.separator + "4.动态打包信息查询请求.OJ_ComboSearchRS.xml");
+        // 解析XML文件并返回Document对象
         return builder.parse(file);
     }
 

@@ -17,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
-import static bundle_system.api.API.*;
 import static bundle_system.io.SharedAttributes.*;
 
 public class BackendBundleSystem {
@@ -44,17 +43,15 @@ public class BackendBundleSystem {
 
     private final List<RulesStorage> rulesStorages;
     private final SQLUtils sqlUtils;
-    private final CSVFileIO fileIO;
 
     /**
+     * 默认使用训练id为1的训练数据的后端打包系统，用于测试
      * 请勿使用默认构造函数，请使用带参数的构造函数，这只是用来测试的
      */
     public BackendBundleSystem() throws IOException {
         this.poolSize = 8;
         executorService = Executors.newFixedThreadPool(poolSize);
         sqlUtils = new SQLUtils();
-        // 测试时使用文件系统之中的文件，因此需要csv文件输入输出操作的支持
-        fileIO = SharedAttributes.fileIOForTest;
         rulesStorages = initAllRulesStorageFromDB(1);
     }
 
@@ -74,7 +71,6 @@ public class BackendBundleSystem {
         executorService = Executors.newFixedThreadPool(poolSize);
         // 从数据库中读取训练数据，并初始化所有规则存储对象
         rulesStorages = initAllRulesStorageFromDB(trainId);
-        fileIO = null;
     }
 
 
@@ -112,7 +108,6 @@ public class BackendBundleSystem {
         Future<?> future = executorService.submit(new BundleTask(doc, rulesStorages));
         // 等待查询任务完成
         future.get();
-
         // 返回处理后的 Document 对象
         return doc;
     }
@@ -154,52 +149,6 @@ public class BackendBundleSystem {
         return doc;
     }
 
-    /**
-     * 提交多个打包任务到线程池（主要用于测试效率）
-     *
-     * @param docs 要处理的 Document 对象列表
-     * @throws ExecutionException   如果执行过程中发生异常
-     * @throws InterruptedException 如果当前线程被中断
-     */
-    public void submitBundleTasks(List<Document> docs) throws ExecutionException, InterruptedException {
-        // 提交查询任务到线程池
-        List<Future<?>> futures = new ArrayList<>();
-        // 遍历 Document 对象列表，为每个文档提交查询任务到线程池
-        for (Document doc : docs) {
-            futures.add(executorService.submit(new BundleTask(doc, rulesStorages)));
-        }
-
-        // 等待所有任务完成
-        for (Future<?> future : futures) {
-            future.get();
-        }
-    }
-
-    /**
-     * 测试多线程以及效率，会对于原来的doc修改
-     *
-     * @param num 测试次数
-     */
-    public void test(int num) throws ParserConfigurationException, IOException, SAXException, ExecutionException, InterruptedException {
-        //模拟输入Document
-        XMLIO xmlio = new XMLIO();
-        long sum = 0;
-        List<Document> docs = new ArrayList<>();
-        String msg0 = "正在模拟输入文档，数量：" + num;
-        logger.info(msg0);
-        for (int i = 0; i < num; i++) {
-            Document doc = xmlio.readTest2();
-            docs.add(doc);
-        }
-        logger.info("文档输入完成，开始打包");
-        long start = System.nanoTime();
-        submitBundleTasks(docs);
-        long end = System.nanoTime();
-        sum += end - start;
-        String msg1 = "完成，平均耗时time(ms):" + (sum) / 1000000 / num;
-        logger.info(msg1);
-        shutdownAll();
-    }
 
     /**
      * 测试正确性，会对于原来的doc修改，最后保存
@@ -274,21 +223,6 @@ public class BackendBundleSystem {
         return ancillary;
     }
 
-    /**
-     * 给附加产品排序的方法，比起较简单的方法，更保险
-     *
-     * @param map            推荐的附加产品属性键值对
-     * @param bundleItemList 附加产品键列表
-     */
-    public static void setPriorityAndSort(Map<String, AttrValueConfidencePriority> map, List<BundleItem> bundleItemList) {
-        // 遍历每个 BundleItem 并设置优先级
-        for (BundleItem bundleItem : bundleItemList) {
-            bundleItem.setPriority(map);
-        }
-
-        // 对 BundleItem 列表进行排序
-        Collections.sort(bundleItemList);
-    }
 
     /**
      * 给附加产品排序的方法，但这个更高级一点，当遇到数值类型字符串时
@@ -312,51 +246,6 @@ public class BackendBundleSystem {
         return true;
     }
 
-    /**
-     * 初始化打包系统实例中所有规则存储的方法（测试方法）
-     * 实际生产环境请使用initAllRulesStorageFromDB方法
-     *
-     * @return List<RulesStorage>
-     * @throws IOException IO异常
-     */
-    private List<RulesStorage> initAllRulesStorageForTests(Integer tid) throws IOException {
-        List<RulesStorage> rulesStoragesForTestSystems = new ArrayList<>();
-
-        // 跳过机票标号
-        rulesStoragesForTestSystems.add(null);
-
-        // 跳过酒店品类（没有使用）
-        rulesStoragesForTestSystems.add(null);
-
-        boolean autoSave = tid != null;
-        if (tid == null) {
-            tid = -1;
-        }
-
-        // 遍历每个品类并初始化规则存储
-        for (int type = 2; type < SharedAttributes.getFullNames().length; type++) {
-            List<List<String>> rules;
-
-            // 如果有 SQLUtils 实例，则尝试从数据库获取规则
-            if (sqlUtils != null) {
-                rules = getRulesFromDB(type, tid);
-
-                // 如果数据库中没有规则，则从 CSV 文件获取
-                if (rules.isEmpty()) {
-                    rules = getRulesFromCSVFile(type, tid, autoSave);
-                }
-            } else {
-                // 直接从 CSV 文件获取规则
-                rules = getRulesFromCSVFile(type, tid, autoSave);
-            }
-
-            // 初始化 RulesStorage 并添加到列表中
-            RulesStorage rulesStorage = RulesStorage.initRulesStorageByType(type, rules);
-            rulesStoragesForTestSystems.add(rulesStorage);
-        }
-
-        return rulesStoragesForTestSystems;
-    }
 
     /**
      * 用于实际生产环境使用，该方法从数据库中获取规则。
@@ -386,45 +275,6 @@ public class BackendBundleSystem {
         return rulesStoragesFromDBSystem;
     }
 
-    /**
-     * 用于测试的方法
-     * @param type 品类编号
-     * @return List<List<String>> 规则列表
-     * @throws IOException 如果读取文件时发生错误，则抛出 IOException。
-     */
-    private List<List<String>> getRulesFromCSVFile(int type) throws IOException {
-        List<List<String>> itemTicketRules = new ArrayList<>();
-        List<List<String>> listOfAttributeList = fileIO.csv2ListOfAttributeListByType(type);
-        // 进行关联规则挖掘
-        associationRulesMining(listOfAttributeList, false, true
-                , null, itemTicketRules, 0.08, 0);
-        return itemTicketRules;
-    }
-
-    /**
-     * 从 CSV 文件获取规则的方法。
-     * 用于自动化本地测试。
-     * @param type 品类编号
-     * @param tid 训练编号
-     * @param autoSave 是否自动保存规则到数据库
-     * @return List<List<String>> 规则列表
-     * @throws IOException 如果读取文件时发生错误，则抛出 IOException。
-     */
-    public List<List<String>> getRulesFromCSVFile(int type, int tid, boolean autoSave) throws IOException {
-        // 获取规则
-        List<List<String>> itemTicketRules = getRulesFromCSVFile(type);
-
-        // 如果需要自动保存且有 SQLUtils 实例，则将规则保存到数据库
-        if (autoSave && sqlUtils != null) {
-            try {
-                sqlUtils.insertRules(type, itemTicketRules, tid);
-            } catch (Exception e) {
-                logger.info("自动存储规则失败");
-            }
-        }
-
-        return itemTicketRules;
-    }
 
     /**
      * 从数据库中获取规则的方法。
@@ -441,9 +291,9 @@ public class BackendBundleSystem {
             // 如果已经存在，则直接加载
             itemTicketRules = sqlUtils.loadRules(type, tid);
         } catch (Exception e) {
+            logger.info("尝试从数据库中加载规则失败");
             return new ArrayList<>();
         }
-
         return itemTicketRules;
     }
 
