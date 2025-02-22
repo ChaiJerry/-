@@ -12,7 +12,6 @@ public class SQLUtils {
     public static final String END_TIME = "endTime";
     public static final String DID = "did";
     public static final String TRAIN_DATA = "train_data_";
-    private Connection con;
     // 连接状态标记，用于判断是否成功连接到数据库。
     private boolean connected;
 
@@ -44,38 +43,21 @@ public class SQLUtils {
         for (int i = 0; i < getFullNames().length; ++i) {
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
-        con = getConnection();
+        Connection connection = getConnection();
         try {
             // 尝试创建必要的表，如果它们不存在的话
-            if(con != null)
+            if(connection != null)
                 createTablesForMemQueryIfNotExist();
         } catch (SQLException e) {
             logger.info("自动建表失败（可忽略）");
+        } finally {
+            closeConnection(connection);
         }
         // 打印数据库连接状态信息
-        String msg= String.format("数据库连接状态：连接成功=%s", con != null);
+        String msg= String.format("数据库连接状态：连接成功=%s", connection != null);
         logger.info(msg);
     }
 
-    /**
-     * 尝试建立与数据库的连接的方法
-     * @return Connection 连接对象，如果成功则返回有效的 Connection 实例；
-     */
-    private Connection getConnection() {
-        Connection connection = null;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection =DriverManager.getConnection(this.url, this.username, this.password);
-            // 连接成功，设置 connected 为 true
-            connected = true;
-        } catch (ClassNotFoundException | SQLException e) {
-            // 连接失败，设置 connected 为 false 并记录错误信息
-            connected = false;
-            logger.info("数据库连接失败！请检查驱动或数据库配置");
-            logger.info(e.getMessage());
-        }
-        return connection;
-    }
 
     /**
      * 默认构造函数，用于测试目的。
@@ -88,6 +70,7 @@ public class SQLUtils {
         for (int i = 0; i < getFullNames().length; i++) {
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
+        Connection connection = null;
         try {
             Properties properties = new Properties();
             properties.load(SQLUtils.class.getClassLoader().getResourceAsStream("sql.properties"));
@@ -95,7 +78,7 @@ public class SQLUtils {
             this.username = properties.getProperty("username");
             this.password = properties.getProperty("password");
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection(url, username, password);
+            connection = DriverManager.getConnection(url, username, password);
             connected = true;
         } catch (IOException | ClassNotFoundException | SQLException ignored) {
             connected = false;
@@ -103,11 +86,14 @@ public class SQLUtils {
         }
         try {
             // 尝试创建必要的表，如果它们不存在的话
-            if(con != null)
+            if(connection != null)
                 createTablesForMemQueryIfNotExist();
         } catch (SQLException e) {
             logger.info("自动建表失败（可忽略）");
+        } finally {
+            closeConnection(connection);
         }
+
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -167,6 +153,9 @@ public class SQLUtils {
         //构建插入语句，插入文件名和上传时间到指定类型的数据库表中
         String sql = INSERT_INTO + getTrainDataTableName(typeName) + "(file_name, upload_time) VALUES (?, ?)";
         // 执行插入操作，这里用的是PreparedStatement来防止SQL注入攻击
+        Connection con = getConnection();
+        // 如果连接失败，则返回null
+        if(con==null) return null;
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, fileName);
             stmt.setString(2, uploadTime);
@@ -189,6 +178,9 @@ public class SQLUtils {
                         return null;
                     }
                 }
+            }finally {
+                // 最后关闭连接
+                closeConnection(con);
             }
         }
     }
@@ -210,6 +202,10 @@ public class SQLUtils {
      */
     public List<TrainDataRecord> getTrainDataRecordsByTypeName(String typeName) throws SQLException {
         String sql = "SELECT * FROM " + getTrainDataTableName(typeName) + " ORDER BY did DESC";
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        // 如果连接失败，则返回空列表
+        if(con==null) return new ArrayList<>();
         try (Statement stmt = con.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             List<TrainDataRecord> trainDataRecords = new ArrayList<>();
@@ -222,6 +218,9 @@ public class SQLUtils {
                 trainDataRecords.add(trainDataRecord);
             }
             return trainDataRecords;
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
@@ -235,6 +234,8 @@ public class SQLUtils {
      */
     public TrainDataRecord getTrainDataRecordByDid(int did, String typeName) throws SQLException {
         String sql = "SELECT * FROM " + getTrainDataTableName(typeName) + " WHERE did=?";
+        Connection con = getConnection();
+        if(con==null) return null;
         try (PreparedStatement pStmt = con.prepareStatement(sql)) {
             pStmt.setInt(1, did);
             try (ResultSet rs = pStmt.executeQuery()) {
@@ -246,7 +247,11 @@ public class SQLUtils {
                             typeName);
                 }
             }
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
+
         return null;
     }
 
@@ -260,6 +265,10 @@ public class SQLUtils {
      * @return 排好序的训练记录
      */
     public List<Map<String, String>> getTrainRecordMaps() throws SQLException {
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        // 如果连接失败，则返回空列表
+        if(con==null) return new ArrayList<>();
         try (Statement stmt = con.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM train_record ORDER BY tid DESC")) {
             List<Map<String, String>> records = new ArrayList<>();
@@ -272,6 +281,9 @@ public class SQLUtils {
                 records.add(recordMap);
             }
             return records;
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
@@ -283,6 +295,10 @@ public class SQLUtils {
      */
     public Map<String, String> getTrainRecordMapByTid(int tid) throws SQLException {
         String sql = "SELECT * FROM train_record WHERE tid=?";
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        // 如果连接失败，则返回空列表
+        if(con==null) return new HashMap<>();
         try (PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setInt(1, tid);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -296,6 +312,9 @@ public class SQLUtils {
                     return new HashMap<>();
                 }
             }
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
@@ -313,6 +332,10 @@ public class SQLUtils {
      */
     public String getTrainStatusByTid(int tid) throws SQLException {
         String sql = "SELECT endTime FROM train_record WHERE tid=?";
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        // 如果连接失败，则返回内部错误状态
+        if(con==null) return "数据库连接失败";
         try (PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setInt(1, tid);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -330,6 +353,9 @@ public class SQLUtils {
                     return "error handling";
                 }
             }
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
@@ -350,6 +376,10 @@ public class SQLUtils {
     public String insertTrainRecord(TrainRecord trainRecord) throws SQLException {
         // 准备插入语句
         String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES (?, ?, ?, ?, ?, ?)";
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        // 如果连接失败，则返回空字符串
+        if(con==null) return "";
         try (PreparedStatement pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, trainRecord.getStartTime());
             pstmt.setString(2, trainRecord.getEndTime());
@@ -374,6 +404,9 @@ public class SQLUtils {
                     throw new SQLException("Creating train record failed, no ID obtained.");
                 }
             }
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
@@ -391,9 +424,12 @@ public class SQLUtils {
     public String insertTrainRecord(String startTime, String endTime
             , String orderNumber, String comments
             , String minSupport, String minConfidence) throws SQLException {
-
         // 准备插入语句
         String sql = "INSERT INTO train_record(startTime, endTime, orderNumber, comments, minSupport, minConfidence) VALUES (?, ?, ?, ?, ?, ?)";
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        // 如果连接失败，则返回空字符串
+        if(con==null) return "数据库连接失败";
         try (PreparedStatement pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, startTime);
             pstmt.setString(2, endTime);
@@ -418,6 +454,9 @@ public class SQLUtils {
                     throw new SQLException("Creating train record failed, no ID obtained.");
                 }
             }
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
@@ -431,19 +470,31 @@ public class SQLUtils {
      */
     public void updateTrainRecordEndTime(int tid, String endTime) throws SQLException {
         String sql = "UPDATE train_record SET endTime = ? WHERE tid = ?";
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        if(con==null) return;
         try (PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setString(1, endTime);
             pstmt.setInt(2, tid);
             pstmt.executeUpdate();
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
     public void upDateTrainRecordOrderNumber(int tid, String orderNumber) throws SQLException {
         String sql = "UPDATE train_record SET orderNumber = ? WHERE tid = ?";
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        if(con==null) return;
         try (PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setString(1, orderNumber);
             pstmt.setInt(2, tid);
             pstmt.executeUpdate();
+        }finally {
+            // 最后关闭连接
+            closeConnection(con);
         }
     }
 
@@ -456,7 +507,7 @@ public class SQLUtils {
      *
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
-    public void createTrainRecordTable() throws SQLException {
+    public void createTrainRecordTable(Connection con) throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS train_record (" +
                 "tid INT AUTO_INCREMENT PRIMARY KEY, " +
                 "startTime VARCHAR(64), " +
@@ -478,7 +529,7 @@ public class SQLUtils {
      *
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
-    public void createTrainDataTables() throws SQLException {
+    public void createTrainDataTables(Connection con) throws SQLException {
         String sql;
         try (Statement stmt = con.createStatement()) {
             for (int i = TICKET; i < typeNames.length ; i++) {
@@ -498,6 +549,20 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void createTablesForMemQueryIfNotExist() throws SQLException {
+        // 初始化连接对象，执行查询操作
+        Connection con = getConnection();
+        if(con==null) return;
+        // 创建规则表，包括 HOTEL、MEAL、BAGGAGE、INSURANCE 和 SEAT 等品类对应的规则表
+        createRulesTable(con);
+        // 创建训练记录表
+        createTrainRecordTable(con);
+        // 创建所有品类对应的训练数据表
+        createTrainDataTables(con);
+        // 最后关闭连接
+        closeConnection(con);
+    }
+
+    private void createRulesTable(Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             // 使用 for 循环创建规则表，由于 TICKET 的规则表不用建，所以从 HOTEL 开始创建
             for (int i = HOTEL; i < typeNames.length; i++) {
@@ -511,8 +576,6 @@ public class SQLUtils {
                 stmt.executeUpdate(sql);
             }
         }
-        createTrainRecordTable();
-        createTrainDataTables();
     }
 
     /**
@@ -521,10 +584,14 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void dropTables() throws SQLException {
+        Connection con = getConnection();
+        if(con==null) return;
         Statement stmt = con.createStatement();
         dropRulesTables(stmt);
         dropTrainRecordTable(stmt);
         dropTrainDataTables(stmt);
+        stmt.close();
+        con.close();
     }
 
     /**
@@ -581,8 +648,13 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void renewRulesTables() throws SQLException {
-        dropRulesTables(con.createStatement());
-        createTablesForMemQueryIfNotExist();
+        try(Connection con = getConnection()){
+            if(con==null) return;
+            Statement statement = con.createStatement();
+            dropRulesTables(statement);
+            createTablesForMemQueryIfNotExist();
+            statement.close();
+        }
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -598,7 +670,7 @@ public class SQLUtils {
      * @throws IllegalArgumentException 如果 itemRule 为空或不包含三个元素
      * @throws RuntimeException         如果在执行 SQL 操作时发生错误
      */
-    private void insertRule(int type, List<String> itemRule, int tid) throws SQLException {
+    private void insertRule(int type, List<String> itemRule, int tid , Connection con) throws SQLException {
         // 检查 itemRule 是否为空或长度是否不等于3
         if (itemRule == null || itemRule.size() != 3) {
             throw new IllegalArgumentException("itemRule must contain exactly three elements.");
@@ -637,15 +709,11 @@ public class SQLUtils {
      */
     public void insertRules(int type, List<List<String>> itemRulesList, int tid) throws SQLException {
         //因为这里性能完全足够，因此不考虑优化，之后可以使用批量插入进行优化
-        for (List<String> itemRule : itemRulesList) {
-            insertRule(type, itemRule, tid);
-        }
-    }
-
-    public void insertRules(int type, List<List<String>> itemRulesList, int tid, int limit) throws SQLException {
-        //因为这里性能完全足够，因此暂时不考虑优化，之后可以使用批量插入进行优化
-        for (int i = 0; i < limit && i < itemRulesList.size(); i++) {
-            insertRule(type, itemRulesList.get(i), tid);
+        try(Connection con = getConnection()) {
+            // 遍历 itemRulesList 中的每个规则，并调用 insertRule 方法将其插入数据库
+            for (List<String> itemRule : itemRulesList) {
+                insertRule(type, itemRule, tid, con);
+            }
         }
     }
 
@@ -662,6 +730,9 @@ public class SQLUtils {
     public List<List<String>> loadRules(int type, int tid) throws SQLException {
         // 构建 SQL 查询语句，根据类型获取相应的规则表名，并按 tid 过滤
         String sql = "SELECT ate, cons, conf FROM " + getRuleTableName(type) + " WHERE tid=?";
+        Connection con = getConnection();
+        // 如果连接对象为 null，则直接返回空列表
+        if(con==null) return Collections.emptyList();
         // 创建 PreparedStatement 对象以执行 SQL 查询
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             // 设置查询参数 tid
@@ -685,6 +756,9 @@ public class SQLUtils {
                 }
                 // 返回包含所有规则信息的二维列表
                 return result;
+            }finally {
+                // 关闭数据库连接
+                closeConnection(con);
             }
         }
     }
@@ -697,6 +771,41 @@ public class SQLUtils {
      */
     private String getRuleTableName(int type) {
         return "rules_" + typeNames[type];
+    }
+
+    /**
+     * 关闭数据库连接的方法。
+     * @param connection 要关闭的数据库连接对象。如果该参数为 null，则不执行任何操作。
+     */
+    private static void closeConnection(Connection connection) {
+        // 如果连接对象不为 null，则尝试关闭该数据库连接
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                logger.info("关闭数据库连接失败");
+            }
+        }
+    }
+
+    /**
+     * 尝试建立与数据库的连接的方法
+     * @return Connection 连接对象，如果成功则返回有效的 Connection 实例；
+     */
+    private Connection getConnection() {
+        Connection connection = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            connection =DriverManager.getConnection(this.url, this.username, this.password);
+            // 连接成功，设置 connected 为 true
+            connected = true;
+        } catch (ClassNotFoundException | SQLException e) {
+            // 连接失败，设置 connected 为 false 并记录错误信息
+            connected = false;
+            logger.info("数据库连接失败！请检查驱动或数据库配置");
+            logger.info(e.getMessage());
+        }
+        return connection;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////

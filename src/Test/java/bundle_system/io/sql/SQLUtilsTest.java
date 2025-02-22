@@ -4,6 +4,7 @@ import org.junit.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SQLUtilsTest {
+    //测试数据库
     SQLUtils sqlUtils = new SQLUtils();
     @Test
     public void testConnection() {
