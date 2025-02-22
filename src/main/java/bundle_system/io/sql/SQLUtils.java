@@ -530,16 +530,21 @@ public class SQLUtils {
      * @throws SQLException 如果在执行 SQL 操作时发生错误
      */
     public void createTrainDataTables(Connection con) throws SQLException {
-        String sql;
-        try (Statement stmt = con.createStatement()) {
-            for (int i = TICKET; i < typeNames.length ; i++) {
-                sql = "CREATE TABLE IF NOT EXISTS " + getTrainDataTableName(i) + " (" +
-                        "did INT AUTO_INCREMENT PRIMARY KEY, " +
-                        "file_name VARCHAR(512), " +
-                        "upload_time VARCHAR(256) " +
-                        ")";
-                stmt.executeUpdate(sql);
+        StringBuilder sqlBuilder = new StringBuilder();
+        // 构建创建所有品类训练数据表的 SQL 语句，从 TICKET 开始到 SEAT
+        for (int i = TICKET; i < typeNames.length; i++) {
+            if (!sqlBuilder.isEmpty()) {
+                sqlBuilder.append(";");
             }
+            sqlBuilder.append("CREATE TABLE IF NOT EXISTS ").append(getTrainDataTableName(i)).append(" (")
+                    .append("did INT AUTO_INCREMENT PRIMARY KEY, ")
+                    .append("file_name VARCHAR(512), ")
+                    .append("upload_time VARCHAR(256)")
+                    .append(")");
+        }
+        // 执行创建所有品类训练数据表的 SQL 语句
+        try (PreparedStatement pstmt = con.prepareStatement(sqlBuilder.toString())) {
+            pstmt.executeBatch(); // 执行批处理
         }
     }
 
