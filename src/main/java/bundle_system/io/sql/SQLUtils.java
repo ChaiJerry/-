@@ -1,6 +1,7 @@
 package bundle_system.io.sql;
 
-import java.io.*;
+import com.zaxxer.hikari.*;
+
 import java.sql.*;
 import java.util.*;
 
@@ -12,14 +13,15 @@ public class SQLUtils {
     public static final String END_TIME = "endTime";
     public static final String DID = "did";
     public static final String TRAIN_DATA = "train_data_";
-    // 连接状态标记，用于判断是否成功连接到数据库。
+    private static final String URL_ARG = "?useSSL=false&serverTimezone=UTC&autoReconnect=true&cachePrepStmts=true&prepStmtCacheSize=250&rewriteBatchedStatements=true";
+    private HikariDataSource dataSource;
     private boolean connected;
 
     public boolean isConnected() {
         return connected;
     }
 
-    public final String[] typeNames = new String[getFullNames().length];//全小写
+    public final String[] typeNames = new String[getFullNames().length]; // 全小写
 
     private String url = null;
     private String username = null;
@@ -36,28 +38,24 @@ public class SQLUtils {
      * @param password 连接数据库的密码
      */
     public SQLUtils(String url, String username, String password) {
-        this.url = url;
+        this.url = url + URL_ARG;
         this.username = username;
         this.password = password;
         // 初始化 TypeNames 数组
         for (int i = 0; i < getFullNames().length; ++i) {
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
-        Connection connection = getConnection();
+        initializeDataSource();
         try {
             // 尝试创建必要的表，如果它们不存在的话
-            if(connection != null)
-                createTablesForMemQueryIfNotExist();
+            createTablesForMemQueryIfNotExist();
         } catch (SQLException e) {
             logger.info("自动建表失败（可忽略）");
-        } finally {
-            closeConnection(connection);
         }
         // 打印数据库连接状态信息
-        String msg= String.format("数据库连接状态：连接成功=%s", connection != null);
+        String msg = String.format("数据库连接状态：连接成功=%s", connected);
         logger.info(msg);
     }
-
 
     /**
      * 默认构造函数，用于测试目的。
@@ -70,31 +68,61 @@ public class SQLUtils {
         for (int i = 0; i < getFullNames().length; i++) {
             typeNames[i] = getFullNames()[i].toLowerCase();
         }
-        Connection connection = null;
+        Properties properties = new Properties();
         try {
-            Properties properties = new Properties();
             properties.load(SQLUtils.class.getClassLoader().getResourceAsStream("sql.properties"));
-            this.url = properties.getProperty("url");
+            this.url = properties.getProperty("url") + URL_ARG;
             this.username = properties.getProperty("username");
             this.password = properties.getProperty("password");
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(url, username, password);
+            initializeDataSource();
             connected = true;
-        } catch (IOException | ClassNotFoundException | SQLException ignored) {
+        } catch (Exception e) {
             connected = false;
             logger.info("数据库连接失败，请不要用默认构造函数，这是为测试用的");
         }
         try {
             // 尝试创建必要的表，如果它们不存在的话
-            if(connection != null)
-                createTablesForMemQueryIfNotExist();
+            createTablesForMemQueryIfNotExist();
         } catch (SQLException e) {
             logger.info("自动建表失败（可忽略）");
-        } finally {
-            closeConnection(connection);
         }
-
     }
+
+    /**
+     * 初始化 HikariCP 数据源的方法
+     */
+    private void initializeDataSource() {
+        try {
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(url);
+            config.setUsername(username);
+            config.setPassword(password);
+            config.addDataSourceProperty("cachePrepStmts", "true");
+            config.addDataSourceProperty("prepStmtCacheSize", "250");
+            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            config.setMaximumPoolSize(10); // 设置最大连接数
+            config.setMinimumIdle(8); // 设置最小空闲连接数为 2
+            config.setIdleTimeout(30000); // 设置空闲超时时间为 30 秒
+            config.setMaxLifetime(1800000); // 设置连接的最大生命周期为 30 分钟
+            config.setAutoCommit(true);
+            dataSource = new HikariDataSource(config);
+            connected = true;
+        }catch (Exception e) {
+            logger.info("数据库连接异常");
+            logger.info(e.getMessage());
+            connected = false;
+        }
+    }
+
+    /**
+     * 获取数据库连接的方法
+     * @return Connection 连接对象，如果成功则返回有效的 Connection 实例；
+     */
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
     //训练数据的文件表
@@ -178,9 +206,6 @@ public class SQLUtils {
                         return null;
                     }
                 }
-            }finally {
-                // 最后关闭连接
-                closeConnection(con);
             }
         }
     }
@@ -218,9 +243,6 @@ public class SQLUtils {
                 trainDataRecords.add(trainDataRecord);
             }
             return trainDataRecords;
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -247,9 +269,6 @@ public class SQLUtils {
                             typeName);
                 }
             }
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
 
         return null;
@@ -281,9 +300,6 @@ public class SQLUtils {
                 records.add(recordMap);
             }
             return records;
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -312,9 +328,6 @@ public class SQLUtils {
                     return new HashMap<>();
                 }
             }
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -353,9 +366,6 @@ public class SQLUtils {
                     return "error handling";
                 }
             }
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -404,9 +414,6 @@ public class SQLUtils {
                     throw new SQLException("Creating train record failed, no ID obtained.");
                 }
             }
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -454,9 +461,6 @@ public class SQLUtils {
                     throw new SQLException("Creating train record failed, no ID obtained.");
                 }
             }
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -477,9 +481,6 @@ public class SQLUtils {
             pstmt.setString(1, endTime);
             pstmt.setInt(2, tid);
             pstmt.executeUpdate();
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -492,9 +493,6 @@ public class SQLUtils {
             pstmt.setString(1, orderNumber);
             pstmt.setInt(2, tid);
             pstmt.executeUpdate();
-        }finally {
-            // 最后关闭连接
-            closeConnection(con);
         }
     }
 
@@ -563,8 +561,6 @@ public class SQLUtils {
         createTrainRecordTable(con);
         // 创建所有品类对应的训练数据表
         createTrainDataTables(con);
-        // 最后关闭连接
-        closeConnection(con);
     }
 
     private void createRulesTable(Connection con) throws SQLException {
@@ -596,7 +592,6 @@ public class SQLUtils {
         dropTrainRecordTable(stmt);
         dropTrainDataTables(stmt);
         stmt.close();
-        con.close();
     }
 
     /**
@@ -761,9 +756,6 @@ public class SQLUtils {
                 }
                 // 返回包含所有规则信息的二维列表
                 return result;
-            }finally {
-                // 关闭数据库连接
-                closeConnection(con);
             }
         }
     }
@@ -778,40 +770,9 @@ public class SQLUtils {
         return "rules_" + typeNames[type];
     }
 
-    /**
-     * 关闭数据库连接的方法。
-     * @param connection 要关闭的数据库连接对象。如果该参数为 null，则不执行任何操作。
-     */
-    private static void closeConnection(Connection connection) {
-        // 如果连接对象不为 null，则尝试关闭该数据库连接
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                logger.info("关闭数据库连接失败");
-            }
-        }
-    }
 
-    /**
-     * 尝试建立与数据库的连接的方法
-     * @return Connection 连接对象，如果成功则返回有效的 Connection 实例；
-     */
-    private Connection getConnection() {
-        Connection connection = null;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection =DriverManager.getConnection(this.url, this.username, this.password);
-            // 连接成功，设置 connected 为 true
-            connected = true;
-        } catch (ClassNotFoundException | SQLException e) {
-            // 连接失败，设置 connected 为 false 并记录错误信息
-            connected = false;
-            logger.info("数据库连接失败！请检查驱动或数据库配置");
-            logger.info(e.getMessage());
-        }
-        return connection;
-    }
+
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
