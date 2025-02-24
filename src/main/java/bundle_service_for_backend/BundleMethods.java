@@ -105,6 +105,8 @@ public class BundleMethods {
             List<BundleItem> bundleItemList = entry.getValue();
             //排序
             if (!BackendBundleSystem.setPriorityAndSortWithNumParse(recommendedAttributes, bundleItemList)) continue;
+            //过滤酒店,使得每种SubCode只保留一个
+            bundleItemList = filterHotel(bundleItemList);
             //将排序好的附加产品添加到节点中
             for (int i = 0, size = bundleItemList.size(); i < size && i < 5; i++) {
                 BundleItemForHotel bundleItem = (BundleItemForHotel) bundleItemList.get(i);
@@ -113,6 +115,19 @@ public class BundleMethods {
             }
         }
         return (Element) fatherElement.getParentNode().getParentNode();
+    }
+
+    private static List<BundleItem> filterHotel(List<BundleItem> hotelList) {
+        List<BundleItem> filteredhotelList = new ArrayList<>();
+        Set<String> subcodeSet = new HashSet<>();
+        for (BundleItem item : hotelList) {
+            BundleItemForHotel bundleItem = (BundleItemForHotel) item;
+            //每个subCode只保留一个
+            if (subcodeSet.add(bundleItem.getSubCode())) {
+                filteredhotelList.add(bundleItem);
+            }
+        }
+        return filteredhotelList;
     }
 
     /**

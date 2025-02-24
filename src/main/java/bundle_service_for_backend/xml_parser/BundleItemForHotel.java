@@ -74,6 +74,15 @@ public class BundleItemForHotel extends BundleItem {
     }
 
     /**
+     * 子代码的getter方法，用于过滤同类酒店
+     * @return 酒店subCode(roomTypeCode)字段值。
+     */
+    public String getSubCode() {
+        return subCode;
+    }
+
+
+    /**
      * 通过实例化后的诸多属性构建酒店房间级商品的XML元素
      * ，用于在报文之中返回。
      * @param doc XML文档对象
