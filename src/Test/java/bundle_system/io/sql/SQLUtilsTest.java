@@ -1,6 +1,9 @@
 package bundle_system.io.sql;
 
 import org.junit.*;
+
+import java.sql.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SQLUtilsTest {
@@ -18,5 +21,17 @@ public class SQLUtilsTest {
         //验证是否正确获取表名并防止不正确的表名输入
         assertNull(sqlUtils.getTrainDataTableName("tax"));
         assertEquals("train_data_seat",sqlUtils.getTrainDataTableName("seat"));
+    }
+
+    @Test
+    public void getTrainRecordMaps() throws SQLException {
+        //验证是否正确获取表名并防止不正确的表名输入
+        assertNotNull(sqlUtils.getTrainRecordMaps());
+        assertNotNull(sqlUtils.getTrainRecordMaps());
+        assertNotNull(sqlUtils.getTrainRecordMaps());
+        assertNotNull(sqlUtils.getTrainRecordMaps());
+        assertNotNull(sqlUtils.getTrainRecordMaps());
+        assertNotNull(sqlUtils.getTrainRecordMaps());
+        assertNotNull(sqlUtils.getTrainRecordMaps());
     }
 }

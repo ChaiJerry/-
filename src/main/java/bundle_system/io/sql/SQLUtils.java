@@ -100,8 +100,8 @@ public class SQLUtils {
             config.addDataSourceProperty("cachePrepStmts", "true");
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-            config.setMaximumPoolSize(10); // 设置最大连接数
-            config.setMinimumIdle(8); // 设置最小空闲连接数为 2
+            config.setMaximumPoolSize(100); // 设置最大连接数
+            config.setMinimumIdle(15); // 设置最小空闲连接数为 15
             config.setIdleTimeout(30000); // 设置空闲超时时间为 30 秒
             config.setMaxLifetime(1800000); // 设置连接的最大生命周期为 30 分钟
             config.setAutoCommit(true);
@@ -207,6 +207,9 @@ public class SQLUtils {
                     }
                 }
             }
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -243,6 +246,9 @@ public class SQLUtils {
                 trainDataRecords.add(trainDataRecord);
             }
             return trainDataRecords;
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -269,6 +275,9 @@ public class SQLUtils {
                             typeName);
                 }
             }
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
 
         return null;
@@ -300,6 +309,9 @@ public class SQLUtils {
                 records.add(recordMap);
             }
             return records;
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -328,6 +340,9 @@ public class SQLUtils {
                     return new HashMap<>();
                 }
             }
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -366,6 +381,9 @@ public class SQLUtils {
                     return "error handling";
                 }
             }
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -414,6 +432,9 @@ public class SQLUtils {
                     throw new SQLException("Creating train record failed, no ID obtained.");
                 }
             }
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -461,6 +482,9 @@ public class SQLUtils {
                     throw new SQLException("Creating train record failed, no ID obtained.");
                 }
             }
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -481,6 +505,9 @@ public class SQLUtils {
             pstmt.setString(1, endTime);
             pstmt.setInt(2, tid);
             pstmt.executeUpdate();
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -493,6 +520,9 @@ public class SQLUtils {
             pstmt.setString(1, orderNumber);
             pstmt.setInt(2, tid);
             pstmt.executeUpdate();
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
@@ -554,13 +584,15 @@ public class SQLUtils {
     public void createTablesForMemQueryIfNotExist() throws SQLException {
         // 初始化连接对象，执行查询操作
         Connection con = getConnection();
-        if(con==null) return;
-        // 创建规则表，包括 HOTEL、MEAL、BAGGAGE、INSURANCE 和 SEAT 等品类对应的规则表
-        createRulesTable(con);
-        // 创建训练记录表
-        createTrainRecordTable(con);
-        // 创建所有品类对应的训练数据表
-        createTrainDataTables(con);
+        try (con) {
+            if (con == null) return;
+            // 创建规则表，包括 HOTEL、MEAL、BAGGAGE、INSURANCE 和 SEAT 等品类对应的规则表
+            createRulesTable(con);
+            // 创建训练记录表
+            createTrainRecordTable(con);
+            // 创建所有品类对应的训练数据表
+            createTrainDataTables(con);
+        }
     }
 
     private void createRulesTable(Connection con) throws SQLException {
@@ -592,6 +624,7 @@ public class SQLUtils {
         dropTrainRecordTable(stmt);
         dropTrainDataTables(stmt);
         stmt.close();
+        con.close();
     }
 
     /**
@@ -757,6 +790,9 @@ public class SQLUtils {
                 // 返回包含所有规则信息的二维列表
                 return result;
             }
+        }finally{
+            // 将连接返回给连接池
+            con.close();
         }
     }
 
