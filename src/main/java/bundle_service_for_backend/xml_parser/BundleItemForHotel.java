@@ -10,6 +10,15 @@ public class BundleItemForHotel extends BundleItem {
     // 定义酒店套餐相关的属性
     // 服务类型
     private String serviceType;
+
+    /**
+     * 获取服务代码(酒店代码)
+     * @return 服务代码
+     */
+    public String getServiceCode() {
+        return serviceCode;
+    }
+
     // 服务代码
     private String serviceCode;
     // 子代码

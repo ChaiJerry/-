@@ -420,6 +420,11 @@ public class XMLParser {
 
             Element basicPropertyInfo = getElementByRelativePath(roomStay, "BasicPropertyInfo");
             String serviceCode = basicPropertyInfo.getAttribute("HotelCode");
+            // 当HotelCode为空，则使用OJHotelCode作为酒店代码
+            if(serviceCode.isEmpty()){
+                //解析OJHotelCode作为酒店代码
+                serviceCode = basicPropertyInfo.getAttribute("OJHotelCode");
+            }
             String serviceLocation = basicPropertyInfo.getAttribute("HotelCityCode");
             String text1 = basicPropertyInfo.getAttribute("HotelName");
             NodeList roomTypes = getElementsByRelativePath(roomStay, "RoomTypes/RoomType");

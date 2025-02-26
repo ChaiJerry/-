@@ -117,14 +117,36 @@ public class BundleMethods {
         return (Element) fatherElement.getParentNode().getParentNode();
     }
 
-    private static List<BundleItem> filterHotel(List<BundleItem> hotelList) {
+    /**
+     * 过滤酒店房间，使得每个酒店的每种SubCode只保留一个，最多有5个酒店
+     * @param roomList 房间列表
+     * @return 过滤后的房间列表
+     */
+    private static List<BundleItem> filterHotel(List<BundleItem> roomList) {
+        //将房间按酒店serviceCode分组，每个酒店下一个subCode只保留一个房间
+        Map<String,Set<String>> hotel2subCodeSetMap = new HashMap<>();
         List<BundleItem> filteredhotelList = new ArrayList<>();
-        Set<String> subcodeSet = new HashSet<>();
-        for (BundleItem item : hotelList) {
-            BundleItemForHotel bundleItem = (BundleItemForHotel) item;
+        for (BundleItem item : roomList) {
+            BundleItemForHotel room = (BundleItemForHotel) item;
+            // 得到房间的酒店代码（serviceCode）和房间类型（subCode）
+            String serviceCode = room.getServiceCode();
+            String subCode = room.getSubCode();
+            // 得到酒店对应的subCode集合
+            Set<String> subCodes;
+            //如果酒店已经在记录中，则取出对应的subCode集合
+            if (hotel2subCodeSetMap.containsKey(serviceCode)) {
+                subCodes = hotel2subCodeSetMap.get(serviceCode);
+            }else if(hotel2subCodeSetMap.size() >= 5) {
+                //如果已经有5个酒店，则不再选择新的
+                continue;
+            }else {
+                //如果还没有该酒店记录且酒店数量小于5，则新建一个subCode集合
+                subCodes = new HashSet<>();
+                hotel2subCodeSetMap.put(serviceCode, subCodes);
+            }
             //每个subCode只保留一个
-            if (subcodeSet.add(bundleItem.getSubCode())) {
-                filteredhotelList.add(bundleItem);
+            if (subCodes.add(subCode)) {
+                filteredhotelList.add(room);
             }
         }
         return filteredhotelList;
